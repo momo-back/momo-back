@@ -74,14 +74,14 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
       User user = userDetails.getUser();
 
       // Access 및 Refresh 토큰 생성
-      String accessToken = jwtUtil.createJwt("access", user, Duration.ofMinutes(10).toMillis());
-      String refreshToken = jwtUtil.createJwt("refresh", user, Duration.ofDays(7).toMillis());
+      String accessToken = jwtUtil.createJwt("access", user, Duration.ofMinutes(30).toMillis());
+      String refreshToken = jwtUtil.createJwt("refresh", user, Duration.ofHours(24).toMillis());
 
       log.info("Access Token 생성 완료: {}", accessToken);
       log.info("Refresh Token 생성 완료: {}", refreshToken);
 
       // Refresh 토큰 저장
-      addRefreshToken(user, refreshToken, Duration.ofDays(7).toMillis());
+      addRefreshToken(user, refreshToken, Duration.ofHours(24).toMillis());
 
       // 응답에 토큰 추가
       Map<String, String> tokens = new HashMap<>();
