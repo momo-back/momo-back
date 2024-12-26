@@ -22,5 +22,8 @@ public class ProfileRequiredValueValidator {
     if (birth == null) {
       throw new ProfileException(ProfileErrorCode.INVALID_BIRTH);
     }
+    if (birth.isAfter(LocalDate.now())) {
+      throw new ProfileException(ProfileErrorCode.INVALID_BIRTH);
+    }
   }
 }
