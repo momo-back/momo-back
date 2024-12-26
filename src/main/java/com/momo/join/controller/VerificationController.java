@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping
 public class VerificationController {
 
   private final UserRepository userRepository;
@@ -18,7 +18,7 @@ public class VerificationController {
     this.userRepository = userRepository;
   }
 
-  @GetMapping("/verify")
+  @GetMapping("/api/v1/user/signup/verify")
   public ResponseEntity<String> verifyUser(@RequestParam("token") String token) {
     User user = userRepository.findByVerificationToken(token)
         .orElseThrow(() -> new RuntimeException("Invalid verification token"));
