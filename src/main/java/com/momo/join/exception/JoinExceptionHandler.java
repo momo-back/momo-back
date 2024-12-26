@@ -1,5 +1,7 @@
 package com.momo.join.exception;
 
+import com.momo.common.exception.ErrorCode;
+import com.momo.common.exception.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,10 +15,9 @@ public class JoinExceptionHandler {
   public ResponseEntity<ErrorResponse> handleValidationException(ValidationException e) {
     log.error("Validation Exception: {}", e.getMessage());
     return ResponseEntity
-        .badRequest()
+        .status(ErrorCode.VALIDATION_ERROR.getStatus())
         .body(new ErrorResponse(
-            "잘못된 요청입니다",
-            "VALIDATION_ERROR",
+            ErrorCode.VALIDATION_ERROR,
             e.getField(),
             e.getMessage()
         ));
@@ -26,10 +27,9 @@ public class JoinExceptionHandler {
   public ResponseEntity<ErrorResponse> handleDuplicateException(DuplicateException e) {
     log.error("Duplicate Exception: {}", e.getMessage());
     return ResponseEntity
-        .status(409)
+        .status(ErrorCode.DUPLICATE_ERROR.getStatus())
         .body(new ErrorResponse(
-            "이미 사용 중인 " + e.getField() + "입니다",
-            "DUPLICATE_ERROR",
+            ErrorCode.DUPLICATE_ERROR,
             e.getField(),
             null
         ));
@@ -39,10 +39,9 @@ public class JoinExceptionHandler {
   public ResponseEntity<ErrorResponse> handleGeneralException(Exception e) {
     log.error("Unexpected Exception: {}", e.getMessage());
     return ResponseEntity
-        .status(500)
+        .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
         .body(new ErrorResponse(
-            "서버 내부 오류가 발생했습니다",
-            "INTERNAL_SERVER_ERROR"
+            ErrorCode.INTERNAL_SERVER_ERROR
         ));
   }
 }

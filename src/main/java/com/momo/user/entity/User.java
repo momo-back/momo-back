@@ -1,21 +1,11 @@
 package com.momo.user.entity;
 
-
+import com.momo.config.token.entity.RefreshToken;
+import java.util.ArrayList;
+import java.util.List;
+import javax.persistence.*;
 import java.time.LocalDateTime;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-
+import lombok.*;
 
 @Getter
 @NoArgsConstructor
@@ -25,7 +15,8 @@ import javax.persistence.PreUpdate;
 @Table(name = "users", uniqueConstraints = {
     @UniqueConstraint(columnNames = "email"),
     @UniqueConstraint(columnNames = "phone"),
-    @UniqueConstraint(columnNames = "nickname")
+    @UniqueConstraint(columnNames = "nickname"),
+    @UniqueConstraint(columnNames = "verification_token")
 })
 public class User {
 
@@ -34,22 +25,19 @@ public class User {
   @Column(name = "id", nullable = false, updatable = false)
   private Long id;
 
-  @Column(name = "email", nullable = false, unique = true, length = 50)
+  @Column(name = "email", nullable = false, length = 50)
   private String email;
 
   @Column(name = "password", nullable = false, length = 255)
   private String password;
 
-  @Column(name = "nickname", nullable = false, unique = true, length = 20)
+  @Column(name = "nickname", nullable = false, length = 20)
   private String nickname;
 
-  @Column(name = "phone", nullable = false, unique = true, length = 20)
+  @Column(name = "phone", nullable = false, length = 20)
   private String phone;
 
-//  @Column(name = "token", unique = true, length = 255)
-//  private String token;
-
-  @Column(name = "verification_token", unique = true, length = 255) // 추가 필드
+  @Column(name = "verification_token", length = 255) // 추가 필드
   private String verificationToken;
 
   @Column(name = "created_at", nullable = false, updatable = false)
@@ -72,21 +60,15 @@ public class User {
   }
 
   /**
-   * 이메일 인증 활성화
+   * 계정을 활성화하는 비즈니스 로직
    */
-  public void activateAccount() {
-    this.enabled = true;
+  public void verify() {
+    this.enabled = true; // 계정 활성화
+    this.verificationToken = null; // 인증 완료 시 토큰 제거
   }
 
-  public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
-  }
 
-  /**
-   * 인증 토큰 설정
-   */
-  public void setVerificationToken(String token) {
-    this.verificationToken = token;
-  }
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<RefreshToken> refreshTokens = new ArrayList<>();
 
 }

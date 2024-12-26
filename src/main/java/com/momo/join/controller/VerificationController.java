@@ -1,5 +1,8 @@
 package com.momo.join.controller;
 
+import com.momo.common.exception.CustomException;
+import com.momo.common.exception.ErrorCode;
+import com.momo.join.service.VerificationService;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
@@ -12,21 +15,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping
 public class VerificationController {
 
-  private final UserRepository userRepository;
+  private final VerificationService verificationService;
 
-  public VerificationController(UserRepository userRepository) {
-    this.userRepository = userRepository;
+  public VerificationController(VerificationService verificationService) {
+    this.verificationService = verificationService;
   }
 
-  @GetMapping("/api/v1/user/signup/verify")
+  @GetMapping("/api/v1/users/signup/verify")
   public ResponseEntity<String> verifyUser(@RequestParam("token") String token) {
-    User user = userRepository.findByVerificationToken(token)
-        .orElseThrow(() -> new RuntimeException("Invalid verification token"));
-
-    user.setEnabled(true); // 계정 활성화
-    user.setVerificationToken(null); // 토큰 제거
-    userRepository.save(user);
-
+    verificationService.verifyUser(token); // 서비스 호출
     return ResponseEntity.ok("이메일 인증이 완료되었습니다!");
   }
 }
