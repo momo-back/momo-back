@@ -45,8 +45,7 @@ public class SecurityConfig {
         .authorizeRequests()
         .antMatchers(
             "/",
-            "/users/signup",
-            "/users/verify/**"
+            "/api/v1/user/**"
         ).permitAll()
         .anyRequest().authenticated();
     http
