@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class ProfileImageService {
 
-  private static final String DEFAULT_IMAGE_KEY =
+  private static final String DEFAULT_IMAGE_URL =
       "https://s3-momo-storage.s3.ap-northeast-2.amazonaws.com/default.jpg";
 
   private final ImageStorage imageStorage;
@@ -22,7 +22,7 @@ public class ProfileImageService {
     return Optional.ofNullable(profileImage)
         .filter(imageFile -> !imageFile.isEmpty())
         .map(this::uploadImage)
-        .orElse(DEFAULT_IMAGE_KEY);
+        .orElse(DEFAULT_IMAGE_URL);
   }
 
   private String uploadImage(MultipartFile profileImage) {
