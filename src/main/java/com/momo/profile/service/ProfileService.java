@@ -3,7 +3,7 @@ package com.momo.profile.service;
 import com.momo.profile.dto.ProfileCreateRequest;
 import com.momo.profile.dto.ProfileCreateResponse;
 import com.momo.profile.persist.entity.Profile;
-import com.momo.profile.persist.repository.ProfileRepository;
+import com.momo.profile.persist.reposiroty.ProfileRepository;
 import com.momo.profile.validate.ProfileRequiredValueValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
