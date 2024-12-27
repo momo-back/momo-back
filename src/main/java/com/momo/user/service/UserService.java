@@ -1,5 +1,7 @@
 package com.momo.user.service;
 
+import com.momo.common.exception.CustomException;
+import com.momo.common.exception.ErrorCode;
 import com.momo.config.JWTUtil;
 import com.momo.config.token.repository.RefreshTokenRepository;
 import com.momo.user.dto.CustomUserDetails;
@@ -38,6 +40,23 @@ public class UserService {
 
     // Access Token 발급
     return jwtUtil.createJwt("access", user, 600000L); // 10분 만료
+  }
+
+  // 회원 탈퇴
+  public void deleteUser() {
+    String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+    // User 조회
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    // RefreshToken 삭제
+    if (refreshTokenRepository.existsByToken(email)) {
+      refreshTokenRepository.deleteByEmail(email);
+    }
+
+    // User 삭제
+    userRepository.delete(user);
   }
 
   // 현재 로그인한 사용자 정보 가져오기

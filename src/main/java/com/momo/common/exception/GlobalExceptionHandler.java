@@ -14,4 +14,10 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(errorCode.getStatus()).body(response);
   }
 
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<ErrorResponse> handleGeneralException(Exception ex) {
+    ErrorResponse response = new ErrorResponse(ErrorCode.INTERNAL_SERVER_ERROR);
+    return ResponseEntity.status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus()).body(response);
+  }
+
 }
