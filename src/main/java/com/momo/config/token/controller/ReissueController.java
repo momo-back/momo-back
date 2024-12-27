@@ -1,4 +1,4 @@
-package com.momo.config.token;
+package com.momo.config.token.controller;
 
 import com.momo.config.token.service.TokenService;
 import java.util.Map;

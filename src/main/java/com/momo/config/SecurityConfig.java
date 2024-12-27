@@ -46,12 +46,16 @@ public class SecurityConfig {
 
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
     // JWT 기반 인증 필터 추가
     JWTFilter jwtFilter = new JWTFilter(userRepository, jwtUtil);
 
     // 로그인 필터 추가
     LoginFilter loginFilter = new LoginFilter(authenticationManager(authenticationConfiguration),
         jwtUtil, refreshTokenRepository, userRepository);
+
+    // 로그아웃 필터 추가
+    CustomLogoutFilter logoutFilter = new CustomLogoutFilter(jwtUtil, refreshTokenRepository);
 
     http
         .csrf(csrf -> csrf.disable())
@@ -69,7 +73,8 @@ public class SecurityConfig {
         .sessionManagement(session -> session
             .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 기반으로 Stateless 설정
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
-        .addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class); // Login 필터 추가
+        .addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class) // Login 필터 추가
+        .addFilterBefore(logoutFilter, UsernamePasswordAuthenticationFilter.class); // Logout 필터 추가
 
     return http.build();
   }
