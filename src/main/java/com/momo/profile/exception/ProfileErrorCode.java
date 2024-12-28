@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ProfileErrorCode {
 
-  DUPLICATE_PROFILE("이미 프로필이 존재합니다.", HttpStatus.CONFLICT),
+  ALREADY_EXISTS("이미 프로필이 존재합니다.", HttpStatus.CONFLICT),
   INVALID_GENDER("성별을 입력해 주세요.", HttpStatus.BAD_REQUEST),
   INVALID_BIRTH("생년월일을 입력해 주세요.", HttpStatus.BAD_REQUEST),
   INVALID_IMAGE_FORMAT("지원하지 않는 이미지 형식입니다.", HttpStatus.BAD_REQUEST);
