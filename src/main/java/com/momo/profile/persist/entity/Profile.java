@@ -2,14 +2,18 @@ package com.momo.profile.persist.entity;
 
 import com.momo.profile.constant.Gender;
 import com.momo.profile.constant.Mbti;
+import com.momo.user.entity.User;
 import java.time.LocalDate;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,24 +30,23 @@ public class Profile extends BaseEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  // TODO: 회원 연결 및 검증 필요
-  /*@ManyToOne(fetch = FetchType.LAZY)
+  @OneToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
-  private User user;*/
+  private User user;
 
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private Gender gender;
 
   @Column(nullable = false)
-  private LocalDate birthDate;
+  private LocalDate birth;
 
   @Column(nullable = false)
   private String profileImageUrl;
 
-  @Column(nullable = false)
+  @Column(length = 500)
   private String introduction;
 
-  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
   private Mbti mbti;
 }
