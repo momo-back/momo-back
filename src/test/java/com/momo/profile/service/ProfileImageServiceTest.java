@@ -35,7 +35,7 @@ class ProfileImageServiceTest {
   void getProfileImageUrl_WithNullImage_ReturnDefaultImageUrl() {
     // given
     // when
-    String imageUrl = profileImageService.getProfileImageUrl(null);
+    String imageUrl = profileImageService.createProfileImageUrl(null);
 
     // then
     verifyNoInteractions(imageStorage);
@@ -54,7 +54,7 @@ class ProfileImageServiceTest {
     when(imageStorage.uploadImage(mockImage)).thenReturn(imageUrl);
 
     // when
-    String response = profileImageService.getProfileImageUrl(mockImage);
+    String response = profileImageService.createProfileImageUrl(mockImage);
 
     // then
     verify(imageStorage).uploadImage(mockImage);
@@ -70,7 +70,7 @@ class ProfileImageServiceTest {
     when(mockImage.getOriginalFilename()).thenReturn("test-image-url.txt");
 
     // when & then
-    assertThatThrownBy(() -> profileImageService.getProfileImageUrl(mockImage))
+    assertThatThrownBy(() -> profileImageService.createProfileImageUrl(mockImage))
         .isInstanceOf(ProfileException.class)
         .hasFieldOrPropertyWithValue("ProfileErrorCode", ProfileErrorCode.INVALID_IMAGE_FORMAT);
   }
