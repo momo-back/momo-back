@@ -1,4 +1,4 @@
-package com.momo.profile.persist.entity;
+package com.momo.common.entity;
 
 import java.time.LocalDateTime;
 import javax.persistence.Column;
