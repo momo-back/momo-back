@@ -4,19 +4,15 @@ import com.momo.profile.constant.Gender;
 import com.momo.profile.constant.Mbti;
 import com.momo.profile.persist.entity.Profile;
 import java.time.LocalDate;
-import java.util.Optional;
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
 public class ProfileCreateRequest {
-
-  private static final String DEFAULT_INTRODUCTION = "";
-  private static final Mbti DEFAULT_MBTI = Mbti.NONE;
-
+  
   private Gender gender;
-
+  
   private LocalDate birth;
 
   private String introduction;
@@ -26,18 +22,10 @@ public class ProfileCreateRequest {
   public Profile toEntity(String profileImageKey) {
     return Profile.builder()
         .gender(this.gender)
-        .birthDate(this.birth)
+        .birth(this.birth)
         .profileImageUrl(profileImageKey)
-        .introduction(this.getIntroductionOrDefault())
-        .mbti(this.getMbtiOrDefault())
+        .introduction(this.introduction)
+        .mbti(this.mbti)
         .build();
-  }
-
-  public String getIntroductionOrDefault() {
-    return Optional.ofNullable(this.introduction).orElse(DEFAULT_INTRODUCTION);
-  }
-
-  public Mbti getMbtiOrDefault() {
-    return Optional.ofNullable(this.mbti).orElse(DEFAULT_MBTI);
   }
 }
