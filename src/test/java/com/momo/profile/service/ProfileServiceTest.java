@@ -3,6 +3,8 @@ package com.momo.profile.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,6 +16,7 @@ import com.momo.profile.dto.ProfileCreateResponse;
 import com.momo.profile.exception.ProfileException;
 import com.momo.profile.persist.entity.Profile;
 import com.momo.profile.persist.reposiroty.ProfileRepository;
+import com.momo.profile.validator.ProfileValidator;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,6 +35,9 @@ class ProfileServiceTest {
   @Mock
   private ProfileImageService profileImageService;
 
+  @Mock
+  private ProfileValidator profileValidator;
+
   @InjectMocks
   private ProfileService profileService;
 
@@ -44,14 +50,16 @@ class ProfileServiceTest {
     String imageUrl = "test-image-url.jpg";
     Profile profile = request.toEntity(imageUrl);
 
-    when(profileImageService.getProfileImageUrl(mockImage)).thenReturn(imageUrl);
+    doNothing().when(profileValidator).validateUserForProfileCreation(anyLong());
+    when(profileImageService.createProfileImageUrl(mockImage)).thenReturn(imageUrl);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
     // when
-    ProfileCreateResponse response = profileService.createProfile(request, mockImage);
+    ProfileCreateResponse response = profileService.createProfile(anyLong(), request, mockImage);
 
     // then
-    verify(profileImageService).getProfileImageUrl(mockImage);
+    verify(profileValidator).validateUserForProfileCreation(anyLong());
+    verify(profileImageService).createProfileImageUrl(mockImage);
     verify(profileRepository).save(any(Profile.class));
 
     assertThat(response.getGender()).isEqualTo(request.getGender());
@@ -65,19 +73,21 @@ class ProfileServiceTest {
   void createProfile_WithoutImage_Success() {
     // given
     ProfileCreateRequest request = createProfileRequest();
-    String imageUrl = "default-image-url.jpg";
+    String imageUrl = "test-image-url.jpg";
     Profile profile = request.toEntity(imageUrl);
 
-    when(profileImageService.getProfileImageUrl(null)).thenReturn(imageUrl);
+    doNothing().when(profileValidator).validateUserForProfileCreation(anyLong());
+    when(profileImageService.createProfileImageUrl(null)).thenReturn(imageUrl);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
     // when
-    ProfileCreateResponse response = profileService.createProfile(request, null);
-
-    verify(profileRepository).save(any(Profile.class));
-    verify(profileImageService).getProfileImageUrl(null);
+    ProfileCreateResponse response = profileService.createProfile(anyLong(), request, null);
 
     // then
+    verify(profileValidator).validateUserForProfileCreation(anyLong());
+    verify(profileImageService).createProfileImageUrl(null);
+    verify(profileRepository).save(any(Profile.class));
+
     assertThat(response.getGender()).isEqualTo(request.getGender());
     assertThat(response.getBirth()).isEqualTo(request.getBirth());
     assertThat(response.getProfileImageUrl()).isEqualTo(imageUrl);
@@ -94,7 +104,7 @@ class ProfileServiceTest {
   }
 
   @Test
-  @DisplayName("성별 누락 시 - 예외 발생")
+  @DisplayName("성별 누락 - 예외 발생")
   void createProfile_WithoutGender_ThrowsException() {
     // given
     ProfileCreateRequest request = ProfileCreateRequest.builder()
@@ -106,7 +116,7 @@ class ProfileServiceTest {
 
     // when
     // then
-    assertThatThrownBy(() -> profileService.createProfile(request, null))
+    assertThatThrownBy(() -> profileService.createProfile(anyLong(), request, null))
         .isInstanceOf(ProfileException.class);
   }
 
@@ -123,7 +133,7 @@ class ProfileServiceTest {
 
     // when
     // then
-    assertThatThrownBy(() -> profileService.createProfile(request, null))
+    assertThatThrownBy(() -> profileService.createProfile(anyLong(), request, null))
         .isInstanceOf(ProfileException.class);
   }
 
@@ -140,7 +150,7 @@ class ProfileServiceTest {
 
     // when
     // then
-    assertThatThrownBy(() -> profileService.createProfile(request, null))
+    assertThatThrownBy(() -> profileService.createProfile(anyLong(), request, null))
         .isInstanceOf(ProfileException.class);
   }
 }
