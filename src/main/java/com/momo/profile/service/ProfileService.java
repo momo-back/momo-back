@@ -1,10 +1,13 @@
 package com.momo.profile.service;
 
+import com.momo.profile.constant.Gender;
 import com.momo.profile.dto.ProfileCreateRequest;
 import com.momo.profile.dto.ProfileCreateResponse;
 import com.momo.profile.persist.entity.Profile;
-import com.momo.profile.persist.repository.ProfileRepository;
-import com.momo.profile.validate.ProfileRequiredValueValidator;
+import com.momo.profile.persist.reposiroty.ProfileRepository;
+import com.momo.profile.validator.ProfileRequiredValueValidator;
+import com.momo.profile.validator.ProfileValidator;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,24 +18,26 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class ProfileService {
 
+  private final ProfileValidator profileValidator;
   private final ProfileRepository profileRepository;
   private final ProfileImageService profileImageService;
 
-  // TODO: 회원 ID 매개변수로 받아야 함
   public ProfileCreateResponse createProfile(
-      ProfileCreateRequest request, MultipartFile profileImage
+      Long userId,
+      ProfileCreateRequest request,
+      MultipartFile profileImage
   ) {
-    // TODO: 회원 존재 여부 검증
-    // TODO: 이미 프로필이 존재하는지 여부 검증
+    validateForProfileCreation(userId, request.getGender(), request.getBirth());
 
-    ProfileRequiredValueValidator.profileRequiredValueValidate(
-        request.getGender(), request.getBirth()
-    );
-
-    String profileImageUrl = profileImageService.getProfileImageUrl(profileImage);
+    String profileImageUrl = profileImageService.createProfileImageUrl(profileImage);
     Profile profile = request.toEntity(profileImageUrl);
 
     Profile savedProfile = profileRepository.save(profile);
     return ProfileCreateResponse.from(savedProfile);
+  }
+
+  private void validateForProfileCreation(Long userId, Gender gender, LocalDate birth) {
+    profileValidator.validateUserForProfileCreation(userId);
+    ProfileRequiredValueValidator.validateProfileRequiredValue(gender, birth);
   }
 }
