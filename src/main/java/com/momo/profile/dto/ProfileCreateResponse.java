@@ -11,6 +11,7 @@ import lombok.Getter;
 @Builder
 public class ProfileCreateResponse {
 
+  private Long id;
   private Gender gender;
   private LocalDate birth;
   private String profileImageUrl;
@@ -19,8 +20,9 @@ public class ProfileCreateResponse {
 
   public static ProfileCreateResponse from(Profile profile) {
     return ProfileCreateResponse.builder()
+        .id(profile.getId())
         .gender(profile.getGender())
-        .birth(profile.getBirthDate())
+        .birth(profile.getBirth())
         .profileImageUrl(profile.getProfileImageUrl())
         .introduction(profile.getIntroduction())
         .mbti(profile.getMbti())
