@@ -9,12 +9,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.momo.exception.MeetingErrorCode;
-import com.momo.exception.MeetingException;
+import com.momo.meeting.exception.MeetingErrorCode;
+import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.dto.CreateMeetingRequest;
-import com.momo.meeting.persist.entity.Meeting;
-import com.momo.meeting.persist.repository.MeetingRepository;
+import com.momo.meeting.entity.Meeting;
+import com.momo.meeting.repository.MeetingRepository;
 import com.momo.mock.MockUser;
 import com.momo.mock.MockUserRepository;
 import java.time.LocalDateTime;

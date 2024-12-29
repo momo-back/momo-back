@@ -3,12 +3,16 @@ package com.momo.user.service;
 import com.momo.common.exception.CustomException;
 import com.momo.common.exception.ErrorCode;
 import com.momo.config.JWTUtil;
+import com.momo.config.token.entity.RefreshToken;
 import com.momo.config.token.repository.RefreshTokenRepository;
 import com.momo.user.dto.CustomUserDetails;
-import com.momo.user.dto.LoginDTO;
+import com.momo.auth.dto.KakaoProfile;
+import com.momo.auth.dto.LoginDTO;
+import com.momo.auth.dto.OAuthToken;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Value;
+import java.util.UUID;
+import javax.transaction.Transactional;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,9 +28,9 @@ public class UserService {
   public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder,
       JWTUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
     this.userRepository = userRepository;
-    this.passwordEncoder = passwordEncoder;
     this.jwtUtil = jwtUtil;
     this.refreshTokenRepository = refreshTokenRepository;
+    this.passwordEncoder = passwordEncoder;
   }
 
   // 로그인 처리
@@ -67,5 +71,51 @@ public class UserService {
         .getPrincipal();
   }
 
+  @Transactional
+  public User processKakaoUser(KakaoProfile kakaoProfile, OAuthToken oauthToken) {
+    // 1. 이메일 및 닉네임 처리
+    String email = kakaoProfile.getKakao_account().getEmail();
+    String uniqueNickname = email;
 
+    // 2. 기존 사용자 확인
+    User existingUser = userRepository.findByEmail(email).orElse(null);
+
+    if (existingUser != null) {
+      existingUser.setEnabled(true); // 기존 사용자는 활성화
+      updateRefreshToken(existingUser, oauthToken.getRefresh_token()); // RefreshToken 갱신
+      return existingUser;
+    }
+
+    // 3. 새로운 사용자 생성
+    String randomPassword = UUID.randomUUID().toString();
+    String encryptedPassword = passwordEncoder.encode(randomPassword);
+
+    User kakaoUser = User.builder()
+        .email(email)
+        .nickname(uniqueNickname)
+        .phone("") // 카카오 API에서는 전화번호를 제공하지 않음
+        .password(encryptedPassword)
+        .verificationToken(null)
+        .enabled(true)
+        .build();
+
+    // 4. RefreshToken 생성 및 추가
+    createRefreshToken(kakaoUser, oauthToken.getRefresh_token());
+
+    // 5. 사용자 저장
+    return userRepository.save(kakaoUser);
+  }
+
+  private void createRefreshToken(User user, String refreshTokenValue) {
+    RefreshToken refreshToken = new RefreshToken(user, refreshTokenValue);
+    user.getRefreshTokens().add(refreshToken);
+  }
+
+  private void updateRefreshToken(User user, String newTokenValue) {
+    // 기존 RefreshToken 삭제
+    refreshTokenRepository.deleteByUser(user);
+
+    // 새로운 RefreshToken 생성 및 추가
+    createRefreshToken(user, newTokenValue);
+  }
 }

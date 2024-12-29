@@ -2,6 +2,7 @@ package com.momo.config.token.repository;
 
 
 import com.momo.config.token.entity.RefreshToken;
+import com.momo.user.entity.User;
 import java.util.Optional;
 import javax.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -34,4 +35,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
    * @return RefreshToken 엔티티
    */
   Optional<RefreshToken> findByToken(String token);
+  void deleteByUser(User user);
+
 }

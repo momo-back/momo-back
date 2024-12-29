@@ -1,7 +1,7 @@
 package com.momo.meeting.dto;
 
 import com.momo.meeting.constant.FoodCategory;
-import com.momo.meeting.persist.entity.Meeting;
+import com.momo.meeting.entity.Meeting;
 import java.time.LocalDateTime;
 import java.util.Set;
 import javax.validation.constraints.Future;
