@@ -11,9 +11,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.momo.exception.MeetingErrorCode;
-import com.momo.exception.MeetingException;
+import com.momo.meeting.exception.MeetingErrorCode;
+import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.constant.FoodCategory;
+<<<<<<< HEAD
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.dto.MeetingCreateRequest;
 import com.momo.meeting.dto.MeetingCreateResponse;
@@ -22,6 +23,13 @@ import com.momo.meeting.persist.repository.MeetingRepository;
 import com.momo.meeting.validator.MeetingValidator;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
+=======
+import com.momo.meeting.dto.CreateMeetingRequest;
+import com.momo.meeting.entity.Meeting;
+import com.momo.meeting.repository.MeetingRepository;
+import com.momo.mock.MockUser;
+import com.momo.mock.MockUserRepository;
+>>>>>>> develop
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Set;

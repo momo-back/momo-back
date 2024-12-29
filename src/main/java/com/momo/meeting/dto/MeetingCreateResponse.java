@@ -2,7 +2,7 @@ package com.momo.meeting.dto;
 
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
-import com.momo.meeting.persist.entity.Meeting;
+import com.momo.meeting.entity.Meeting;
 import com.momo.user.entity.User;
 
 import java.time.LocalDateTime;

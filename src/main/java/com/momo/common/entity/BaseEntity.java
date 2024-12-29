@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:src/main/java/com/momo/common/entity/BaseEntity.java
 package com.momo.common.entity;
+========
+package com.momo.profile.entity;
+>>>>>>>> develop:src/main/java/com/momo/profile/entity/BaseEntity.java
 
 import java.time.LocalDateTime;
 import javax.persistence.Column;
