@@ -1,4 +1,4 @@
-package com.momo.common.infrastructure.s3.util;
+package com.momo.common.s3.util;
 
 import java.util.UUID;
 

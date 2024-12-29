@@ -1,11 +1,12 @@
-package com.momo.common.infrastructure.s3.service;
+package com.momo.common.s3.service;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.momo.common.infrastructure.s3.exception.S3ErrorCode;
-import com.momo.common.infrastructure.s3.exception.S3Exception;
-import com.momo.common.infrastructure.s3.validate.FileValidator;
+import com.momo.common.s3.exception.S3ErrorCode;
+import com.momo.common.s3.exception.S3Exception;
+import com.momo.common.s3.validate.FileValidator;
+import com.momo.common.s3.util.FileUtils;
 import com.momo.profile.adptor.ImageStorage;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import com.momo.common.infrastructure.s3.util.FileUtils;
 
 @Slf4j
 @Service
