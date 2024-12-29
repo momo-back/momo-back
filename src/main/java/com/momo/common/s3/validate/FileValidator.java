@@ -1,7 +1,7 @@
-package com.momo.common.infrastructure.s3.validate;
+package com.momo.common.s3.validate;
 
-import com.momo.common.infrastructure.s3.exception.S3ErrorCode;
-import com.momo.common.infrastructure.s3.exception.S3Exception;
+import com.momo.common.s3.exception.S3ErrorCode;
+import com.momo.common.s3.exception.S3Exception;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
