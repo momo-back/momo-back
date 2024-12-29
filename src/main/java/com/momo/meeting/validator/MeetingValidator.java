@@ -1,9 +1,8 @@
 package com.momo.meeting.validator;
 
-import com.momo.exception.MeetingErrorCode;
-import com.momo.exception.MeetingException;
-import com.momo.meeting.persist.repository.MeetingRepository;
-import com.momo.user.entity.User;
+import com.momo.meeting.exception.MeetingErrorCode;
+import com.momo.meeting.exception.MeetingException;
+import com.momo.meeting.repository.MeetingRepository;
 import com.momo.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

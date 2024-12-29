@@ -1,15 +1,20 @@
 package com.momo.profile.entity;
 
+import com.momo.common.entity.BaseEntity;
 import com.momo.profile.constant.Gender;
 import com.momo.profile.constant.Mbti;
+import com.momo.user.entity.User;
 import java.time.LocalDate;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,9 +32,9 @@ public class Profile extends BaseEntity {
   private Long id;
 
   // TODO: 회원 연결 및 검증 필요
-  /*@ManyToOne(fetch = FetchType.LAZY)
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
-  private User user;*/
+  private User user;
 
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
