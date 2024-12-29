@@ -2,7 +2,7 @@ package com.momo.common.aspect;
 
 import com.momo.common.exception.CustomException;
 import com.momo.common.exception.ErrorCode;
-import com.momo.profile.persist.reposiroty.ProfileRepository;
+import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.dto.CustomUserDetails;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
