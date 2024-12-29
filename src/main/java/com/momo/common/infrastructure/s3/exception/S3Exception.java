@@ -1,4 +1,4 @@
-package com.momo.common.s3.exception;
+package com.momo.common.infrastructure.s3.exception;
 
 import lombok.Getter;
 
