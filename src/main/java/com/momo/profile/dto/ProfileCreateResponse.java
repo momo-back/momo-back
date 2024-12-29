@@ -2,7 +2,7 @@ package com.momo.profile.dto;
 
 import com.momo.profile.constant.Gender;
 import com.momo.profile.constant.Mbti;
-import com.momo.profile.persist.entity.Profile;
+import com.momo.profile.entity.Profile;
 import java.time.LocalDate;
 import lombok.Builder;
 import lombok.Getter;

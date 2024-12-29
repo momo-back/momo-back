@@ -23,6 +23,7 @@ public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "user_id", nullable = false, updatable = false)
+  //컬럼 이름 유저 아이디 는 그냥 아이디로 되어야 함.
   private Long id;
 
   @Column(name = "email", nullable = false, length = 50)
@@ -65,6 +66,10 @@ public class User {
   public void verify() {
     this.enabled = true; // 계정 활성화
     this.verificationToken = null; // 인증 완료 시 토큰 제거
+  }
+
+  public void setEnabled(boolean enabled) {
+    this.enabled = enabled;
   }
 
 

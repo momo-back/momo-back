@@ -43,6 +43,12 @@ public class RefreshToken {
     this.expiration = expiration;
   }
 
+  // 필요한 생성자 추가
+  public RefreshToken(User user, String token) {
+    this.user = user;
+    this.token = token;
+  }
+
   // 정적 팩토리 메서드
   public static RefreshToken create(User user, String token, LocalDateTime expiration) {
     return new RefreshToken(user, token, expiration);
