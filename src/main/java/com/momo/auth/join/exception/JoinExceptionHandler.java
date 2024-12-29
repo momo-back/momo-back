@@ -1,4 +1,4 @@
-package com.momo.join.exception;
+package com.momo.auth.join.exception;
 
 import com.momo.common.exception.ErrorCode;
 import com.momo.common.exception.ErrorResponse;
