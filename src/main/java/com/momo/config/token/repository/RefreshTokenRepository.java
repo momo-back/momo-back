@@ -2,6 +2,7 @@ package com.momo.config.token.repository;
 
 
 import com.momo.config.token.entity.RefreshToken;
+import com.momo.user.entity.User;
 import java.util.Optional;
 import javax.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -24,8 +25,9 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
    */
   @Modifying
   @Transactional
-  @Query("DELETE FROM RefreshToken rt WHERE rt.user.email = :email")
+  @Query(value = "DELETE FROM refresh_token WHERE user_id = (SELECT id FROM users WHERE email = :email)", nativeQuery = true)
   void deleteByEmail(@Param("email") String email);
+
 
   /**
    * Refresh Token 값으로 엔티티 조회
@@ -33,4 +35,6 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
    * @return RefreshToken 엔티티
    */
   Optional<RefreshToken> findByToken(String token);
+  void deleteByUser(User user);
+
 }

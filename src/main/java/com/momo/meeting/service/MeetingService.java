@@ -1,14 +1,13 @@
 package com.momo.meeting.service;
 
-import com.momo.exception.MeetingErrorCode;
-import com.momo.exception.MeetingException;
-import com.momo.meeting.dto.CreateMeetingRequest;
-import com.momo.meeting.persist.entity.Meeting;
-import com.momo.meeting.persist.repository.MeetingRepository;
-import com.momo.mock.MockUser;
-import com.momo.mock.MockUserRepository;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+
+import com.momo.meeting.dto.MeetingCreateRequest;
+import com.momo.meeting.dto.MeetingCreateResponse;
+import com.momo.meeting.validator.MeetingValidator;
+import com.momo.user.entity.User;
+import com.momo.meeting.entity.Meeting;
+import com.momo.meeting.repository.MeetingRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,36 +16,14 @@ import org.springframework.stereotype.Service;
 public class MeetingService {
 
   private final MeetingRepository meetingRepository;
-  private final MockUserRepository userRepository; // TODO: merge 후 변경
+  private final MeetingValidator meetingValidator;
 
-  public Long createMeeting(CreateMeetingRequest request, Long userId) {
-    validateMeetingDateTime(request.getMeetingDateTime());
-    validateDailyPostLimit(userId);
+  public MeetingCreateResponse createMeeting(User user, MeetingCreateRequest request) {
+    meetingValidator.validateForMeetingCreation(user.getId(), request.getMeetingDateTime());
 
-    // TODO: merge 후 변경
-    MockUser user = userRepository.findById(userId)
-        .orElseThrow(RuntimeException::new);
+    Meeting meeting = request.toEntity(request, user);
+    Meeting saved = meetingRepository.save(meeting);
 
-    Meeting meeting = request.toEntity(request);
-
-    return meetingRepository.save(meeting).getId();
-  }
-
-  private void validateDailyPostLimit(Long userId) {
-    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-    LocalDateTime endOfDay = startOfDay.plusDays(1);
-
-    int todayPostCount = meetingRepository
-        .countByUser_IdAndCreatedAtBetween(userId, startOfDay, endOfDay);
-
-    if (todayPostCount >= 10) {
-      throw new MeetingException(MeetingErrorCode.DAILY_POSTING_LIMIT_EXCEEDED);
-    }
-  }
-
-  private void validateMeetingDateTime(LocalDateTime meetingDateTime) {
-    if (meetingDateTime.isBefore(LocalDateTime.now())) {
-      throw new MeetingException(MeetingErrorCode.INVALID_MEETING_DATE_TIME);
-    }
+    return MeetingCreateResponse.from(saved);
   }
 }
