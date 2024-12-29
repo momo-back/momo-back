@@ -1,9 +1,11 @@
 package com.momo.meeting.controller;
 
-import com.momo.meeting.dto.CreateMeetingRequest;
+import com.momo.common.annotation.RequireProfile;
+import com.momo.meeting.dto.MeetingCreateRequest;
+import com.momo.meeting.dto.MeetingCreateResponse;
 import com.momo.meeting.service.MeetingService;
+import com.momo.user.dto.CustomUserDetails;
 import java.net.URI;
-import java.nio.file.attribute.UserPrincipal;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -20,14 +22,18 @@ public class MeetingController {
 
   private final MeetingService meetingService;
 
+  @RequireProfile
   @PostMapping
-  public ResponseEntity<Long> createMeeting(
-      @AuthenticationPrincipal() UserPrincipal userPrincipal,
-      @Valid @RequestBody CreateMeetingRequest request
+  public ResponseEntity<MeetingCreateResponse> createMeeting(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @Valid @RequestBody MeetingCreateRequest request
   ) {
-    Long meetingId = meetingService.createMeeting(request, 1L); // TODO: 회원의 ID로 변경
+    MeetingCreateResponse response = meetingService.createMeeting(
+        customUserDetails.getUser(),
+        request
+    );
     return ResponseEntity
-        .created(URI.create("api/posts/" + meetingId))
-        .body(meetingId);
+        .created(URI.create("api/posts/" + response.getId()))
+        .body(response);
   }
 }

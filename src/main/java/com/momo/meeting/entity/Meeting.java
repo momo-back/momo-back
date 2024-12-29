@@ -1,6 +1,8 @@
 package com.momo.meeting.entity;
 
 import com.momo.meeting.constant.FoodCategory;
+import com.momo.meeting.constant.MeetingStatus;
+import com.momo.user.entity.User;
 import com.momo.profile.entity.BaseEntity;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -9,9 +11,12 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -24,6 +29,10 @@ public class Meeting extends BaseEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id", nullable = false)
+  private User user;
+
   @Column(nullable = false, length = 60)
   private String title;
 
@@ -31,10 +40,13 @@ public class Meeting extends BaseEntity {
   private LocalDateTime meetingDateTime;
 
   @Column(nullable = false)
-  private Long locationId;
+  private Integer approvedCount;
 
   @Column(nullable = false)
-  private Integer maxParticipants;
+  private Integer maxCount;
+
+  @Column(nullable = false)
+  private Long locationId;
 
   @ElementCollection // 기본적으로 지연로딩
   @Enumerated(EnumType.STRING)
@@ -45,7 +57,7 @@ public class Meeting extends BaseEntity {
 
   private String thumbnailUrl;
 
-  /*@ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id", nullable = false)
-  private User author; // 작성자*/
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private MeetingStatus meetingStatus;
 }

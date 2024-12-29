@@ -1,7 +1,9 @@
 package com.momo.meeting.dto;
 
 import com.momo.meeting.constant.FoodCategory;
+import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.entity.Meeting;
+import com.momo.user.entity.User;
 import java.time.LocalDateTime;
 import java.util.Set;
 import javax.validation.constraints.Future;
@@ -15,7 +17,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class CreateMeetingRequest {
+public class MeetingCreateRequest {
 
   @NotBlank(message = "제목을 입력해주세요.")
   @Size(min = 1, max = 60, message = "제목은 1-60자 사이로 입력해주세요.")
@@ -29,7 +31,7 @@ public class CreateMeetingRequest {
   private Long locationId;
 
   @Min(value = 2, message = "모임 인원은 2명 이상이어야 합니다.")
-  private Integer maxParticipants;
+  private Integer maxCount;
 
   @NotEmpty(message = "카테고리를 1개 이상 선택해주세요.")
   private Set<FoodCategory> categories;
@@ -40,15 +42,18 @@ public class CreateMeetingRequest {
 
   private String thumbnailUrl;
 
-  public Meeting toEntity(CreateMeetingRequest request) {
+  public Meeting toEntity(MeetingCreateRequest request, User user) {
     return Meeting.builder()
+        .user(user)
         .title(request.getTitle())
         .meetingDateTime(request.getMeetingDateTime())
+        .approvedCount(1)
+        .maxCount(request.getMaxCount())
         .locationId(request.getLocationId())
-        .maxParticipants(request.getMaxParticipants())
         .categories(request.getCategories())
         .content(request.getContent())
         .thumbnailUrl(request.getThumbnailUrl())
+        .meetingStatus(MeetingStatus.RECRUITING)
         .build();
   }
 }
