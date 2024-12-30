@@ -6,7 +6,7 @@
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # application-local.yml
-/src/main/resources/application-local.yml
+src/main/resources/application-local.yml
 
 # User-specific stuff
 .idea/**/workspace.xml
