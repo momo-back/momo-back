@@ -22,7 +22,6 @@ public class MeetingController {
 
   private final MeetingService meetingService;
 
-  @RequireProfile
   @PostMapping
   public ResponseEntity<MeetingCreateResponse> createMeeting(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
