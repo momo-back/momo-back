@@ -3,6 +3,7 @@ package com.momo.profile.dto;
 import com.momo.profile.constant.Gender;
 import com.momo.profile.constant.Mbti;
 import com.momo.profile.entity.Profile;
+import com.momo.user.entity.User;
 import java.time.LocalDate;
 import java.util.Optional;
 import lombok.Builder;
@@ -23,10 +24,11 @@ public class ProfileCreateRequest {
 
   private Mbti mbti;
 
-  public Profile toEntity(String profileImageKey) {
+  public Profile toEntity(User user, String profileImageKey) {
     return Profile.builder()
+        .user(user)
         .gender(this.gender)
-        .birthDate(this.birth)
+        .birth(this.birth)
         .profileImageUrl(profileImageKey)
         .introduction(this.getIntroductionOrDefault())
         .mbti(this.getMbtiOrDefault())
