@@ -26,6 +26,6 @@ public class ProfileController {
       @RequestPart(required = false) MultipartFile profileImage
   ) {
     return ResponseEntity.ok(profileService
-        .createProfile(customUserDetails.getId(), request, profileImage));
+        .createProfile(customUserDetails.getUser(), request, profileImage));
   }
 }
