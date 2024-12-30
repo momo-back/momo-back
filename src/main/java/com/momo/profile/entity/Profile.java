@@ -31,7 +31,6 @@ public class Profile extends BaseEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  // TODO: 회원 연결 및 검증 필요
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
@@ -46,9 +45,7 @@ public class Profile extends BaseEntity {
   @Column(nullable = false)
   private String profileImageUrl;
 
-  @Column(nullable = false)
   private String introduction;
 
-  @Column(nullable = false)
   private Mbti mbti;
 }
