@@ -2,14 +2,13 @@ package com.momo.common.aspect;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.momo.common.exception.CustomException;
 import com.momo.common.exception.ErrorCode;
-import com.momo.profile.persist.reposiroty.ProfileRepository;
+import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.dto.CustomUserDetails;
 import com.momo.user.entity.User;
 import org.aspectj.lang.JoinPoint;
