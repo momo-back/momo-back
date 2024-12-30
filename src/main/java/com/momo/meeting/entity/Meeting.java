@@ -1,9 +1,9 @@
 package com.momo.meeting.entity;
 
+import com.momo.common.entity.BaseEntity;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.user.entity.User;
-import com.momo.profile.entity.BaseEntity;
 import java.time.LocalDateTime;
 import java.util.Set;
 import javax.persistence.Column;
