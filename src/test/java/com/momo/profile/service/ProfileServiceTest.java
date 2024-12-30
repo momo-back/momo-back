@@ -17,6 +17,7 @@ import com.momo.profile.entity.Profile;
 import com.momo.profile.repository.ProfileRepository;
 import com.momo.profile.validate.ProfileValidator;
 import com.momo.user.dto.CustomUserDetails;
+import com.momo.user.entity.User;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,15 +48,16 @@ class ProfileServiceTest {
     // given
     ProfileCreateRequest request = createProfileRequest();
     MultipartFile mockImage = mock(MultipartFile.class);
+    User user = createUser();
     String imageUrl = "test-image-url.jpg";
-    Profile profile = request.toEntity(imageUrl);
+    Profile profile = request.toEntity(user, imageUrl);
 
     doNothing().when(profileValidator).validateUser(1L);
     when(profileImageService.getProfileImageUrl(mockImage)).thenReturn(imageUrl);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
     // when
-    ProfileCreateResponse response = profileService.createProfile(1L, request, mockImage);
+    ProfileCreateResponse response = profileService.createProfile(user, request, mockImage);
 
     // then
     verify(profileImageService).getProfileImageUrl(mockImage);
@@ -73,14 +75,15 @@ class ProfileServiceTest {
     // given
     ProfileCreateRequest request = createProfileRequest();
     String imageUrl = "default-image-url.jpg";
-    Profile profile = request.toEntity(imageUrl);
+    User user = createUser();
+    Profile profile = request.toEntity(user, imageUrl);
 
     doNothing().when(profileValidator).validateUser(1L);
     when(profileImageService.getProfileImageUrl(null)).thenReturn(imageUrl);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
     // when
-    ProfileCreateResponse response = profileService.createProfile(1L, request, null);
+    ProfileCreateResponse response = profileService.createProfile(user, request, null);
 
     verify(profileRepository).save(any(Profile.class));
     verify(profileImageService).getProfileImageUrl(null);
@@ -105,6 +108,7 @@ class ProfileServiceTest {
   @DisplayName("성별 누락 시 - 예외 발생")
   void createProfile_WithoutGender_ThrowsException() {
     // given
+    User user = createUser();
     ProfileCreateRequest request = ProfileCreateRequest.builder()
         .gender(null)
         .birth(LocalDate.of(1990, 1, 1))
@@ -116,7 +120,7 @@ class ProfileServiceTest {
     doNothing().when(profileValidator).validateUser(1L);
 
     // then
-    assertThatThrownBy(() -> profileService.createProfile(1L, request, null))
+    assertThatThrownBy(() -> profileService.createProfile(user, request, null))
         .isInstanceOf(ProfileException.class);
   }
 
@@ -124,6 +128,7 @@ class ProfileServiceTest {
   @DisplayName("생년월일 누락 시 - 예외 발생")
   void createProfile_WithoutBirthDate_ThrowsException() {
     // given
+    User user = createUser();
     ProfileCreateRequest request = ProfileCreateRequest.builder()
         .gender(Gender.MALE)
         .birth(null)
@@ -133,7 +138,7 @@ class ProfileServiceTest {
 
     // when
     // then
-    assertThatThrownBy(() -> profileService.createProfile(1L, request, null))
+    assertThatThrownBy(() -> profileService.createProfile(user, request, null))
         .isInstanceOf(ProfileException.class);
   }
 
@@ -141,6 +146,7 @@ class ProfileServiceTest {
   @DisplayName("미래 생년월일 입력 시 - 예외 발생")
   void createProfile_WithFutureBirthDate_ThrowsException() {
     // given
+    User user = createUser();
     ProfileCreateRequest request = ProfileCreateRequest.builder()
         .gender(Gender.MALE)
         .birth(LocalDate.now().plusDays(1))
@@ -152,7 +158,19 @@ class ProfileServiceTest {
     doNothing().when(profileValidator).validateUser(1L);
 
     // then
-    assertThatThrownBy(() -> profileService.createProfile(1L, request, null))
+    assertThatThrownBy(() -> profileService.createProfile(user, request, null))
         .isInstanceOf(ProfileException.class);
+  }
+
+  User createUser(){
+    return User.builder()
+        .id(1L)
+        .email("test@gmail.com")
+        .password("testpassword")
+        .nickname("testnickname")
+        .phone("01012345678")
+        .verificationToken(null)
+        .enabled(true)
+        .build();
   }
 }
