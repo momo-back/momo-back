@@ -67,7 +67,8 @@ public class SecurityConfig {
             .antMatchers(
                 EndpointConstants.ROOT,
                 EndpointConstants.USERS_API,
-                EndpointConstants.TOKEN_REISSUE
+                EndpointConstants.TOKEN_REISSUE,
+                "/h2-console/**"
             ).permitAll()
             .anyRequest().authenticated()
         )

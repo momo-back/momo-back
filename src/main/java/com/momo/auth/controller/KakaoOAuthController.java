@@ -1,3 +1,4 @@
+/*
 package com.momo.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,7 +25,7 @@ import org.springframework.web.client.RestTemplate;
 @RequestMapping("/api/v1/oauth/kakao")
 public class KakaoOAuthController {
 
-  @Value("${lwj.key}")
+  //@Value("${lwj.key}")
   private String lwjKey;
 
   @Autowired
@@ -114,3 +115,4 @@ public class KakaoOAuthController {
     }
   }
 }
+*/
