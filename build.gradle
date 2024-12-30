@@ -25,13 +25,14 @@ dependencies {
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+	runtimeOnly 'com.h2database:h2'
+
 	// AWS S3
 	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.174'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
-	implementation 'com.amazonaws:aws-java-sdk-s3:1.12.570'
 
 	// jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
