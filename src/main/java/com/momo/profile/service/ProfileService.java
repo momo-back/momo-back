@@ -7,6 +7,8 @@ import com.momo.profile.entity.Profile;
 import com.momo.profile.repository.ProfileRepository;
 import com.momo.profile.validate.ProfileRequiredValueValidator;
 import com.momo.profile.validate.ProfileValidator;
+import com.momo.user.dto.CustomUserDetails;
+import com.momo.user.entity.User;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,14 +25,14 @@ public class ProfileService {
   private final ProfileImageService profileImageService;
 
   public ProfileCreateResponse createProfile(
-      Long userId,
+      User user,
       ProfileCreateRequest request,
       MultipartFile profileImage
   ) {
-    validateForProfileCreation(userId, request.getGender(), request.getBirth());
+    validateForProfileCreation(user.getId(), request.getGender(), request.getBirth());
 
     String profileImageUrl = profileImageService.getProfileImageUrl(profileImage);
-    Profile profile = request.toEntity(profileImageUrl);
+    Profile profile = request.toEntity(user, profileImageUrl);
 
     Profile savedProfile = profileRepository.save(profile);
     return ProfileCreateResponse.from(savedProfile);

@@ -40,7 +40,7 @@ public class Profile extends BaseEntity {
   private Gender gender;
 
   @Column(nullable = false)
-  private LocalDate birthDate;
+  private LocalDate birth;
 
   @Column(nullable = false)
   private String profileImageUrl;

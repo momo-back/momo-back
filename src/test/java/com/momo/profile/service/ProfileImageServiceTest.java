@@ -72,6 +72,9 @@ class ProfileImageServiceTest {
     // when & then
     assertThatThrownBy(() -> profileImageService.getProfileImageUrl(mockImage))
         .isInstanceOf(ProfileException.class)
-        .hasFieldOrPropertyWithValue("ProfileErrorCode", ProfileErrorCode.INVALID_IMAGE_FORMAT);
+        .hasFieldOrPropertyWithValue(
+            "ProfileErrorCode",
+            ProfileErrorCode.INVALID_IMAGE_FORMAT
+        );
   }
 }
