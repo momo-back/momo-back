@@ -3,8 +3,6 @@ package com.momo.meeting.dto;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.entity.Meeting;
-import com.momo.user.entity.User;
-
 import java.time.LocalDateTime;
 import java.util.Set;
 import lombok.Builder;
@@ -15,7 +13,6 @@ import lombok.Getter;
 public class MeetingCreateResponse {
 
   private Long id;
-  private User user;
   private String title;
   private LocalDateTime meetingDateTime;
   private Integer approvedCount;
@@ -29,7 +26,6 @@ public class MeetingCreateResponse {
   public static MeetingCreateResponse from(Meeting meeting) {
     return MeetingCreateResponse.builder()
         .id(meeting.getId())
-        .user(meeting.getUser())
         .title(meeting.getTitle())
         .meetingDateTime(meeting.getMeetingDateTime())
         .approvedCount(meeting.getApprovedCount())

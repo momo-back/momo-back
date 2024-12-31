@@ -27,7 +27,7 @@ public class MeetingCreateRequest {
   @Future(message = "모임 날짜는 현재 시간 이후로 선택해주세요.")
   private LocalDateTime meetingDateTime;
 
-  @NotBlank(message = "모임 장소를 입력해주세요.")
+  @NotNull(message = "모임 장소를 입력해주세요.")
   private Long locationId;
 
   @Min(value = 2, message = "모임 인원은 2명 이상이어야 합니다.")

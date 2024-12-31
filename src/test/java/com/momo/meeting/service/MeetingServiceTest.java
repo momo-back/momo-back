@@ -1,10 +1,10 @@
 package com.momo.meeting.service;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -19,7 +19,6 @@ import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.repository.MeetingRepository;
 import com.momo.meeting.validator.MeetingValidator;
 import com.momo.user.entity.User;
-import com.momo.user.repository.UserRepository;
 import java.time.LocalDateTime;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
@@ -36,9 +35,6 @@ class MeetingServiceTest {
   private MeetingRepository meetingRepository;
 
   @Mock
-  private UserRepository userRepository;
-
-  @InjectMocks
   private MeetingValidator meetingValidator;
 
   @InjectMocks
@@ -52,6 +48,7 @@ class MeetingServiceTest {
     MeetingCreateRequest request = createValidRequest();
     Meeting meeting = createMeeting(user, request);
 
+    doNothing().when(meetingValidator).validateForMeetingCreation(eq(user.getId()), any());
     when(meetingRepository.save(any(Meeting.class))).thenReturn(meeting);
 
     // when
@@ -61,39 +58,21 @@ class MeetingServiceTest {
     verify(meetingRepository).save(any(Meeting.class));
     assertThat(response)
         .extracting(
-            "id", "user", "title",
+            "id", "title",
             "meetingDateTime", "approvedCount", "maxCount",
             "locationId", "categories", "content",
             "thumbnailUrl", "meetingStatus"
-        ).containsExactly(1L, user, response.getTitle(),
-            response.getMeetingDateTime(), response.getApprovedCount(), response.getMaxCount(),
-            response.getLocationId(), response.getCategories(), response.getContent(),
+        ).containsExactly(
+            1L, response.getTitle(),
+            response.getMeetingDateTime(), response.getApprovedCount(),
+            response.getMaxCount(), response.getLocationId(),
+            response.getCategories(), response.getContent(),
             response.getThumbnailUrl(), response.getMeetingStatus());
   }
 
   @Test
-  @DisplayName("하루 게시글 제한(10개) 초과 - 예외 발생")
-  void createMeetingPost_ExceedDailyLimit_ThrowsException() {
-    // given
-    User user = createUser();
-    MeetingCreateRequest request = createValidRequest();
-
-    when(meetingRepository.countByUser_IdAndCreatedAtBetween(eq(user.getId()), any(), any()))
-        .thenReturn(10);
-
-    // when & then
-    assertThatThrownBy(() ->
-        meetingService.createMeeting(user, request))
-        .isInstanceOf(MeetingException.class)
-        .hasFieldOrPropertyWithValue(
-            "meetingErrorCode",
-            MeetingErrorCode.DAILY_POSTING_LIMIT_EXCEEDED
-        );
-  }
-
-  @Test
   @DisplayName("존재하지 않는 사용자 - 예외 발생")
-  void createMeetingPost_UserNotFound_ThrowsException() {
+  void createMeeting_UserNotFound_ThrowsException() {
     // given
     User mockUser = mock(User.class);
     MeetingCreateRequest request = createValidRequest();
@@ -102,21 +81,6 @@ class MeetingServiceTest {
     assertThatThrownBy(() ->
         meetingService.createMeeting(mockUser, request))
         .isInstanceOf(RuntimeException.class);
-  }
-
-  @Test
-  @DisplayName("미래가 아닌 모임 날짜 - 예외 발생")
-  void createMeetingPost_PastDateTime_ThrowsException() {
-    // given
-    User mockUser = mock(User.class);
-    MeetingCreateRequest request = createRequestWithInvalidDateTime();
-
-    // when & then
-    assertThatThrownBy(() ->
-        meetingService.createMeeting(mockUser, request))
-        .isInstanceOf(MeetingException.class)
-        .hasFieldOrPropertyWithValue(
-            "meetingErrorCode", MeetingErrorCode.INVALID_MEETING_DATE_TIME);
   }
 
   private static User createUser() {
@@ -150,18 +114,6 @@ class MeetingServiceTest {
     return MeetingCreateRequest.builder()
         .title("테스트 모임")
         .meetingDateTime(LocalDateTime.now().plusDays(1))
-        .locationId(123456L)
-        .maxCount(6)
-        .categories(Set.of(FoodCategory.KOREAN, FoodCategory.JAPANESE))
-        .content("테스트 내용")
-        .thumbnailUrl("test-thumbnail-url.jpg")
-        .build();
-  }
-
-  private MeetingCreateRequest createRequestWithInvalidDateTime() {
-    return MeetingCreateRequest.builder()
-        .title("테스트 모임")
-        .meetingDateTime(LocalDateTime.now().minusDays(1))
         .locationId(123456L)
         .maxCount(6)
         .categories(Set.of(FoodCategory.KOREAN, FoodCategory.JAPANESE))
