@@ -1,6 +1,5 @@
 package com.momo.meeting.controller;
 
-import com.momo.common.annotation.RequireProfile;
 import com.momo.meeting.dto.MeetingCreateRequest;
 import com.momo.meeting.dto.MeetingCreateResponse;
 import com.momo.meeting.service.MeetingService;
