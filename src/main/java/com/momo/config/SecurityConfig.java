@@ -4,10 +4,13 @@ import com.momo.auth.security.CustomLogoutFilter;
 import com.momo.auth.security.LoginFilter;
 import com.momo.config.constants.EndpointConstants;
 import com.momo.config.token.repository.RefreshTokenRepository;
+import com.momo.user.service.CustomUserDetailsService;
 import com.momo.user.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -15,30 +18,29 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
   private final AuthenticationConfiguration authenticationConfiguration;
+  private final CustomUserDetailsService customUserDetailsService;
   private final UserRepository userRepository;
   private final JWTUtil jwtUtil;
   private final RefreshTokenRepository refreshTokenRepository;
 
-
-  public SecurityConfig(AuthenticationConfiguration authenticationConfiguration,
-      UserRepository userRepository,JWTUtil jwtUtil,
+  public SecurityConfig(
+      AuthenticationConfiguration authenticationConfiguration,
+      CustomUserDetailsService customUserDetailsService,
+      UserRepository userRepository,
+      JWTUtil jwtUtil,
       RefreshTokenRepository refreshTokenRepository) {
     this.authenticationConfiguration = authenticationConfiguration;
+    this.customUserDetailsService = customUserDetailsService;
     this.userRepository = userRepository;
     this.jwtUtil = jwtUtil;
     this.refreshTokenRepository = refreshTokenRepository;
-
-  }
-
-  @Bean
-  public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-    return configuration.getAuthenticationManager();
   }
 
   @Bean
@@ -47,16 +49,23 @@ public class SecurityConfig {
   }
 
   @Bean
+  public DaoAuthenticationProvider authenticationProvider() {
+    DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+    authProvider.setUserDetailsService(customUserDetailsService);
+    authProvider.setPasswordEncoder(bCryptPasswordEncoder());
+    return authProvider;
+  }
+
+  // RestTemplate 빈 등록
+  @Bean
+  public RestTemplate restTemplate() {
+    return new RestTemplate();
+  }
+
+  @Bean
   public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
-    // JWT 기반 인증 필터 추가
     JWTFilter jwtFilter = new JWTFilter(userRepository, jwtUtil);
-
-    // 로그인 필터 추가
-    LoginFilter loginFilter = new LoginFilter(authenticationManager(authenticationConfiguration),
-        jwtUtil, refreshTokenRepository, userRepository);
-
-    // 로그아웃 필터 추가
+    LoginFilter loginFilter = new LoginFilter(authenticationManager(), jwtUtil, refreshTokenRepository, userRepository);
     CustomLogoutFilter logoutFilter = new CustomLogoutFilter(jwtUtil, refreshTokenRepository);
 
     http
@@ -67,18 +76,27 @@ public class SecurityConfig {
             .antMatchers(
                 EndpointConstants.ROOT,
                 EndpointConstants.USERS_API,
+                EndpointConstants.KAKAO_API,
                 EndpointConstants.TOKEN_REISSUE,
+                EndpointConstants.KAKAO_LOGIN,
                 "/h2-console/**"
             ).permitAll()
             .anyRequest().authenticated()
         )
-        .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) // 프레임 옵션 비활성화
-        .sessionManagement(session -> session
-            .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // JWT 기반으로 Stateless 설정
-        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) // JWT 필터 추가
-        .addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class) // Login 필터 추가
-        .addFilterBefore(logoutFilter, UsernamePasswordAuthenticationFilter.class); // Logout 필터 추가
+        .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
+        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authenticationProvider(authenticationProvider())
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(loginFilter, UsernamePasswordAuthenticationFilter.class)
+        .addFilterBefore(logoutFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
   }
+
+  // 기존 AuthenticationManager 메서드 사용
+  @Bean
+  public AuthenticationManager authenticationManager() throws Exception {
+    return authenticationConfiguration.getAuthenticationManager();
+  }
 }
+

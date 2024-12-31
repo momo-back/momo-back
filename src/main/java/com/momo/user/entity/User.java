@@ -2,16 +2,20 @@ package com.momo.user.entity;
 
 import com.momo.config.token.entity.RefreshToken;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Builder
+@Setter
 @Table(name = "users", uniqueConstraints = {
     @UniqueConstraint(columnNames = "email"),
     @UniqueConstraint(columnNames = "phone"),
@@ -23,7 +27,6 @@ public class User {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "user_id", nullable = false, updatable = false)
-  //컬럼 이름 유저 아이디 는 그냥 아이디로 되어야 함.
   private Long id;
 
   @Column(name = "email", nullable = false, length = 50)
@@ -32,14 +35,17 @@ public class User {
   @Column(name = "password", nullable = false, length = 255)
   private String password;
 
-  @Column(name = "nickname", nullable = false, length = 20)
+  @Column(name = "nickname", nullable = false, length = 200)
   private String nickname;
 
-  @Column(name = "phone", nullable = false, length = 20)
-  private String phone;
+  @Column(name = "phone", nullable = true, length = 20) // nullable = true 설정
+  private String phone = ""; // 기본값 설정
 
   @Column(name = "verification_token", length = 255) // 추가 필드
   private String verificationToken;
+
+  @Column(name = "access_token", length = 255)
+  private String accessToken;
 
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
@@ -49,6 +55,9 @@ public class User {
 
   @Column(name = "enabled", nullable = false)
   private boolean enabled = false; // 기본값 비활성화
+
+  @Column(nullable = false)
+  private boolean oauthUser = false; // 기본값은 false
 
   @PrePersist
   protected void onCreate() {
@@ -72,8 +81,21 @@ public class User {
     this.enabled = enabled;
   }
 
+  public boolean isOauthUser() {
+    return oauthUser;
+  }
+
+  public void setOauthUser(boolean oauthUser) {
+    this.oauthUser = oauthUser;
+  }
+
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<RefreshToken> refreshTokens = new ArrayList<>();
+
+  public List<GrantedAuthority> getAuthorities() {
+    return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
+  }
+
 
 }
