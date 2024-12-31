@@ -18,6 +18,7 @@ public class ProfileImageService {
 
   private final ImageStorage imageStorage;
 
+  // TODO: URL로 이미지 접근하려면 S3 버킷 public으로 수정 필요
   public String getProfileImageUrl(MultipartFile profileImage) {
     return Optional.ofNullable(profileImage)
         .filter(imageFile -> !imageFile.isEmpty())
