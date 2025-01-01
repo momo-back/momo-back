@@ -19,12 +19,9 @@ public class MeetingValidator {
   private final UserRepository userRepository;
 
   public void validateForMeetingCreation(Long userId, LocalDateTime meetingDateTime) {
-    // TODO: 일일 모임 생성 제한 검증 Redis 고려
     validateDailyPostLimit(userId);
     validateMeetingDateTime(meetingDateTime);
-    if (!userRepository.existsById(userId)) {
-      throw new CustomException(ErrorCode.USER_NOT_FOUND);
-    }
+    validateUser(userId);
   }
 
   private void validateDailyPostLimit(Long userId) {
@@ -42,6 +39,12 @@ public class MeetingValidator {
   private void validateMeetingDateTime(LocalDateTime meetingDateTime) {
     if (meetingDateTime.isBefore(LocalDateTime.now())) {
       throw new MeetingException(MeetingErrorCode.INVALID_MEETING_DATE_TIME);
+    }
+  }
+
+  private void validateUser(Long userId) {
+    if (!userRepository.existsById(userId)) {
+      throw new CustomException(ErrorCode.USER_NOT_FOUND);
     }
   }
 }
