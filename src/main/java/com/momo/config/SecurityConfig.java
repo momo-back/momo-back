@@ -5,8 +5,10 @@ import com.momo.auth.security.LoginFilter;
 import com.momo.config.constants.EndpointConstants;
 import com.momo.config.token.repository.RefreshTokenRepository;
 import com.momo.user.repository.UserRepository;
+import java.net.http.HttpRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -68,9 +70,11 @@ public class SecurityConfig {
                 EndpointConstants.ROOT,
                 EndpointConstants.USERS_API,
                 EndpointConstants.TOKEN_REISSUE,
-                "/h2-console/**",
+                EndpointConstants.H2,
                 "/ws/**"
             ).permitAll()
+            .antMatchers(HttpMethod.GET, EndpointConstants.MEETINGS).permitAll()
+            .antMatchers(HttpMethod.POST, EndpointConstants.MEETINGS).authenticated()
             .anyRequest().authenticated()
         )
         .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())) // 프레임 옵션 비활성화
