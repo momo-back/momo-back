@@ -68,7 +68,8 @@ public class SecurityConfig {
                 EndpointConstants.ROOT,
                 EndpointConstants.USERS_API,
                 EndpointConstants.TOKEN_REISSUE,
-                "/h2-console/**"
+                "/h2-console/**",
+                "/ws/**"
             ).permitAll()
             .anyRequest().authenticated()
         )
