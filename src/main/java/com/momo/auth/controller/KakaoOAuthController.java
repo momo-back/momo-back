@@ -52,7 +52,7 @@ public class KakaoOAuthController {
         "accessToken", oauthToken.getAccess_token(),
         "refreshToken", oauthToken.getRefresh_token(),
         "userId", kakaoUser.getId(),
-        "message", "Kakao login successful"
+        "message", "카카오 계정으로 로그인되었습니다."
     ));
   }
 }

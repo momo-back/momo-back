@@ -79,7 +79,8 @@ public class SecurityConfig {
                 EndpointConstants.KAKAO_API,
                 EndpointConstants.TOKEN_REISSUE,
                 EndpointConstants.KAKAO_LOGIN,
-                "/h2-console/**"
+                EndpointConstants.KAKAO_LOGOUT,
+                EndpointConstants.H2
             ).permitAll()
             .anyRequest().authenticated()
         )
