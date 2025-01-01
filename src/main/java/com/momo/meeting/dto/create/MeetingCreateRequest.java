@@ -27,8 +27,17 @@ public class MeetingCreateRequest {
   @Future(message = "모임 날짜는 현재 시간 이후로 선택해주세요.")
   private LocalDateTime meetingDateTime;
 
-  @NotNull(message = "모임 장소를 입력해주세요.")
+  @NotNull(message = "위치 아이디 누락")
   private Long locationId;
+
+  @NotNull(message = "위도 누락")
+  private Double latitude;
+
+  @NotNull(message = "경도 누락")
+  private Double longitude;
+
+  @NotNull(message = "주소 누락")
+  private String address;
 
   @Min(value = 2, message = "모임 인원은 2명 이상이어야 합니다.")
   private Integer maxCount;
@@ -46,11 +55,14 @@ public class MeetingCreateRequest {
     return Meeting.builder()
         .user(user)
         .title(request.getTitle())
+        .locationId(request.getLocationId())
+        .latitude(request.getLatitude())
+        .longitude(request.getLongitude())
+        .address(request.getAddress())
         .meetingDateTime(request.getMeetingDateTime())
         .approvedCount(1)
         .maxCount(request.getMaxCount())
-        .locationId(request.getLocationId())
-        .categories(request.getCategories())
+        .category(request.getCategories())
         .content(request.getContent())
         .thumbnailUrl(request.getThumbnailUrl())
         .meetingStatus(MeetingStatus.RECRUITING)
