@@ -8,8 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum MeetingStatus {
 
   RECRUITING("모집 중"),
-  CLOSED("모집 완료"),
-  EXPIRED("기간 만료");
+  CLOSED("모집 완료");
 
   private final String description;
 }
