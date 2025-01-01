@@ -70,7 +70,8 @@ public class SecurityConfig {
                 EndpointConstants.ROOT,
                 EndpointConstants.USERS_API,
                 EndpointConstants.TOKEN_REISSUE,
-                EndpointConstants.H2
+                EndpointConstants.H2,
+                "/ws/**"
             ).permitAll()
             .antMatchers(HttpMethod.GET, EndpointConstants.MEETINGS).permitAll()
             .antMatchers(HttpMethod.POST, EndpointConstants.MEETINGS).authenticated()
