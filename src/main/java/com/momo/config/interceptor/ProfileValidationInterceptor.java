@@ -2,9 +2,11 @@ package com.momo.config.interceptor;
 
 import com.momo.common.exception.CustomException;
 import com.momo.common.exception.ErrorCode;
+import com.momo.config.constants.ExcludePath;
 import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.dto.CustomUserDetails;
-import com.momo.user.entity.User;
+import java.util.EnumSet;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +21,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @RequiredArgsConstructor
 public class ProfileValidationInterceptor implements HandlerInterceptor {
 
+  private static final Set<ExcludePath> EXCLUDE_PATHS = EnumSet.allOf(ExcludePath.class);
   private final ProfileRepository profileRepository;
 
   @Override
@@ -27,18 +30,38 @@ public class ProfileValidationInterceptor implements HandlerInterceptor {
       HttpServletResponse response,
       Object handle
   ) {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    String requestURI = request.getRequestURI();
+    String method = request.getMethod();
 
-    if (auth != null && auth.isAuthenticated()) {
-      Long userId = ((CustomUserDetails) auth.getPrincipal()).getId();
-      boolean hasProfile = profileRepository.existsByUser_Id(userId);
-
-      log.info("======================== 인터셉터 ========================");
-      if (!hasProfile) {
-        // TODO: 프로필 생성 페이지로 리다이렉트 시킬지 결정 필요
-        throw new CustomException(ErrorCode.NOT_EXISTS_PROFILE);
-      }
+    if (isExcludePath(requestURI, method)) {
+      log.info("======================== 인터셉터 패스 ========================");
+      return true;
     }
+
+    log.info("======================== 인터셉터 ========================");
+    validateUserProfile(getAuthenticatedUserId());
     return true;
+  }
+
+  private boolean isExcludePath(String requestURI, String method) {
+    return EXCLUDE_PATHS.stream()
+        .anyMatch(exclude ->
+            exclude.getPath().equals(requestURI) &&
+                exclude.getMethod().name().equals(method)
+        );
+  }
+
+  private void validateUserProfile(Long userId) {
+    if (!profileRepository.existsByUser_Id(userId)) {
+      throw new CustomException(ErrorCode.NOT_EXISTS_PROFILE);
+    }
+  }
+
+  private Long getAuthenticatedUserId() {
+    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null || !auth.isAuthenticated()) {
+      throw new CustomException(ErrorCode.USER_NOT_FOUND);
+    }
+    return ((CustomUserDetails) auth.getPrincipal()).getId();
   }
 }
