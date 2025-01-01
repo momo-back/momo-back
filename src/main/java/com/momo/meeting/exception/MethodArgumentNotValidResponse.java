@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public class MeetingErrorResponse {
+public class MethodArgumentNotValidResponse {
 
   private final int status;
   private final String message;
