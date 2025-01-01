@@ -17,12 +17,16 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Meeting extends BaseEntity {
 
   @Id
@@ -37,20 +41,29 @@ public class Meeting extends BaseEntity {
   private String title;
 
   @Column(nullable = false)
-  private LocalDateTime meetingDateTime;
+  private Long locationId;
 
   @Column(nullable = false)
-  private Integer approvedCount;
+  private Double latitude;
+
+  @Column(nullable = false)
+  private Double longitude;
+
+  @Column(nullable = false)
+  private String address;
+
+  @Column(nullable = false)
+  private LocalDateTime meetingDateTime;
 
   @Column(nullable = false)
   private Integer maxCount;
 
   @Column(nullable = false)
-  private Long locationId;
+  private Integer approvedCount;
 
   @ElementCollection // 기본적으로 지연로딩
   @Enumerated(EnumType.STRING)
-  private Set<FoodCategory> categories;
+  private Set<FoodCategory> category;
 
   @Column(nullable = false, length = 600)
   private String content;
