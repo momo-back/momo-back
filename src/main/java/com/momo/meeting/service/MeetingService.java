@@ -28,10 +28,9 @@ public class MeetingService {
   @Transactional
   public MeetingCreateResponse createMeeting(User user, MeetingCreateRequest request) {
     meetingValidator.validateForMeetingCreation(user.getId(), request.getMeetingDateTime());
-
     Meeting meeting = request.toEntity(request, user);
-    Meeting saved = meetingRepository.save(meeting);
 
+    Meeting saved = meetingRepository.save(meeting);
     return MeetingCreateResponse.from(saved);
   }
 
@@ -59,8 +58,11 @@ public class MeetingService {
   }
 
   private MeetingCursor createCursor(List<MeetingToMeetingDtoProjection> meetingProjections) {
-    MeetingToMeetingDtoProjection lastProjection = meetingProjections.get(
-        meetingProjections.size() - 1);
+    if (meetingProjections.isEmpty()) {
+      return null;
+    }
+    MeetingToMeetingDtoProjection lastProjection = meetingProjections
+        .get(meetingProjections.size() - 1);
     return MeetingCursor.of(lastProjection.getId(), lastProjection.getDistance());
   }
 
