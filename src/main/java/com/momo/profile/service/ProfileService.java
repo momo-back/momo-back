@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
@@ -24,6 +25,7 @@ public class ProfileService {
   private final ProfileRepository profileRepository;
   private final ProfileImageService profileImageService;
 
+  @Transactional
   public ProfileCreateResponse createProfile(
       User user,
       ProfileCreateRequest request,
