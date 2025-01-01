@@ -44,9 +44,6 @@ public class User {
   @Column(name = "verification_token", length = 255) // 추가 필드
   private String verificationToken;
 
-  @Column(name = "access_token", length = 255)
-  private String accessToken;
-
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
