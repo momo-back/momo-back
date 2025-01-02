@@ -98,6 +98,20 @@ public class ChatRoomService {
         .collect(Collectors.toList());
   }
 
+  // 참여중인 채팅방 참여자 목록 조회
+  public List<Long> getRoomReaders(Long userId, Long chatRoomId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+    ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+        .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
+    if(!chatRoomRepository.existsByReaderContains(user)){
+      throw new RuntimeException("해당 채팅방에 참여중이 아닙니다.");
+    }
+
+    return chatRoom.getReader().stream()
+        .map(User::getId)
+        .collect(Collectors.toList());
+  }
 
 
 

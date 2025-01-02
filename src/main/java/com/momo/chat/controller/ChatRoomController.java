@@ -21,7 +21,7 @@ public class ChatRoomController {
   private final ChatRoomService chatRoomService;
   // 채팅방 생성, 입장 시 채팅방 구독, 채팅방 삭제, 퇴장, 강퇴시 채팅방 구독 해제 필요
   // 채팅방 생성
-  @PostMapping("{meetingId}")
+  @PostMapping("/{meetingId}")
   public ResponseEntity<ChatRoomResponseDto> createRoom(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long meetingId
@@ -54,7 +54,7 @@ public class ChatRoomController {
   }
 
   // 참여중인 채팅방 정보 조회
-  @GetMapping("{chatRoomId}")
+  @GetMapping("/{chatRoomId}")
   public ResponseEntity<ChatRoomResponseDto> getRoom(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long chatRoomId
@@ -74,7 +74,14 @@ public class ChatRoomController {
     return ResponseEntity.ok().body(roomData);
   }
 
-
-
-
+  // 참여중인 채팅방 참여자 목록 조회
+  @GetMapping("/{chatRoomId}/participants")
+  public ResponseEntity<List<Long>> getRoomReaders(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long chatRoomId
+  ) {
+    List<Long> participants = chatRoomService.getRoomReaders(
+        customUserDetails.getUser().getId(), chatRoomId);
+    return ResponseEntity.ok().body(participants);
+  }
 }

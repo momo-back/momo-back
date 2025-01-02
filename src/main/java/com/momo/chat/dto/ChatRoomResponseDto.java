@@ -35,7 +35,7 @@ public class ChatRoomResponseDto {
     }
 
     return new ChatRoomResponseDto(chatRoom.getId(), chatRoom.getMeeting().getId(), chatRoom.getHost().getId(), readerId);
-
   }
+
 
 }
