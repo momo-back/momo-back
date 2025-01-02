@@ -87,7 +87,7 @@ public class SecurityConfig {
                 EndpointConstants.KAKAO_LOGIN,
                 EndpointConstants.KAKAO_LOGOUT,
                 EndpointConstants.H2,
-                "/ws/**"
+                EndpointConstants.WEBSOCKET
             ).permitAll()
             .antMatchers(HttpMethod.GET, EndpointConstants.MEETINGS).permitAll()
             .antMatchers(HttpMethod.POST, EndpointConstants.MEETINGS).authenticated()

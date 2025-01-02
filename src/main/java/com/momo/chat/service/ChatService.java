@@ -45,15 +45,15 @@ public class ChatService {
     messagingTemplate.convertAndSend("/sub/chat/room/" + dto.getRoomId(), sendMessage);
   }
 
+  @Transactional
+  public void enterRoom(Long userId, ChatRequestDto dto) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+    messagingTemplate.convertAndSend("/sub/chat/room/" + dto.getRoomId(),
+        user.getNickname() + "님이 입장했습니다.");
+  }
 
-//  // 채팅 메세지 저장
-//  @Transactional
-//  public void saveMessage(Long roomId, ChatMessageDto requestDto) {
-//    ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-//        .orElseThrow(() -> new RuntimeException("채팅방이 없습니다."));
-//
-//    Chat chat = requestDto.toEntity(chatRoom);
-//    chatRepository.save(chat);
-//  }
+
+
 
 }

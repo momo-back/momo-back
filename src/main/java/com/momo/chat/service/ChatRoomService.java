@@ -7,6 +7,9 @@ import com.momo.chat.repository.ChatRoomRepository;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.repository.MeetingRepository;
 import com.momo.user.entity.User;
+import com.momo.user.repository.UserRepository;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -17,15 +20,22 @@ public class ChatRoomService {
   private final ChatRepository chatRepository;
   private final ChatRoomRepository chatRoomRepository;
   private final MeetingRepository meetingRepository;
+  private final UserRepository userRepository;
 
   // 채팅방 생성
   public ChatRoomResponseDto createChatRoom(Long userId, long meetingId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
     Meeting meeting = meetingRepository.findById(meetingId)
         .orElseThrow(() -> new RuntimeException("해당 모임이 없습니다."));
-    User user = meeting.getUser();
+
+    List<User> readers = new ArrayList<>();
+    readers.add(user);
+
     ChatRoom chatRoom = ChatRoom.builder()
         .host(user)
         .meeting(meeting)
+        .reader(readers)
         .build();
 
     chatRoomRepository.save(chatRoom);
@@ -34,18 +44,32 @@ public class ChatRoomService {
 
   }
 
+  // 채팅방 입장
+  public ChatRoomResponseDto joinRoom(Long userId, long meetingId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+    ChatRoom chatRoom = chatRoomRepository.findByMeetingId(meetingId)
+        .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
 
+    List<User> readers = chatRoom.getReader();
+    readers.add(user);
+    chatRoomRepository.save(chatRoom);
 
+    return ChatRoomResponseDto.of(chatRoom);
+  }
 
+  // 채팅방 퇴장
+  public ChatRoomResponseDto leaveRoom(Long userId, long meetingId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+    ChatRoom chatRoom = chatRoomRepository.findByMeetingId(meetingId)
+        .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
 
+    List<User> readers = chatRoom.getReader();
+    readers.remove(user);
+    chatRoomRepository.save(chatRoom);
 
-//  public void createChatRoom(User user, Long meetingId) {
-//    Meeting meeting = meetingRepository.findById(meetingId).orElseThrow();
-//    ChatRoom chatRoom = ChatRoom.builder()
-//                                .user(user)
-//                                .meeting(meeting)
-//                                .build();
-//    chatRoomRepository.save(chatRoom);
-//  }
+    return ChatRoomResponseDto.of(chatRoom);
+  }
 
 }
