@@ -59,8 +59,21 @@ public class ChatRoomController {
       @AuthenticationPrincipal CustomUserDetails customUserDetails
   ) {
     List<ChatRoomResponseDto> roomData = chatRoomService.getRooms(
-        customUserDetails.getUser());
+        customUserDetails.getUser().getId());
     return ResponseEntity.ok().body(roomData);
   }
+
+  // 채팅방 정보 조회
+  @GetMapping
+  public ResponseEntity<ChatRoomResponseDto> getRoom(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @RequestParam Long chatRoomId
+  ) {
+    ChatRoomResponseDto roomData = chatRoomService.getRoom(
+        customUserDetails.getUser().getId(), chatRoomId);
+    return ResponseEntity.ok().body(roomData);
+  }
+
+
 
 }
