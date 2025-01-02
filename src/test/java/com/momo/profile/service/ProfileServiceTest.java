@@ -16,7 +16,6 @@ import com.momo.profile.exception.ProfileException;
 import com.momo.profile.entity.Profile;
 import com.momo.profile.repository.ProfileRepository;
 import com.momo.profile.validate.ProfileValidator;
-import com.momo.user.dto.CustomUserDetails;
 import com.momo.user.entity.User;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
@@ -52,7 +51,7 @@ class ProfileServiceTest {
     String imageUrl = "test-image-url.jpg";
     Profile profile = request.toEntity(user, imageUrl);
 
-    doNothing().when(profileValidator).validateUser(1L);
+    doNothing().when(profileValidator).validateHasProfile(1L);
     when(profileImageService.getProfileImageUrl(mockImage)).thenReturn(imageUrl);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
@@ -78,7 +77,7 @@ class ProfileServiceTest {
     User user = createUser();
     Profile profile = request.toEntity(user, imageUrl);
 
-    doNothing().when(profileValidator).validateUser(1L);
+    doNothing().when(profileValidator).validateHasProfile(1L);
     when(profileImageService.getProfileImageUrl(null)).thenReturn(imageUrl);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
@@ -117,7 +116,7 @@ class ProfileServiceTest {
         .build();
 
     // when
-    doNothing().when(profileValidator).validateUser(1L);
+    doNothing().when(profileValidator).validateHasProfile(1L);
 
     // then
     assertThatThrownBy(() -> profileService.createProfile(user, request, null))
@@ -155,7 +154,7 @@ class ProfileServiceTest {
         .build();
 
     // when
-    doNothing().when(profileValidator).validateUser(1L);
+    doNothing().when(profileValidator).validateHasProfile(1L);
 
     // then
     assertThatThrownBy(() -> profileService.createProfile(user, request, null))
