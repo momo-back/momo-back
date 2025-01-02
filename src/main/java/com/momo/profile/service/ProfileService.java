@@ -7,7 +7,6 @@ import com.momo.profile.entity.Profile;
 import com.momo.profile.repository.ProfileRepository;
 import com.momo.profile.validate.ProfileRequiredValueValidator;
 import com.momo.profile.validate.ProfileValidator;
-import com.momo.user.dto.CustomUserDetails;
 import com.momo.user.entity.User;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +40,7 @@ public class ProfileService {
   }
 
   private void validateForProfileCreation(Long userId, Gender gender, LocalDate birth) {
-    profileValidator.validateUser(userId);
+    profileValidator.validateHasProfile(userId);
     ProfileRequiredValueValidator.validateProfileRequiredValue(gender, birth);
   }
 }
