@@ -30,7 +30,7 @@ public class ParticipationValidation {
     }
 
     // 이미 참여 신청한 모임인지
-    if (participationRepository.findByUser_IdAndMeeting_Id(userId, meeting.getId())) {
+    if (participationRepository.existsByUser_IdAndMeeting_Id(userId, meeting.getId())) {
       throw new ParticipationException(ParticipationErrorCode.ALREADY_PARTICIPATE_MEETING);
     }
     return meeting;

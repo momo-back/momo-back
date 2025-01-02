@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ParticipationRepository extends JpaRepository<Participation, Long> {
 
-  boolean findByUser_IdAndMeeting_Id(Long userId, Long id);
+  boolean existsByUser_IdAndMeeting_Id(Long userId, Long id);
 }

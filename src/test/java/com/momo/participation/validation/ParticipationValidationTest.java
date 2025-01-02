@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
-import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
@@ -109,7 +108,7 @@ class ParticipationValidationTest {
 
     when(meetingRepository.findById(anyLong()))
         .thenReturn(Optional.of(meeting));
-    when(participationRepository.findByUser_IdAndMeeting_Id(
+    when(participationRepository.existsByUser_IdAndMeeting_Id(
         participationUser.getId(), meeting.getId())).thenReturn(true);
 
     // when
@@ -123,7 +122,7 @@ class ParticipationValidationTest {
         );
 
     verify(participationRepository)
-        .findByUser_IdAndMeeting_Id(participationUser.getId(), meeting.getId());
+        .existsByUser_IdAndMeeting_Id(participationUser.getId(), meeting.getId());
   }
 
   private static User createUser(Long userId) {
