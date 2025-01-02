@@ -1,11 +1,8 @@
 package com.momo.meeting.validator;
 
-import com.momo.common.exception.CustomException;
-import com.momo.common.exception.ErrorCode;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.repository.MeetingRepository;
-import com.momo.user.repository.UserRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -16,15 +13,10 @@ import org.springframework.stereotype.Component;
 public class MeetingValidator {
 
   private final MeetingRepository meetingRepository;
-  private final UserRepository userRepository;
 
   public void validateForMeetingCreation(Long userId, LocalDateTime meetingDateTime) {
-    // TODO: 일일 모임 생성 제한 검증 Redis 고려
     validateDailyPostLimit(userId);
     validateMeetingDateTime(meetingDateTime);
-    if (!userRepository.existsById(userId)) {
-      throw new CustomException(ErrorCode.USER_NOT_FOUND);
-    }
   }
 
   private void validateDailyPostLimit(Long userId) {

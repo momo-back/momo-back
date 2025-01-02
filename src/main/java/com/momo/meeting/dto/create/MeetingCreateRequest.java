@@ -23,21 +23,21 @@ public class MeetingCreateRequest {
   @Size(min = 1, max = 60, message = "제목은 1-60자 사이로 입력해주세요.")
   private String title;
 
+  @NotNull(message = "위치 아이디가 누락되었습니다.")
+  private Long locationId;
+
+  @NotNull(message = "위도가 누락되었습니다")
+  private Double latitude;
+
+  @NotNull(message = "경도가 누락되었습니다")
+  private Double longitude;
+
+  @NotNull(message = "주소가 누락되었습니다")
+  private String address;
+
   @NotNull(message = "모임 날짜와 시간을 선택해주세요.")
   @Future(message = "모임 날짜는 현재 시간 이후로 선택해주세요.")
   private LocalDateTime meetingDateTime;
-
-  @NotNull(message = "위치 아이디 누락")
-  private Long locationId;
-
-  @NotNull(message = "위도 누락")
-  private Double latitude;
-
-  @NotNull(message = "경도 누락")
-  private Double longitude;
-
-  @NotNull(message = "주소 누락")
-  private String address;
 
   @Min(value = 2, message = "모임 인원은 2명 이상이어야 합니다.")
   private Integer maxCount;

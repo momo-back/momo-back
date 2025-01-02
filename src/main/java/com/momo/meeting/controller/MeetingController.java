@@ -37,7 +37,7 @@ public class MeetingController {
         request
     );
     return ResponseEntity
-        .created(URI.create("api/posts/" + response.getId()))
+        .created(URI.create("/api/meetings/" + response.getId()))
         .body(response);
   }
 
