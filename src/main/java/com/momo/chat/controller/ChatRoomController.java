@@ -95,4 +95,16 @@ public class ChatRoomController {
     chatRoomService.deleteRoom(customUserDetails.getUser().getId(), chatRoomId);
     return ResponseEntity.noContent().build();
   }
+
+  // 특정 사용자 강퇴 (호스트만 가능)
+  @PostMapping("/{chatRoomId}/withdrawal/{userId}")
+  public ResponseEntity<ChatRoomResponseDto> withdrawal(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long chatRoomId,
+      @PathVariable Long userId
+  ) {
+    ChatRoomResponseDto roomData = chatRoomService.withdrawal(
+        customUserDetails.getUser().getId(), chatRoomId, userId);
+    return ResponseEntity.ok().body(roomData);
+  }
 }

@@ -128,5 +128,31 @@ public class ChatRoomService {
     chatRoomRepository.delete(chatRoom);
   }
 
+  // 특정 사용자 강퇴 (호스트만 가능)
+  public ChatRoomResponseDto withdrawal(Long hostUserId, Long chatRoomId, Long targetUserId) {
+    User hostUser = userRepository.findById(hostUserId)
+        .orElseThrow(() -> new RuntimeException("호스트 회원을 찾을 수 없습니다."));
+    User targetUser = userRepository.findById(targetUserId)
+        .orElseThrow(() -> new RuntimeException("강제 퇴장할 사용자를 찾을 수 없습니다."));
+    ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+        .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
+
+    // 호스트만 강제 퇴장을 시킬 수 있음
+    if (!chatRoom.getHost().getId().equals(hostUser.getId())) {
+      throw new RuntimeException("호스트만 사용자를 강제 퇴장시킬 수 있습니다.");
+    }
+
+    // 강제 퇴장 대상 사용자가 채팅방에 참여 중인지 확인
+    if (!chatRoom.getReader().contains(targetUser)) {
+      throw new RuntimeException("해당 사용자는 채팅방에 참여 중이 아닙니다.");
+    }
+
+    // 채팅방에서 퇴장 대상 사용자 제거
+    chatRoom.getReader().remove(targetUser);
+    chatRoomRepository.save(chatRoom);
+
+    return ChatRoomResponseDto.of(chatRoom);
+  }
+
 
 }
