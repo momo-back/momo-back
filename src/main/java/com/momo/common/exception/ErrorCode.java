@@ -6,7 +6,10 @@ public enum ErrorCode {
   DUPLICATE_ERROR("이미 사용 중인 값입니다", 409),
   INTERNAL_SERVER_ERROR("서버 내부 오류가 발생했습니다", 500),
   USER_NOT_FOUND("사용자를 찾을 수 없습니다", 404),
-  NOT_EXISTS_PROFILE("프로필 생성을 완료해 주세요.", 403);
+  NOT_EXISTS_PROFILE("프로필 생성을 완료해 주세요.", 403),
+  INVALID_KAKAO_RESPONSE("Invalid Kakao API response", 400),
+  INVALID_REQUEST("Invalid request", 400);
+
 
   private final String message;
   private final int status;

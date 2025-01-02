@@ -11,6 +11,7 @@ import com.momo.auth.dto.LoginDTO;
 import com.momo.auth.dto.OAuthToken;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
+import java.util.ArrayList;
 import java.util.UUID;
 import javax.transaction.Transactional;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -73,45 +74,62 @@ public class UserService {
 
   @Transactional
   public User processKakaoUser(KakaoProfile kakaoProfile, OAuthToken oauthToken) {
-    // 1. 이메일 및 닉네임 처리
     String email = kakaoProfile.getKakao_account().getEmail();
-    String uniqueNickname = email;
 
-    // 2. 기존 사용자 확인
+    // 이메일로 기존 사용자 검색
     User existingUser = userRepository.findByEmail(email).orElse(null);
 
     if (existingUser != null) {
-      existingUser.setEnabled(true); // 기존 사용자는 활성화
-      updateRefreshToken(existingUser, oauthToken.getRefresh_token()); // RefreshToken 갱신
+      existingUser.setEnabled(true); // 사용자 활성화
+      updateRefreshToken(existingUser, oauthToken.getRefresh_token()); // 여기서 호출
       return existingUser;
     }
 
-    // 3. 새로운 사용자 생성
+    // 새 사용자 생성
     String randomPassword = UUID.randomUUID().toString();
     String encryptedPassword = passwordEncoder.encode(randomPassword);
 
     User kakaoUser = User.builder()
         .email(email)
-        .nickname(uniqueNickname)
-        .phone("") // 카카오 API에서는 전화번호를 제공하지 않음
+        .nickname(email) // 닉네임 기본값으로 이메일 사용
         .password(encryptedPassword)
-        .verificationToken(null)
         .enabled(true)
+        .oauthUser(true)
         .build();
 
-    // 4. RefreshToken 생성 및 추가
-    createRefreshToken(kakaoUser, oauthToken.getRefresh_token());
-
-    // 5. 사용자 저장
-    return userRepository.save(kakaoUser);
+    userRepository.save(kakaoUser); // 저장
+    createRefreshToken(kakaoUser, oauthToken.getRefresh_token()); // 새 사용자에 대해 Refresh Token 생성
+    return kakaoUser;
   }
 
+
   private void createRefreshToken(User user, String refreshTokenValue) {
+    // Null 체크 및 예외 처리
+    if (user == null) {
+      throw new IllegalArgumentException("User cannot be null");
+    }
+
+    if (user.getId() == null) {
+      throw new IllegalStateException("User ID cannot be null");
+    }
+
+    // RefreshToken 리스트 초기화
+    if (user.getRefreshTokens() == null) {
+      user.setRefreshTokens(new ArrayList<>());
+    }
+
+    // RefreshToken 생성 및 저장
     RefreshToken refreshToken = new RefreshToken(user, refreshTokenValue);
     user.getRefreshTokens().add(refreshToken);
+    refreshTokenRepository.save(refreshToken);
   }
 
   private void updateRefreshToken(User user, String newTokenValue) {
+    // 사용자 검증
+    if (user == null || user.getId() == null) {
+      throw new IllegalArgumentException("User or User ID cannot be null");
+    }
+
     // 기존 RefreshToken 삭제
     refreshTokenRepository.deleteByUser(user);
 

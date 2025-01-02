@@ -54,8 +54,10 @@ public class TokenService {
 
     // 사용자 정보 추출 및 조회
     String email = jwtUtil.getEmail(refreshToken);
+
+    // Optional로 사용자 조회
     User user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        .orElseThrow(() -> new IllegalArgumentException("User not found for email: " + email));
 
     // 새로운 Access 및 Refresh Token 발급
     String newAccessToken = jwtUtil.createJwt("access", user, 600000L); // 10분
@@ -70,6 +72,17 @@ public class TokenService {
     response.addCookie(createCookie("refresh", newRefreshToken));
 
     return ResponseEntity.ok(newAccessToken);
+  }
+
+  @Transactional
+  private void saveRefreshToken(User user, String token, LocalDateTime expiration) {
+    // user 검증 로직 추가
+    if (user == null || user.getId() == null) {
+      throw new IllegalStateException("User or User ID cannot be null");
+    }
+
+    RefreshToken refreshToken = RefreshToken.create(user, token, expiration);
+    refreshTokenRepository.save(refreshToken);
   }
 
   // 쿠키에서 Refresh Token 추출
@@ -97,11 +110,6 @@ public class TokenService {
   // Refresh Token 타입 확인
   private boolean isRefreshToken(String token) {
     return "refresh".equals(jwtUtil.getTokenType(token));
-  }
-  @Transactional
-  private void saveRefreshToken(User user, String token, LocalDateTime expiration) {
-    RefreshToken refreshToken = RefreshToken.create(user, token, expiration);
-    refreshTokenRepository.save(refreshToken);
   }
 
   // 쿠키 생성 메서드
