@@ -1,4 +1,4 @@
-package com.momo.config.controller;
+package com.momo.auth.controller;
 
 import com.momo.config.JWTUtil;
 import com.momo.config.token.repository.RefreshTokenRepository;
@@ -18,24 +18,24 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.client.RestTemplate;
 
+@Slf4j
 @RestController
 @RequestMapping
-@Slf4j
-public class LogoutController {
+public class KakaoDeleteController {
 
   private final RefreshTokenRepository refreshTokenRepository;
   private final JWTUtil jwtUtil;
   private final RestTemplate restTemplate;
 
-  public LogoutController(JWTUtil jwtUtil, RefreshTokenRepository refreshTokenRepository, RestTemplate restTemplate) {
+  public KakaoDeleteController(JWTUtil jwtUtil, RefreshTokenRepository refreshTokenRepository, RestTemplate restTemplate) {
     this.jwtUtil = jwtUtil;
     this.refreshTokenRepository = refreshTokenRepository;
     this.restTemplate = restTemplate;
   }
 
-  @DeleteMapping("/api/v1/kakao/logout")
+  @DeleteMapping("/api/v1/kakao/delete")
   @Transactional
-  public ResponseEntity<?> kakaoLogout(HttpServletRequest request, HttpServletResponse response) {
+  public ResponseEntity<?> kakaoDelete(HttpServletRequest request, HttpServletResponse response) {
     // Authorization 헤더에서 Bearer 토큰 추출
     String accessToken = extractAccessTokenFromAuthorizationHeader(request);
 
@@ -45,46 +45,42 @@ public class LogoutController {
     }
 
     try {
-      // 카카오 로그아웃 처리 (HttpServletResponse를 전달)
-      logoutKakaoUser(accessToken, response);
+      // 카카오 회원 탈퇴 처리
+      deleteKakaoUser(accessToken);
 
-      return ResponseEntity.ok("카카오 계정으로 로그아웃이 완료되었습니다.");
+      // 카카오 회원 탈퇴 후 쿠키 삭제 및 DB에서 Refresh Token 삭제
+      clearRefreshCookie(response);
+      String email = "kakao_user_email";  // 카카오 이메일을 어떻게 가져올지에 대한 추가 로직 필요
+      refreshTokenRepository.deleteByEmail(email);
+
+      return ResponseEntity.ok("카카오 계정 연동이 해제되었습니다.");
     } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to log out from Kakao");
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("인증에 실패했습니다.");
     }
   }
 
-
-  private void logoutKakaoUser(String accessToken, HttpServletResponse response) {
-    String kakaoLogoutUrl = "https://kapi.kakao.com/v1/user/logout";
+  private void deleteKakaoUser(String accessToken) {
+    String kakaoDeleteUrl = "https://kapi.kakao.com/v1/user/unlink";
 
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Bearer " + accessToken);  // 카카오 로그인 시 받은 엑세스 토큰 사용
 
     HttpEntity<String> entity = new HttpEntity<>(headers);
     try {
-      ResponseEntity<String> kakaoResponse = restTemplate.exchange(kakaoLogoutUrl, HttpMethod.POST, entity, String.class);
+      ResponseEntity<String> response = restTemplate.exchange(kakaoDeleteUrl, HttpMethod.POST, entity, String.class);
 
       // 카카오 API 응답 상태 코드 및 본문을 로그로 출력
-      log.debug("Kakao logout API response status: {}", kakaoResponse.getStatusCode());
-      log.debug("Kakao logout API response body: {}", kakaoResponse.getBody());
+      log.debug("Kakao delete API response status: {}", response.getStatusCode());
+      log.debug("Kakao delete API response body: {}", response.getBody());
 
-      if (kakaoResponse.getStatusCode() != HttpStatus.OK) {
-        throw new RuntimeException("Failed to log out from Kakao. Status: " + kakaoResponse.getStatusCode() + ", Body: " + kakaoResponse.getBody());
+      if (response.getStatusCode() != HttpStatus.OK) {
+        throw new RuntimeException("Failed to delete Kakao account. Status: " + response.getStatusCode() + ", Body: " + response.getBody());
       }
-
-      // 카카오 로그아웃 성공 후 쿠키 삭제 및 DB에서 Refresh Token 삭제
-      clearRefreshCookie(response);
-      String email = "kakao_user_email";  // 카카오 이메일을 어떻게 가져올지에 대한 추가 로직 필요
-      refreshTokenRepository.deleteByEmail(email);
-
     } catch (Exception e) {
-      log.error("Error occurred while calling Kakao logout API: ", e);
-      throw new RuntimeException("Error occurred while calling Kakao logout API: " + e.getMessage(), e);
+      log.error("Error occurred while calling Kakao delete API: ", e);
+      throw new RuntimeException("Error occurred while calling Kakao delete API: " + e.getMessage(), e);
     }
   }
-
-
 
   private String extractAccessTokenFromAuthorizationHeader(HttpServletRequest request) {
     String authorizationHeader = request.getHeader("Authorization");
