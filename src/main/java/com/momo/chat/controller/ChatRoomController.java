@@ -7,6 +7,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -83,5 +84,15 @@ public class ChatRoomController {
     List<Long> participants = chatRoomService.getRoomReaders(
         customUserDetails.getUser().getId(), chatRoomId);
     return ResponseEntity.ok().body(participants);
+  }
+
+  // 채팅방 삭제 (호스트만 가능)
+  @DeleteMapping("/{chatRoomId}")
+  public ResponseEntity<Void> deleteRoom(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long chatRoomId
+  ) {
+    chatRoomService.deleteRoom(customUserDetails.getUser().getId(), chatRoomId);
+    return ResponseEntity.noContent().build();
   }
 }

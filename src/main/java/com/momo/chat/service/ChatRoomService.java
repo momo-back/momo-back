@@ -104,6 +104,7 @@ public class ChatRoomService {
         .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
     ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
         .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
+
     if(!chatRoomRepository.existsByReaderContains(user)){
       throw new RuntimeException("해당 채팅방에 참여중이 아닙니다.");
     }
@@ -113,7 +114,19 @@ public class ChatRoomService {
         .collect(Collectors.toList());
   }
 
+  // 채팅방 삭제 (호스트만 가능)
+  public void deleteRoom(Long userId, Long chatRoomId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+    ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+        .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
 
+    if (!chatRoom.getHost().getId().equals(user.getId())) {
+      throw new RuntimeException("호스트만 채팅방을 삭제할 수 있습니다.");
+    }
+
+    chatRoomRepository.delete(chatRoom);
+  }
 
 
 }
