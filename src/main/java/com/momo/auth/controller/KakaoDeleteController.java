@@ -53,9 +53,9 @@ public class KakaoDeleteController {
       String email = "kakao_user_email";  // 카카오 이메일을 어떻게 가져올지에 대한 추가 로직 필요
       refreshTokenRepository.deleteByEmail(email);
 
-      return ResponseEntity.ok("Kakao account deletion completed successfully.");
+      return ResponseEntity.ok("카카오 계정 연동이 해제되었습니다.");
     } catch (Exception e) {
-      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete Kakao account");
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("인증에 실패했습니다.");
     }
   }
 
