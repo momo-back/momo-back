@@ -77,9 +77,7 @@ public class SecurityConfig {
                 EndpointConstants.ROOT,
                 EndpointConstants.USERS_API,
                 EndpointConstants.KAKAO_API,
-                EndpointConstants.TOKEN_REISSUE,
-                EndpointConstants.KAKAO_LOGIN,
-                EndpointConstants.KAKAO_LOGOUT
+                EndpointConstants.TOKEN_REISSUE
             ).permitAll()
             .anyRequest().authenticated()
         )
