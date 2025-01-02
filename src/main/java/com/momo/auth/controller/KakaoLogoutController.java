@@ -1,4 +1,4 @@
-package com.momo.config.controller;
+package com.momo.auth.controller;
 
 import com.momo.config.JWTUtil;
 import com.momo.config.token.repository.RefreshTokenRepository;
@@ -21,13 +21,13 @@ import org.springframework.web.client.RestTemplate;
 @RestController
 @RequestMapping
 @Slf4j
-public class LogoutController {
+public class KakaoLogoutController {
 
   private final RefreshTokenRepository refreshTokenRepository;
   private final JWTUtil jwtUtil;
   private final RestTemplate restTemplate;
 
-  public LogoutController(JWTUtil jwtUtil, RefreshTokenRepository refreshTokenRepository, RestTemplate restTemplate) {
+  public KakaoLogoutController(JWTUtil jwtUtil, RefreshTokenRepository refreshTokenRepository, RestTemplate restTemplate) {
     this.jwtUtil = jwtUtil;
     this.refreshTokenRepository = refreshTokenRepository;
     this.restTemplate = restTemplate;
