@@ -8,9 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -19,12 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class ChatRoomController {
 
   private final ChatRoomService chatRoomService;
-  // 채팅방 생성, 입장 시 채팅방 구독, 채팅방 퇴장 시 채팅방 구독 해제 필요
+  // 채팅방 생성, 입장 시 채팅방 구독, 채팅방 삭제, 퇴장, 강퇴시 채팅방 구독 해제 필요
   // 채팅방 생성
-  @PostMapping
+  @PostMapping("{meetingId}")
   public ResponseEntity<ChatRoomResponseDto> createRoom(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
-      @RequestParam Long meetingId
+      @PathVariable Long meetingId
   ) {
     ChatRoomResponseDto roomData = chatRoomService.createChatRoom(
         customUserDetails.getUser().getId(), meetingId);
@@ -32,24 +32,35 @@ public class ChatRoomController {
   }
 
   // 채팅방 입장
-  @PostMapping("/join")
+  @PostMapping("/join/{chatRoomId}")
   public ResponseEntity<ChatRoomResponseDto> joinRoom(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
-      @RequestParam Long meetingId
+      @PathVariable Long chatRoomId
   ) {
     ChatRoomResponseDto roomData = chatRoomService.joinRoom(
-        customUserDetails.getUser().getId(), meetingId);
+        customUserDetails.getUser().getId(), chatRoomId);
     return ResponseEntity.ok().body(roomData);
   }
 
   // 채팅방 퇴장
-  @PostMapping("/leave")
+  @PostMapping("/leave/{chatRoomId}")
   public ResponseEntity<ChatRoomResponseDto> leaveRoom(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
-      @RequestParam Long meetingId
+      @PathVariable Long chatRoomId
   ) {
     ChatRoomResponseDto roomData = chatRoomService.leaveRoom(
-        customUserDetails.getUser().getId(), meetingId);
+        customUserDetails.getUser().getId(), chatRoomId);
+    return ResponseEntity.ok().body(roomData);
+  }
+
+  // 참여중인 채팅방 정보 조회
+  @GetMapping("{chatRoomId}")
+  public ResponseEntity<ChatRoomResponseDto> getRoom(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long chatRoomId
+  ) {
+    ChatRoomResponseDto roomData = chatRoomService.getRoom(
+        customUserDetails.getUser().getId(), chatRoomId);
     return ResponseEntity.ok().body(roomData);
   }
 
@@ -63,16 +74,6 @@ public class ChatRoomController {
     return ResponseEntity.ok().body(roomData);
   }
 
-  // 채팅방 정보 조회
-  @GetMapping
-  public ResponseEntity<ChatRoomResponseDto> getRoom(
-      @AuthenticationPrincipal CustomUserDetails customUserDetails,
-      @RequestParam Long chatRoomId
-  ) {
-    ChatRoomResponseDto roomData = chatRoomService.getRoom(
-        customUserDetails.getUser().getId(), chatRoomId);
-    return ResponseEntity.ok().body(roomData);
-  }
 
 
 

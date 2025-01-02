@@ -46,10 +46,10 @@ public class ChatRoomService {
   }
 
   // 채팅방 입장
-  public ChatRoomResponseDto joinRoom(Long userId, Long meetingId) {
+  public ChatRoomResponseDto joinRoom(Long userId, Long chatRoomId) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
-    ChatRoom chatRoom = chatRoomRepository.findByMeetingId(meetingId)
+    ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
         .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
 
     List<User> readers = chatRoom.getReader();
@@ -60,15 +60,28 @@ public class ChatRoomService {
   }
 
   // 채팅방 퇴장
-  public ChatRoomResponseDto leaveRoom(Long userId, Long meetingId) {
+  public ChatRoomResponseDto leaveRoom(Long userId, Long chatRoomId) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
-    ChatRoom chatRoom = chatRoomRepository.findByMeetingId(meetingId)
+    ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
         .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
 
     List<User> readers = chatRoom.getReader();
     readers.remove(user);
     chatRoomRepository.save(chatRoom);
+
+    return ChatRoomResponseDto.of(chatRoom);
+  }
+
+  // 참여중인 채팅방 정보 조회
+  public ChatRoomResponseDto getRoom(Long userId, Long chatRoomId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+    ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+        .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
+    if(!chatRoomRepository.existsByReaderContains(user)){
+      throw new RuntimeException("해당 채팅방에 참여중이 아닙니다.");
+    }
 
     return ChatRoomResponseDto.of(chatRoom);
   }
@@ -85,15 +98,7 @@ public class ChatRoomService {
         .collect(Collectors.toList());
   }
 
-  // 채팅방 정보 조회
-  public ChatRoomResponseDto getRoom(Long userId, Long chatRoomId) {
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
-    ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
-        .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
 
-    return ChatRoomResponseDto.of(chatRoom);
-  }
 
 
 
