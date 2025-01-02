@@ -8,4 +8,6 @@ public class EndpointConstants {
   public static final String TOKEN_REISSUE = "/token/reissue";
   public static final String KAKAO_LOGOUT = "/api/v1/kakao/**";
   public static final String H2 = "/h2-console/**";
+  public static final String MEETINGS = "/api/v1/meetings/**";
+
 }

@@ -7,7 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.momo.meeting.constant.FoodCategory;
-import com.momo.meeting.dto.MeetingCreateRequest;
+import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.repository.MeetingRepository;

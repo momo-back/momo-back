@@ -6,8 +6,10 @@ import com.momo.config.constants.EndpointConstants;
 import com.momo.config.token.repository.RefreshTokenRepository;
 import com.momo.user.service.CustomUserDetailsService;
 import com.momo.user.repository.UserRepository;
+import java.net.http.HttpRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -78,10 +80,17 @@ public class SecurityConfig {
                 EndpointConstants.USERS_API,
                 EndpointConstants.KAKAO_API,
                 EndpointConstants.TOKEN_REISSUE,
+                EndpointConstants.ROOT,
+                EndpointConstants.USERS_API,
+                EndpointConstants.KAKAO_API,
+                EndpointConstants.TOKEN_REISSUE,
                 EndpointConstants.KAKAO_LOGIN,
                 EndpointConstants.KAKAO_LOGOUT,
-                EndpointConstants.H2
+                EndpointConstants.H2,
+                "/ws/**"
             ).permitAll()
+            .antMatchers(HttpMethod.GET, EndpointConstants.MEETINGS).permitAll()
+            .antMatchers(HttpMethod.POST, EndpointConstants.MEETINGS).authenticated()
             .anyRequest().authenticated()
         )
         .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
