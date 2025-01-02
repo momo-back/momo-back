@@ -10,6 +10,7 @@ import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -70,6 +71,14 @@ public class ChatRoomService {
     chatRoomRepository.save(chatRoom);
 
     return ChatRoomResponseDto.of(chatRoom);
+  }
+
+  // 로그인한 유저의 모든 채팅방 목록 조회
+  public List<ChatRoomResponseDto> getRooms(User user) {
+    List<ChatRoom> ChatRooms = chatRoomRepository.findAllByReaderContains(user);
+    return ChatRooms.stream()
+        .map(chatRoom -> ChatRoomResponseDto.of(chatRoom))
+        .collect(Collectors.toList());
   }
 
 }

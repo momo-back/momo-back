@@ -3,9 +3,11 @@ package com.momo.chat.controller;
 import com.momo.chat.dto.ChatRoomResponseDto;
 import com.momo.chat.service.ChatRoomService;
 import com.momo.user.dto.CustomUserDetails;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -51,5 +53,14 @@ public class ChatRoomController {
     return ResponseEntity.ok().body(roomData);
   }
 
+  // 로그인한 유저의 모든 채팅방 목록 조회
+  @GetMapping
+  public ResponseEntity<List<ChatRoomResponseDto>> getRooms(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails
+  ) {
+    List<ChatRoomResponseDto> roomData = chatRoomService.getRooms(
+        customUserDetails.getUser());
+    return ResponseEntity.ok().body(roomData);
+  }
 
 }
