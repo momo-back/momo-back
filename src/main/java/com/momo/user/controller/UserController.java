@@ -39,13 +39,8 @@ public class UserController {
       return ResponseEntity.badRequest().body("이메일 주소를 입력해주세요.");
     }
 
-    try {
-      String token = userService.generateResetToken(emailRequest.getEmail());
-      emailService.sendPasswordResetEmail(emailRequest.getEmail(), token);
-      return ResponseEntity.ok("비밀번호 재설정 이메일이 발송되었습니다.");
-    } catch (Exception e) {
-      return ResponseEntity.badRequest().body("요청 처리 중 문제가 발생했습니다.");
-    }
+    userService.sendPasswordResetLink(emailRequest.getEmail());
+    return ResponseEntity.ok("비밀번호 재설정 이메일이 발송되었습니다.");
   }
 
   @PostMapping("/password/change")
@@ -57,12 +52,7 @@ public class UserController {
       return ResponseEntity.badRequest().body("새 비밀번호를 입력해주세요.");
     }
 
-    if (userService.validateResetToken(passwordResetRequest.getToken())) { // 토큰 검증 로직
-      userService.resetPassword(passwordResetRequest.getToken(), passwordResetRequest.getNewPassword());
-      return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
-    } else {
-      return ResponseEntity.status(400).body("유효하지 않은 토큰입니다.");
-    }
+    userService.resetPassword(passwordResetRequest.getToken(), passwordResetRequest.getNewPassword());
+    return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
   }
-
 }

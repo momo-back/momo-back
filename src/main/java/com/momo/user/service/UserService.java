@@ -30,6 +30,7 @@ public class UserService {
   private final BCryptPasswordEncoder passwordEncoder;
   private final JWTUtil jwtUtil;
   private final RefreshTokenRepository refreshTokenRepository;
+  private final EmailService emailService;
 
   private final HashMap<String, String> passwordResetTokens = new HashMap<>();
 
@@ -78,7 +79,18 @@ public class UserService {
     return passwordResetTokens.containsKey(token);
   }
 
-  // 비밀번호 업데이트
+  // 비밀번호 재설정 링크 발송
+  public void sendPasswordResetLink(String email) {
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    String token = UUID.randomUUID().toString();
+    passwordResetTokens.put(token, email);
+
+    emailService.sendPasswordResetEmail(email, token);
+  }
+
+  // 비밀번호 재설정
   @Transactional
   public void resetPassword(String token, String newPassword) {
     String email = passwordResetTokens.get(token);
