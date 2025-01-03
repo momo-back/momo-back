@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ParticipationExceptionHandler {
 
   @ExceptionHandler(ParticipationException.class)
-  public ResponseEntity<?> handleParticipationException(ParticipationException e) {
-    log.info("에러 {}", e.getParticipationErrorCode().getMessage());
+  public ResponseEntity<ParticipationErrorResponse> handleParticipationException(
+      ParticipationException e
+  ) {
+    log.error("Participation Exception: {}", e.getParticipationErrorCode().getMessage());
     return createErrorResponse(e.getParticipationErrorCode());
   }
 
