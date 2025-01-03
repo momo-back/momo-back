@@ -12,27 +12,27 @@ import com.momo.auth.dto.OAuthToken;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import java.util.ArrayList;
-import java.util.UUID;
-import javax.transaction.Transactional;
+import java.util.HashMap;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
+import java.util.UUID;
+import java.util.Optional;
+
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
   private final UserRepository userRepository;
   private final BCryptPasswordEncoder passwordEncoder;
   private final JWTUtil jwtUtil;
   private final RefreshTokenRepository refreshTokenRepository;
+  private final EmailService emailService;
 
-  public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder,
-      JWTUtil jwtUtil, RefreshTokenRepository refreshTokenRepository) {
-    this.userRepository = userRepository;
-    this.jwtUtil = jwtUtil;
-    this.refreshTokenRepository = refreshTokenRepository;
-    this.passwordEncoder = passwordEncoder;
-  }
+  private final HashMap<String, String> passwordResetTokens = new HashMap<>();
 
   // 로그인 처리
   public String loginUser(LoginDTO loginDto) {
@@ -62,6 +62,50 @@ public class UserService {
 
     // User 삭제
     userRepository.delete(user);
+  }
+
+  // 비밀번호 재설정 토큰 생성
+  public String generateResetToken(String email) {
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    String token = UUID.randomUUID().toString();
+    passwordResetTokens.put(token, email);
+    return token;
+  }
+
+  // 비밀번호 재설정 토큰 검증
+  public boolean validateResetToken(String token) {
+    return passwordResetTokens.containsKey(token);
+  }
+
+  // 비밀번호 재설정 링크 발송
+  public void sendPasswordResetLink(String email) {
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    String token = UUID.randomUUID().toString();
+    passwordResetTokens.put(token, email);
+
+    emailService.sendPasswordResetEmail(email, token);
+  }
+
+  // 비밀번호 재설정
+  @Transactional
+  public void resetPassword(String token, String newPassword) {
+    String email = passwordResetTokens.get(token);
+    if (email == null) {
+      throw new CustomException(ErrorCode.INVALID_TOKEN);
+    }
+
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    user.setPassword(passwordEncoder.encode(newPassword));
+    userRepository.save(user);
+
+    // 사용된 토큰 제거
+    passwordResetTokens.remove(token);
   }
 
   // 현재 로그인한 사용자 정보 가져오기
@@ -102,9 +146,7 @@ public class UserService {
     return kakaoUser;
   }
 
-
   private void createRefreshToken(User user, String refreshTokenValue) {
-    // Null 체크 및 예외 처리
     if (user == null) {
       throw new IllegalArgumentException("User cannot be null");
     }
@@ -113,27 +155,22 @@ public class UserService {
       throw new IllegalStateException("User ID cannot be null");
     }
 
-    // RefreshToken 리스트 초기화
     if (user.getRefreshTokens() == null) {
       user.setRefreshTokens(new ArrayList<>());
     }
 
-    // RefreshToken 생성 및 저장
     RefreshToken refreshToken = new RefreshToken(user, refreshTokenValue);
     user.getRefreshTokens().add(refreshToken);
     refreshTokenRepository.save(refreshToken);
   }
 
   private void updateRefreshToken(User user, String newTokenValue) {
-    // 사용자 검증
     if (user == null || user.getId() == null) {
       throw new IllegalArgumentException("User or User ID cannot be null");
     }
 
-    // 기존 RefreshToken 삭제
     refreshTokenRepository.deleteByUser(user);
 
-    // 새로운 RefreshToken 생성 및 추가
     createRefreshToken(user, newTokenValue);
   }
 }

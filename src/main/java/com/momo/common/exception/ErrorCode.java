@@ -7,8 +7,10 @@ public enum ErrorCode {
   INTERNAL_SERVER_ERROR("서버 내부 오류가 발생했습니다", 500),
   USER_NOT_FOUND("사용자를 찾을 수 없습니다", 404),
   NOT_EXISTS_PROFILE("프로필 생성을 완료해 주세요.", 403),
-  INVALID_KAKAO_RESPONSE("Invalid Kakao API response", 400),
-  INVALID_REQUEST("Invalid request", 400);
+  INVALID_KAKAO_RESPONSE("잘못된 Kakao API 응답입니다.", 400),
+  INVALID_REQUEST("잘못된 요청입니다.", 400),
+  INVALID_TOKEN("유효하지 않은 토큰입니다.", 400),
+  EMAIL_SEND_FAILED("메일 발송을 실패했습니다.",400);
 
 
   private final String message;
