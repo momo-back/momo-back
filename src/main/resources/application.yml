@@ -54,6 +54,8 @@ spring:
     init:
       mode: always
 
+sse:
+  timeout: 60000 # 60초
 ---
 
 spring:
