@@ -1,11 +1,15 @@
 package com.momo.chat.service;
 
+import com.momo.chat.dto.ChatHistoryResponseDto;
 import com.momo.chat.dto.ChatRoomResponseDto;
+import com.momo.chat.entity.Chat;
 import com.momo.chat.entity.ChatRoom;
 import com.momo.chat.repository.ChatRepository;
 import com.momo.chat.repository.ChatRoomRepository;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.repository.MeetingRepository;
+import com.momo.profile.entity.Profile;
+import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import java.util.ArrayList;
@@ -22,6 +26,7 @@ public class ChatRoomService {
   private final ChatRoomRepository chatRoomRepository;
   private final MeetingRepository meetingRepository;
   private final UserRepository userRepository;
+  private final ProfileRepository profileRepository;
 
   // 채팅방 생성
   public ChatRoomResponseDto createChatRoom(Long userId, Long meetingId) {
@@ -79,8 +84,8 @@ public class ChatRoomService {
         .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
     ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
         .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
-    if(!chatRoomRepository.existsByReaderContains(user)){
-      throw new RuntimeException("해당 채팅방에 참여중이 아닙니다.");
+    if (!chatRoom.getReader().contains(user)) {
+      throw new RuntimeException("해당 채팅방에 참여 중이 아닙니다.");
     }
 
     return ChatRoomResponseDto.of(chatRoom);
@@ -105,8 +110,8 @@ public class ChatRoomService {
     ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
         .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
 
-    if(!chatRoomRepository.existsByReaderContains(user)){
-      throw new RuntimeException("해당 채팅방에 참여중이 아닙니다.");
+    if (!chatRoom.getReader().contains(user)) {
+      throw new RuntimeException("해당 채팅방에 참여 중이 아닙니다.");
     }
 
     return chatRoom.getReader().stream()
@@ -154,5 +159,29 @@ public class ChatRoomService {
     return ChatRoomResponseDto.of(chatRoom);
   }
 
+  // 채팅 기록 조회
+  public List<ChatHistoryResponseDto> getChatHistory(Long userId, Long chatRoomId) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("회원을 찾을 수 없습니다."));
+    ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+        .orElseThrow(() -> new RuntimeException("해당 채팅방이 없습니다."));
+    Profile profile = profileRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("프로필을 찾을 수 없습니다."));
+
+    if (!chatRoom.getReader().contains(user)) {
+      throw new RuntimeException("해당 채팅방에 참여 중이 아닙니다.");
+    }
+
+    List<Chat> chats = chatRepository.findAllByChatRoomId(chatRoomId);// 채팅방 ID로 모든 채팅 조회
+
+    return chats.stream().map(chat -> new ChatHistoryResponseDto(
+        chat.getSender().getId(),
+        chat.getSender().getNickname(),
+        profile.getProfileImageUrl(),
+        chat.getMessage(),
+        chat.getCreatedAt(),
+        chat.getUpdatedAt()
+    )).collect(Collectors.toList());
+  }
 
 }
