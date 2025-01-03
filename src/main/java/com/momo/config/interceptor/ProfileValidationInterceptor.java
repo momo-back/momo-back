@@ -7,11 +7,11 @@ import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.dto.CustomUserDetails;
 import java.io.IOException;
 import java.util.EnumSet;
-import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -22,14 +22,11 @@ import org.springframework.web.servlet.HandlerInterceptor;
 @RequiredArgsConstructor
 public class ProfileValidationInterceptor implements HandlerInterceptor {
 
-  private static final Set<ExcludePath> EXCLUDE_PATHS = EnumSet.allOf(ExcludePath.class);
+  private static final EnumSet<ExcludePath> EXCLUDE_PATHS = EnumSet.allOf(ExcludePath.class);
   private final ProfileRepository profileRepository;
 
   @Override
-  public boolean preHandle(
-      HttpServletRequest request,
-      HttpServletResponse response,
-      Object handle
+  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handle
   ) throws IOException {
     String requestURI = request.getRequestURI();
     String method = request.getMethod();
@@ -53,10 +50,8 @@ public class ProfileValidationInterceptor implements HandlerInterceptor {
 
   private boolean isExcludePath(String requestURI, String method) {
     return EXCLUDE_PATHS.stream()
-        .anyMatch(exclude ->
-            exclude.getPath().equals(requestURI) &&
-                exclude.getMethod().name().equals(method)
-        );
+        .anyMatch(exclude -> exclude.getPath().equals(requestURI) &&
+            exclude.getMethod().equals(HttpMethod.valueOf(method)));
   }
 
   private void validateUserProfile(Long userId) {
