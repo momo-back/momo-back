@@ -2,18 +2,17 @@ package com.momo.notification.repository;
 
 import com.momo.notification.entity.Notification;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 
-  Optional<Notification> findByIdAndReceiver_Id(Long notificationId, Long receiverId);
+  List<Notification> findAllByUser_Id(Long userId);
 
-  List<Notification> findAllByReceiver_Id(Long receiverId);
+  int deleteByIdAndUser_Id(Long notificationId, Long userId);
 
-  void deleteAllByReceiver_Id(Long userId);
+  void deleteAllByUser_Id(Long userId);
 
-  boolean existsByReceiver_Id(Long id);
+  boolean existsByUser_Id(Long userId);
 }
