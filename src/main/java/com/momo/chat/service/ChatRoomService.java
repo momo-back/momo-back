@@ -46,8 +46,8 @@ public class ChatRoomService {
 
   // 채팅방 입장
   public ChatRoomResponseDto joinRoom(Long userId, Long chatRoomId) {
-    ChatRoom chatRoom = chatValidator.validateChatRoomExists(chatRoomId);
     User user = chatValidator.validateUserExists(userId);
+    ChatRoom chatRoom = chatValidator.validateChatRoomExists(chatRoomId);
 
     List<User> readers = chatRoom.getReader();
     readers.add(user);
@@ -58,8 +58,8 @@ public class ChatRoomService {
 
   // 채팅방 퇴장
   public ChatRoomResponseDto leaveRoom(Long userId, Long chatRoomId) {
-    ChatRoom chatRoom = chatValidator.validateChatRoomExists(chatRoomId);
     User user = chatValidator.validateUserExists(userId);
+    ChatRoom chatRoom = chatValidator.validateChatRoomExists(chatRoomId);
 
     List<User> readers = chatRoom.getReader();
     readers.remove(user);
