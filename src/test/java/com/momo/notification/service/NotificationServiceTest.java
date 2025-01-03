@@ -11,7 +11,6 @@ import com.momo.notification.dto.NotificationResponse;
 import com.momo.notification.entity.Notification;
 import com.momo.notification.repository.NotificationRepository;
 import com.momo.notification.sseemitter.SseEmitterManager;
-import com.momo.notification.validation.NotificationValidation;
 import com.momo.user.dto.CustomUserDetails;
 import com.momo.user.entity.User;
 import java.util.List;
@@ -33,9 +32,6 @@ class NotificationServiceTest {
   @Mock
   private NotificationRepository notificationRepository;
 
-  @Mock
-  private NotificationValidation notificationValidation;
-
   @InjectMocks
   private NotificationService notificationService;
 
@@ -46,7 +42,7 @@ class NotificationServiceTest {
     CustomUserDetails customUserDetails = new CustomUserDetails(createUser());
 
     // when
-    SseEmitter sseEmitter = notificationService.subscribeSseEmitter(customUserDetails.getId()) ;
+    SseEmitter sseEmitter = notificationService.subscribeSseEmitter(customUserDetails.getId());
 
     // then
     assertThat(sseEmitter).isNotNull();
@@ -59,14 +55,14 @@ class NotificationServiceTest {
   @DisplayName("알림 전송 - 성공")
   void sendNotification_Success() {
     // given
-    User receiver = createUser();
+    User user = createUser();
     SseEmitter emitter = new SseEmitter();
-    when(sseEmitterManager.get(receiver.getId())).thenReturn(Optional.of(emitter));
-    when(notificationRepository.existsByReceiver_Id(receiver.getId())).thenReturn(true);
+    when(sseEmitterManager.get(user.getId())).thenReturn(Optional.of(emitter));
+    when(notificationRepository.existsByUser_Id(user.getId())).thenReturn(true);
 
     // when
     notificationService.sendNotification(
-        receiver, "테스트 알림", NotificationType.NEW_CHAT_MESSAGE);
+        user, "테스트 알림", NotificationType.NEW_CHAT_MESSAGE);
 
     // then
     verify(notificationRepository).save(any(Notification.class));
@@ -76,15 +72,15 @@ class NotificationServiceTest {
   @DisplayName("알림 목록 조회 - 성공")
   void getNotifications_Success() {
     // given
-    Long receiverId = 1L;
+    Long userId = 1L;
     List<Notification> notifications = List.of(
         createNotification("알림1"),
         createNotification("알림2")
     );
-    when(notificationRepository.findAllByReceiver_Id(receiverId)).thenReturn(notifications);
+    when(notificationRepository.findAllByUser_Id(userId)).thenReturn(notifications);
 
     // when
-    List<NotificationResponse> result = notificationService.getNotifications(receiverId);
+    List<NotificationResponse> result = notificationService.getNotifications(userId);
 
     // then
     assertThat(result).hasSize(2);
@@ -97,31 +93,32 @@ class NotificationServiceTest {
   void deleteNotification_Success() {
     // given
     Long notificationId = 1L;
-    Long receiverId = 1L;
+    Long userId = 1L;
     Notification notification = createNotification("테스트 알림");
-    when(notificationValidation.validateNotification(notificationId, receiverId))
-        .thenReturn(notification);
-    when(notificationRepository.existsByReceiver_Id(receiverId)).thenReturn(false);
+
+    when(notificationRepository.deleteByIdAndUser_Id(notificationId, userId)).thenReturn(1);
+    when(notificationRepository.existsByUser_Id(userId)).thenReturn(false);
 
     // when
-    notificationService.deleteNotification(notificationId, receiverId);
+    notificationService.deleteNotification(notificationId, userId);
 
     // then
-    verify(notificationRepository).delete(notification);
+    verify(notificationRepository).deleteByIdAndUser_Id(notificationId, userId);
+    verify(notificationRepository).existsByUser_Id(userId);
   }
 
   @Test
   @DisplayName("전체 알림 삭제 - 성공")
   void deleteAllNotifications_Success() {
     // given
-    Long receiverId = 1L;
-    when(notificationRepository.existsByReceiver_Id(receiverId)).thenReturn(false);
+    Long userId = 1L;
+    when(notificationRepository.existsByUser_Id(userId)).thenReturn(false);
 
     // when
-    notificationService.deleteAllNotifications(receiverId);
+    notificationService.deleteAllNotifications(userId);
 
     // then
-    verify(notificationRepository).deleteAllByReceiver_Id(receiverId);
+    verify(notificationRepository).deleteAllByUser_Id(userId);
   }
 
   private static User createUser() {
@@ -138,7 +135,7 @@ class NotificationServiceTest {
   private static Notification createNotification(String content) {
     return Notification.builder()
         .content(content)
-        .receiver(createUser())
+        .user(createUser())
         .notificationType(NotificationType.NEW_PARTICIPATION_REQUEST)
         .build();
   }
