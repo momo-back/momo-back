@@ -53,5 +53,13 @@ public class ChatService {
         user.getNickname() + "님이 입장했습니다.");
   }
 
+  @Transactional
+  public void leaveRoom(Long userId, ChatRequestDto dto) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+    messagingTemplate.convertAndSend("/sub/chat/room/" + dto.getRoomId(),
+        user.getNickname() + "님이 퇴장했습니다.");
+  }
+
 
 }
