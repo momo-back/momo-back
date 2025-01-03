@@ -55,9 +55,5 @@ public class ChatRoom extends BaseEntity {
   @OneToMany(mappedBy = "chatRoom", orphanRemoval = true)
   private List<Chat> ChatMessages = new ArrayList<>();
 
-//  public void update(ChatRoomRequestDto requestDto){
-//    this.title = requestDto.getTitle();
-//    this.content = requestDto.getContent();
-//  }
 
 }
