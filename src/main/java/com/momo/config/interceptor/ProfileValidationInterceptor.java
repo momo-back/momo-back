@@ -5,6 +5,7 @@ import com.momo.common.exception.ErrorCode;
 import com.momo.config.constants.ExcludePath;
 import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.dto.CustomUserDetails;
+import java.io.IOException;
 import java.util.EnumSet;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
@@ -29,7 +30,7 @@ public class ProfileValidationInterceptor implements HandlerInterceptor {
       HttpServletRequest request,
       HttpServletResponse response,
       Object handle
-  ) {
+  ) throws IOException {
     String requestURI = request.getRequestURI();
     String method = request.getMethod();
 
@@ -39,7 +40,14 @@ public class ProfileValidationInterceptor implements HandlerInterceptor {
     }
 
     log.info("======================== 인터셉터 ========================");
-    validateUserProfile(getAuthenticatedUserId());
+
+    try {
+      validateUserProfile(getAuthenticatedUserId());
+    } catch (CustomException e) {
+      log.info("프로필이 없는 사용자입니다. 프로필 생성 페이지로 리다이렉트합니다.");
+      response.sendRedirect("/create/profile"); // 프로필 생성 페이지 url
+      return false;
+    }
     return true;
   }
 
