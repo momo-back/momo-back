@@ -13,7 +13,7 @@ import com.momo.notification.service.NotificationService;
 import com.momo.participation.constant.ParticipationStatus;
 import com.momo.participation.entity.Participation;
 import com.momo.participation.repository.ParticipationRepository;
-import com.momo.participation.validation.ParticipationValidation;
+import com.momo.participation.validation.ParticipationValidator;
 import com.momo.user.entity.User;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -28,7 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ParticipationServiceTest {
 
   @Mock
-  private ParticipationValidation participationValidation;
+  private ParticipationValidator participationValidation;
 
   @Mock
   private ParticipationRepository participationRepository;

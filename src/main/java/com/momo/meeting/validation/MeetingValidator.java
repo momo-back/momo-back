@@ -1,4 +1,4 @@
-package com.momo.meeting.validator;
+package com.momo.meeting.validation;
 
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;

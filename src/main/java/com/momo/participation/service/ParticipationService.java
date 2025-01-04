@@ -6,7 +6,7 @@ import com.momo.notification.service.NotificationService;
 import com.momo.participation.constant.ParticipationStatus;
 import com.momo.participation.entity.Participation;
 import com.momo.participation.repository.ParticipationRepository;
-import com.momo.participation.validation.ParticipationValidation;
+import com.momo.participation.validation.ParticipationValidator;
 import com.momo.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ public class ParticipationService {
   private static final String PARTICIPATION_NOTIFICATION_MESSAGE =
       "님이 모임 참여를 신청했습니다.";
 
-  private final ParticipationValidation participationValidation;
+  private final ParticipationValidator participationValidation;
   private final ParticipationRepository participationRepository;
   private final NotificationService notificationService;
 

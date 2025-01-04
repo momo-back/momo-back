@@ -7,7 +7,7 @@ import com.momo.meeting.dto.MeetingListReadRequest;
 import com.momo.meeting.dto.MeetingListReadResponse;
 import com.momo.meeting.dto.MeetingDto;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
-import com.momo.meeting.validator.MeetingValidator;
+import com.momo.meeting.validation.MeetingValidator;
 import com.momo.user.entity.User;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.repository.MeetingRepository;

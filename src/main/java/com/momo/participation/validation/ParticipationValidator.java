@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class ParticipationValidation {
+public class ParticipationValidator {
 
   private final MeetingRepository meetingRepository;
   private final ParticipationRepository participationRepository;
