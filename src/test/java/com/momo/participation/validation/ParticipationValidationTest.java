@@ -36,7 +36,7 @@ class ParticipationValidationTest {
   private ParticipationRepository participationRepository;
 
   @InjectMocks
-  private ParticipationValidation participationValidation;
+  private ParticipationValidator participationValidation;
 
   @Test
   @DisplayName("존재하지 않는 모임에 참가 신청 - 예외 발생")

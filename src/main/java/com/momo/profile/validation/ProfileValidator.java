@@ -1,4 +1,4 @@
-package com.momo.profile.validate;
+package com.momo.profile.validation;
 
 import com.momo.profile.exception.ProfileErrorCode;
 import com.momo.profile.exception.ProfileException;

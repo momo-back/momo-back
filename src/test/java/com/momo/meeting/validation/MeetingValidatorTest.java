@@ -1,4 +1,4 @@
-package com.momo.meeting.validator;
+package com.momo.meeting.validation;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;

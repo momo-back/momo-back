@@ -23,7 +23,7 @@ import com.momo.meeting.dto.create.MeetingCreateResponse;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import com.momo.meeting.repository.MeetingRepository;
-import com.momo.meeting.validator.MeetingValidator;
+import com.momo.meeting.validation.MeetingValidator;
 import com.momo.user.entity.User;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

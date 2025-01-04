@@ -15,7 +15,7 @@ import com.momo.profile.dto.ProfileCreateResponse;
 import com.momo.profile.exception.ProfileException;
 import com.momo.profile.entity.Profile;
 import com.momo.profile.repository.ProfileRepository;
-import com.momo.profile.validate.ProfileValidator;
+import com.momo.profile.validation.ProfileValidator;
 import com.momo.user.entity.User;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
