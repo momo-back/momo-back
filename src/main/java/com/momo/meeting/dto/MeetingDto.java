@@ -33,6 +33,7 @@ public class MeetingDto {
   private Integer maxCount;
   private Integer approvedCount;
   private Set<String> category;
+  private String content;
   private String thumbnailUrl;
 
   public static List<MeetingDto> convertToMeetingDtos(
@@ -59,6 +60,7 @@ public class MeetingDto {
         .maxCount(meeting.getMaxCount())
         .approvedCount(meeting.getApprovedCount())
         .category(foodCategories)
+        .content(meeting.getContent())
         .thumbnailUrl(meeting.getThumbnailUrl())
         .build();
   }
