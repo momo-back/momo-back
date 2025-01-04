@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.momo.common.exception.CustomException;
 import com.momo.common.exception.ErrorCode;
+import com.momo.config.aspect.ProfileValidationAspect;
 import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.dto.CustomUserDetails;
 import com.momo.user.entity.User;
