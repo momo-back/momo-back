@@ -17,6 +17,7 @@ import com.momo.user.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import javax.transaction.Transactional;
 import java.util.UUID;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -52,6 +54,7 @@ public class UserService {
   }
 
   // 회원 탈퇴
+  @Transactional
   public void deleteUser() {
     String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -59,14 +62,17 @@ public class UserService {
     User user = userRepository.findByEmail(email)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-    // RefreshToken 삭제
-    if (refreshTokenRepository.existsByToken(email)) {
-      refreshTokenRepository.deleteByEmail(email);
-    }
+    // RefreshToken 삭제 (명시적으로 수행)
+    refreshTokenRepository.deleteByUser(user);
 
-    // User 삭제
+    // User 삭제 (연관된 Profile과 RefreshToken은 자동 삭제)
+    log.debug("Deleting user: {}", user.getEmail());
     userRepository.delete(user);
+    log.debug("User deleted successfully.");
   }
+
+
+
 
   // 비밀번호 재설정 토큰 생성
   public String generateResetToken(String email) {
@@ -200,16 +206,16 @@ public class UserService {
   }
 
   // 카카오 로그인 회원정보 조회
-  public UserInfoResponse getUserInfoForKakaoUser(String email) {
-    // 이메일로 User 조회
+  public UserInfoResponse getUserInfoByEmail(String email) {
+    // User 엔티티 조회
     User user = userRepository.findByEmail(email)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-    // 해당 User의 Profile 조회
+    // Profile 엔티티 조회
     Profile profile = profileRepository.findByUser(user)
         .orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
 
-    // UserInfoResponse 빌드
+    // UserInfoResponse 생성 및 반환
     return UserInfoResponse.builder()
         .nickname(user.getNickname())
         .phone(user.getPhone())
@@ -219,7 +225,7 @@ public class UserService {
         .profileImageUrl(profile.getProfileImageUrl())
         .introduction(profile.getIntroduction())
         .mbti(profile.getMbti())
-        .oauthProvider("KAKAO") // Kakao 인증
+        .oauthProvider(user.isOauthUser() ? "KAKAO" : "LOCAL") // 회원 타입 구분
         .build();
   }
 }

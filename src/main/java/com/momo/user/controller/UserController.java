@@ -61,17 +61,11 @@ public class UserController {
   }
 
   // 마이페이지 회원정보 조회
+  // 회원정보 조회 (일반 로그인 회원 및 카카오 로그인 회원 모두 처리)
   @GetMapping("/me")
   public ResponseEntity<UserInfoResponse> getUserInfo() {
-    UserInfoResponse userInfo = userService.getUserInfo();
-    return ResponseEntity.ok(userInfo);
-  }
-
-  // 카카오 로그인 회원정보 조회
-  @GetMapping("/me/kakao")
-  public ResponseEntity<UserInfoResponse> getKakaoUserInfo() {
     String email = SecurityContextHolder.getContext().getAuthentication().getName();
-    UserInfoResponse userInfo = userService.getUserInfoForKakaoUser(email);
+    UserInfoResponse userInfo = userService.getUserInfoByEmail(email);
     return ResponseEntity.ok(userInfo);
   }
 }

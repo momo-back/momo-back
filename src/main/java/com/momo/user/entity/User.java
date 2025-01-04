@@ -1,6 +1,7 @@
 package com.momo.user.entity;
 
 import com.momo.config.token.entity.RefreshToken;
+import com.momo.profile.entity.Profile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -93,6 +94,9 @@ public class User {
   public List<GrantedAuthority> getAuthorities() {
     return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
   }
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+  private List<Profile> profiles = new ArrayList<>();
 
 
 }
