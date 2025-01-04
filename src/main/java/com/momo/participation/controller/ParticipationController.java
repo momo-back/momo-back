@@ -17,7 +17,7 @@ public class ParticipationController {
 
   private final ParticipationService participationService;
 
-  @PostMapping("/{meetingId}/participate")
+  @PostMapping("/{meetingId}/participation")
   public ResponseEntity<Long> createParticipation(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long meetingId
