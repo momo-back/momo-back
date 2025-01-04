@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.entity.Meeting;
+import com.momo.notification.constant.NotificationType;
+import com.momo.notification.service.NotificationService;
 import com.momo.participation.constant.ParticipationStatus;
 import com.momo.participation.entity.Participation;
 import com.momo.participation.repository.ParticipationRepository;
@@ -31,6 +33,9 @@ class ParticipationServiceTest {
   @Mock
   private ParticipationRepository participationRepository;
 
+  @Mock
+  private NotificationService notificationService;
+
   @InjectMocks
   private ParticipationService participationService;
 
@@ -38,14 +43,14 @@ class ParticipationServiceTest {
   @DisplayName("모임 참여 신청 - 성공")
   void createParticipation_Success() {
     // given
-    User user = createUser();
-    Meeting meeting = createMeeting(user);
+    User user = createUser(1L);
+    User meetingOwner = createUser(2L);
+    Meeting meeting = createMeeting(meetingOwner);
     Participation participation = createParticipation(user, meeting);
 
     // given
     when(participationValidation.validateForParticipate(user.getId(), meeting.getId()))
         .thenReturn(meeting);
-
     when(participationRepository.save(any(Participation.class))).thenReturn(participation);
 
     // when
@@ -56,11 +61,16 @@ class ParticipationServiceTest {
 
     verify(participationValidation).validateForParticipate(user.getId(), meeting.getId());
     verify(participationRepository).save(any(Participation.class));
+    verify(notificationService).sendNotification(
+        meetingOwner,
+        user.getNickname() + "님이 모임 참여를 신청했습니다.",
+        NotificationType.NEW_PARTICIPATION_REQUEST
+    );
   }
 
-  private static User createUser() {
+  private static User createUser(Long userId) {
     return User.builder()
-        .id(1L)
+        .id(userId)
         .email("test@gmail.com")
         .password("testapssword")
         .phone("01012345678")

@@ -59,17 +59,12 @@ class MeetingValidatorTest {
     User user = createUser();
     MeetingCreateRequest request = createRequestWithInvalidDateTime();
 
-    when(meetingRepository.countByUser_IdAndCreatedAtBetween(eq(user.getId()), any(), any()))
-        .thenReturn(0);
-
     // when & then
     assertThatThrownBy(() -> meetingValidator.validateForMeetingCreation(
-        user.getId(), LocalDateTime.now()))
+        user.getId(), request.getMeetingDateTime()))
         .isInstanceOf(MeetingException.class)
         .hasFieldOrPropertyWithValue(
             "meetingErrorCode", MeetingErrorCode.INVALID_MEETING_DATE_TIME);
-
-    verify(meetingRepository).countByUser_IdAndCreatedAtBetween(eq(user.getId()), any(), any());
   }
 
   private static User createUser() {

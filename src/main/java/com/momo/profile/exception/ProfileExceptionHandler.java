@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Slf4j
-@RestControllerAdvice
+@RestControllerAdvice("com.momo.profile")
 public class ProfileExceptionHandler {
 
   @ExceptionHandler(ProfileException.class)
   public ResponseEntity<ProfileErrorResponse> handleProfileException(ProfileException e) {
-    log.error("Profile Exception: {}", e.getMessage());
+    log.error("Profile Exception: {}", e.getProfileErrorCode().getMessage());
     return createErrorResponse(e.getProfileErrorCode());
   }
 

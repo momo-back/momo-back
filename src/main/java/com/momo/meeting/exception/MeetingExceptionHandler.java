@@ -1,6 +1,5 @@
 package com.momo.meeting.exception;
 
-import com.momo.common.exception.CustomException;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +18,7 @@ public class MeetingExceptionHandler {
 
   @ExceptionHandler(MeetingException.class)
   public ResponseEntity<MeetingErrorResponse> handleMeetingException(MeetingException e) {
+    log.error("Meeting Exception: {}", e.getMessage());
     return createErrorResponse(e.getMeetingErrorCode());
   }
 
