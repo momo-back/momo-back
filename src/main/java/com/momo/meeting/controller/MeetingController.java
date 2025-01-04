@@ -28,7 +28,6 @@ public class MeetingController {
 
   @PostMapping
   public ResponseEntity<MeetingCreateResponse> createMeeting(
-      // TODO: 사용자 위치 정보 필요
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @Valid @RequestBody MeetingCreateRequest request
   ) {
