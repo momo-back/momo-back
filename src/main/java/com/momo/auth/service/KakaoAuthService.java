@@ -70,9 +70,17 @@ public class KakaoAuthService {
         String.class
     );
 
-    return parseResponse(response.getBody(), KakaoProfile.class, ErrorCode.INVALID_KAKAO_RESPONSE);
+    return parseResponse(response.getBody());
   }
 
+  private KakaoProfile parseResponse(String body) {
+    try {
+      ObjectMapper objectMapper = new ObjectMapper();
+      return objectMapper.readValue(body, KakaoProfile.class);
+    } catch (Exception e) {
+      throw new RuntimeException("카카오 프로필 정보 파싱 실패", e);
+    }
+  }
   /**
    * 공통 JSON 응답 파싱 메서드
    */

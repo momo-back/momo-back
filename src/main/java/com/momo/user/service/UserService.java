@@ -5,10 +5,13 @@ import com.momo.common.exception.ErrorCode;
 import com.momo.config.JWTUtil;
 import com.momo.config.token.entity.RefreshToken;
 import com.momo.config.token.repository.RefreshTokenRepository;
+import com.momo.profile.entity.Profile;
+import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.dto.CustomUserDetails;
 import com.momo.auth.dto.KakaoProfile;
 import com.momo.auth.dto.LoginDTO;
 import com.momo.auth.dto.OAuthToken;
+import com.momo.user.dto.UserInfoResponse;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import java.util.ArrayList;
@@ -31,6 +34,7 @@ public class UserService {
   private final JWTUtil jwtUtil;
   private final RefreshTokenRepository refreshTokenRepository;
   private final EmailService emailService;
+  private final ProfileRepository profileRepository;
 
   private final HashMap<String, String> passwordResetTokens = new HashMap<>();
 
@@ -172,5 +176,50 @@ public class UserService {
     refreshTokenRepository.deleteByUser(user);
 
     createRefreshToken(user, newTokenValue);
+  }
+
+  public UserInfoResponse getUserInfo() {
+    String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
+    Profile profile = profileRepository.findByUser(user)
+        .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+    return UserInfoResponse.builder()
+        .nickname(user.getNickname())
+        .phone(user.getPhone())
+        .email(user.getEmail())
+        .gender(profile.getGender())
+        .birth(profile.getBirth())
+        .profileImageUrl(profile.getProfileImageUrl())
+        .introduction(profile.getIntroduction())
+        .mbti(profile.getMbti())
+        .build();
+  }
+
+  // 카카오 로그인 회원정보 조회
+  public UserInfoResponse getUserInfoForKakaoUser(String email) {
+    // 이메일로 User 조회
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    // 해당 User의 Profile 조회
+    Profile profile = profileRepository.findByUser(user)
+        .orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
+
+    // UserInfoResponse 빌드
+    return UserInfoResponse.builder()
+        .nickname(user.getNickname())
+        .phone(user.getPhone())
+        .email(user.getEmail())
+        .gender(profile.getGender())
+        .birth(profile.getBirth())
+        .profileImageUrl(profile.getProfileImageUrl())
+        .introduction(profile.getIntroduction())
+        .mbti(profile.getMbti())
+        .oauthProvider("KAKAO") // Kakao 인증
+        .build();
   }
 }
