@@ -18,6 +18,30 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
 
   @Query(value =
       "SELECT "
+          + "m.id as id, "
+          + "m.title as title, "
+          + "m.location_id as locationId, "
+          + "m.latitude as latitude, "
+          + "m.longitude as longitude, "
+          + "m.address as address, "
+          + "m.meeting_date_time as meetingDateTime, "
+          + "m.max_count as maxCount, "
+          + "m.approved_count as approvedCount, "
+          + "m.content as content, "
+          + "m.thumbnail_url as thumbnailUrl "
+          + "FROM meeting m "
+          + "WHERE m.id > :lastId "
+          + "AND m.meeting_status = 'RECRUITING' "
+          + "ORDER BY m.created_at ASC "
+          + "LIMIT :pageSize",
+      nativeQuery = true)
+  List<MeetingToMeetingDtoProjection> findOrderByCreatedAtWithCursor(
+      @Param("lastId") Long lastId,
+      @Param("pageSize") int pageSize
+  );
+
+  @Query(value =
+      "SELECT "
           + "dm.id as id, "
           + "dm.title as title, "
           + "dm.location_id as locationId, "
@@ -27,6 +51,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
           + "dm.meeting_date_time as meetingDateTime, "
           + "dm.max_count as maxCount, "
           + "dm.approved_count as approvedCount, "
+          + "dm.content as content, "
           + "dm.thumbnail_url as thumbnailUrl, "
           + "("
           + "  SELECT GROUP_CONCAT(mc.category) "
@@ -36,7 +61,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
           + "dm.distance as distance "
           + "FROM ("
           + "  SELECT m.id, m.title, m.location_id, m.latitude, m.longitude, m.address, "
-          + "  m.meeting_date_time, m.max_count, m.approved_count, m.thumbnail_url, "
+          + "  m.meeting_date_time, m.max_count, m.approved_count, m.content, m.thumbnail_url, "
           + "    ST_Distance_Sphere( "
           + "        POINT(:userLongitude, :userLatitude), "
           + "        POINT(m.longitude, m.latitude) "
@@ -60,56 +85,4 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
       @Param("lastDistance") double lastDistance,
       @Param("pageSize") int pageSize
   );
-
-  Optional<Meeting> findByIdAndUser_Id(Long id, Long userId);
-
-  /*@Query(value =
-      "SELECT m.id as id, "
-          + "m.title as title, "
-          + "m.location_id as locationId, "
-          + "m.latitude as latitude, "
-          + "m.longitude as longitude, "
-          + "m.address as address, "
-          + "m.meeting_date_time as meetingDateTime, "
-          + "m.max_count as maxCount, "
-          + "m.approved_count as approvedCount, "
-          + "m.thumbnail_url as thumbnailUrl, "
-          + "GROUP_CONCAT(DISTINCT mc.category) as category, "
-          + "ST_Distance_Sphere("
-          + "    POINT(:userLongitude, :userLatitude), "
-          + "    POINT(m.longitude, m.latitude)"
-          + ") as distance "
-          + "FROM meeting m "
-          + "LEFT JOIN meeting_category mc ON m.id = mc.meeting_id "
-          + "WHERE m.meeting_status = 'RECRUITING' "
-          + "AND ST_Distance_Sphere("
-          + "    POINT(:userLongitude, :userLatitude), "
-          + "    POINT(m.longitude, m.latitude)"
-          + ") <= :radius "
-          + "AND ("
-          + "    ST_Distance_Sphere("
-          + "        POINT(:userLongitude, :userLatitude), "
-          + "        POINT(m.longitude, m.latitude)"
-          + "    ) > :lastDistance "
-          + "    OR ("
-          + "        ST_Distance_Sphere("
-          + "            POINT(:userLongitude, :userLatitude), "
-          + "            POINT(m.longitude, m.latitude)"
-          + "        ) = :lastDistance "
-          + "    AND m.id > :lastId)"
-          + ") "
-          + "GROUP BY m.id, m.title, m.location_id, m.latitude, m.longitude, "
-          + "        m.address, m.meeting_date_time, m.max_count, m.approved_count, "
-          + "        m.thumbnail_url "
-          + "ORDER BY distance ASC, m.id ASC "
-          + "LIMIT :pageSize",
-      nativeQuery = true)
-  List<MeetingToMeetingDtoProjection> findNearbyMeetingsWithCursor(
-      @Param("userLatitude") double userLatitude,
-      @Param("userLongitude") double userLongitude,
-      @Param("radius") double radius,
-      @Param("lastId") Long lastId,
-      @Param("lastDistance") double lastDistance,
-      @Param("pageSize") int pageSize
-  );*/
 }
