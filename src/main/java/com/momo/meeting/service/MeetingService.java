@@ -1,11 +1,14 @@
 package com.momo.meeting.service;
 
+import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.dto.MeetingCursor;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
 import com.momo.meeting.dto.MeetingListReadRequest;
 import com.momo.meeting.dto.MeetingListReadResponse;
 import com.momo.meeting.dto.MeetingDto;
+import com.momo.meeting.exception.MeetingErrorCode;
+import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import com.momo.meeting.validation.MeetingValidator;
 import com.momo.user.entity.User;
@@ -42,6 +45,16 @@ public class MeetingService {
         MeetingDto.convertToMeetingDtos(meetingProjections),
         createCursor(meetingProjections),
         request.getPageSize());
+  }
+
+  @Transactional
+  public void updateMeetingStatus(Long userId, Long meetingId, MeetingStatus newStatus) {
+    Meeting meeting = meetingRepository.findById(meetingId)
+        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
+    /*if (!meeting.isOwner(userId)) {
+      // TODO: merge 후 구현
+    }*/
+    meeting.updateStatus(newStatus);
   }
 
   private List<MeetingToMeetingDtoProjection> getMeetingList(

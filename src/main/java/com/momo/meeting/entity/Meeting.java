@@ -73,4 +73,8 @@ public class Meeting extends BaseEntity {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private MeetingStatus meetingStatus;
+
+  public void updateStatus(MeetingStatus newStatus) {
+    this.meetingStatus = newStatus;
+  }
 }
