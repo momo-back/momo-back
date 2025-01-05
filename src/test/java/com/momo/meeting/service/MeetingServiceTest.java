@@ -16,8 +16,8 @@ import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.dto.MeetingCursor;
 import com.momo.meeting.dto.MeetingDto;
-import com.momo.meeting.dto.MeetingListReadRequest;
-import com.momo.meeting.dto.MeetingListReadResponse;
+import com.momo.meeting.dto.MeetingsRequest;
+import com.momo.meeting.dto.MeetingsResponse;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
 import com.momo.meeting.entity.Meeting;
@@ -138,7 +138,7 @@ class MeetingServiceTest {
   @DisplayName("모집글 목록 조회 - 성공")
   void getNearbyMeetings_Success() {
     // given
-    MeetingListReadRequest request = createaMeetingListReadRequest();
+    MeetingsRequest request = createaMeetingListReadRequest();
     List<MeetingToMeetingDtoProjection> mockProjections = createMockProjections();
 
     when(meetingRepository.findNearbyMeetingsWithCursor(
@@ -151,7 +151,7 @@ class MeetingServiceTest {
     )).thenReturn(mockProjections);
 
     // when
-    MeetingListReadResponse response = meetingService.getNearbyMeetings(request);
+    MeetingsResponse response = meetingService.getMeetings(request);
 
     // then
     assertEquals(TEST_PAGE_SIZE + 1, response.getMeetings().size());
@@ -170,8 +170,8 @@ class MeetingServiceTest {
     );
   }
 
-  private static MeetingListReadRequest createaMeetingListReadRequest() {
-    return MeetingListReadRequest.createCursorRequest(
+  private static MeetingsRequest createaMeetingListReadRequest() {
+    return MeetingsRequest.createRequest(
         userLatitude,
         userLongitude,
         null,
@@ -230,7 +230,7 @@ class MeetingServiceTest {
     assertEquals("test-url" + i + ".jpg", meetingDto.getThumbnailUrl());
   }
 
-  private static void verifyCursor(MeetingListReadResponse response) {
+  private static void verifyCursor(MeetingsResponse response) {
     List<MeetingDto> meetingDtos = response.getMeetings();
     MeetingDto meetingDto = meetingDtos.get(meetingDtos.size() - 1);
     MeetingCursor cursor = response.getCursor();
