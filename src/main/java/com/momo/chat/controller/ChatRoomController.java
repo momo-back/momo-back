@@ -1,7 +1,8 @@
 package com.momo.chat.controller;
 
-import com.momo.chat.dto.ChatHistoryResponseDto;
-import com.momo.chat.dto.ChatRoomResponseDto;
+import com.momo.chat.dto.ChatHistoryDto;
+import com.momo.chat.dto.ChatReaderDto;
+import com.momo.chat.dto.ChatRoomDto;
 import com.momo.chat.service.ChatRoomService;
 import com.momo.user.dto.CustomUserDetails;
 import java.util.List;
@@ -24,65 +25,65 @@ public class ChatRoomController {
   // 채팅방 생성, 입장 시 채팅방 구독, 채팅방 삭제, 퇴장, 강퇴시 채팅방 구독 해제 필요
   // 채팅방 생성
   @PostMapping("/{meetingId}")
-  public ResponseEntity<ChatRoomResponseDto> createRoom(
+  public ResponseEntity<ChatRoomDto> createRoom(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long meetingId
   ) {
-    ChatRoomResponseDto roomData = chatRoomService.createChatRoom(
+    ChatRoomDto roomData = chatRoomService.createChatRoom(
         customUserDetails.getUser().getId(), meetingId);
     return ResponseEntity.ok().body(roomData);
   }
 
   // 채팅방 입장
   @PostMapping("/{roomId}/join")
-  public ResponseEntity<ChatRoomResponseDto> joinRoom(
+  public ResponseEntity<ChatRoomDto> joinRoom(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long roomId
   ) {
-    ChatRoomResponseDto roomData = chatRoomService.joinRoom(
+    ChatRoomDto roomData = chatRoomService.joinRoom(
         customUserDetails.getUser().getId(), roomId);
     return ResponseEntity.ok().body(roomData);
   }
 
   // 채팅방 퇴장
   @PostMapping("/{roomId}/leave")
-  public ResponseEntity<ChatRoomResponseDto> leaveRoom(
+  public ResponseEntity<ChatRoomDto> leaveRoom(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long roomId
   ) {
-    ChatRoomResponseDto roomData = chatRoomService.leaveRoom(
+    ChatRoomDto roomData = chatRoomService.leaveRoom(
         customUserDetails.getUser().getId(), roomId);
     return ResponseEntity.ok().body(roomData);
   }
 
   // 참여중인 채팅방 정보 조회
   @GetMapping("/{roomId}")
-  public ResponseEntity<ChatRoomResponseDto> getRoom(
+  public ResponseEntity<ChatRoomDto> getRoom(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long roomId
   ) {
-    ChatRoomResponseDto roomData = chatRoomService.getRoom(
+    ChatRoomDto roomData = chatRoomService.getRoom(
         customUserDetails.getUser().getId(), roomId);
     return ResponseEntity.ok().body(roomData);
   }
 
   // 로그인한 유저의 모든 채팅방 목록 조회
   @GetMapping
-  public ResponseEntity<List<ChatRoomResponseDto>> getRooms(
+  public ResponseEntity<List<ChatRoomDto>> getRooms(
       @AuthenticationPrincipal CustomUserDetails customUserDetails
   ) {
-    List<ChatRoomResponseDto> roomData = chatRoomService.getRooms(
+    List<ChatRoomDto> roomData = chatRoomService.getRooms(
         customUserDetails.getUser().getId());
     return ResponseEntity.ok().body(roomData);
   }
 
   // 참여중인 채팅방 참여자 목록 조회
   @GetMapping("/{roomId}/participants")
-  public ResponseEntity<List<Long>> getRoomReaders(
+  public ResponseEntity<List<ChatReaderDto>> getRoomReaders(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long roomId
   ) {
-    List<Long> participants = chatRoomService.getRoomReaders(
+    List<ChatReaderDto> participants = chatRoomService.getRoomReaders(
         customUserDetails.getUser().getId(), roomId);
     return ResponseEntity.ok().body(participants);
   }
@@ -99,22 +100,22 @@ public class ChatRoomController {
 
   // 특정 사용자 강퇴 (호스트만 가능)
   @PostMapping("/{roomId}/withdrawal/{userId}")
-  public ResponseEntity<ChatRoomResponseDto> withdrawal(
+  public ResponseEntity<ChatRoomDto> withdrawal(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long roomId,
       @PathVariable Long userId
   ) {
-    ChatRoomResponseDto roomData = chatRoomService.withdrawal(
+    ChatRoomDto roomData = chatRoomService.withdrawal(
         customUserDetails.getUser().getId(), roomId, userId);
     return ResponseEntity.ok().body(roomData);
   }
 
   // 채팅 기록 조회
   @GetMapping("/{roomId}/messages")
-  public ResponseEntity<List<ChatHistoryResponseDto>> getChatHistory(
+  public ResponseEntity<List<ChatHistoryDto>> getChatHistory(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long roomId) {
-    List<ChatHistoryResponseDto> history = chatRoomService.getChatHistory(
+    List<ChatHistoryDto> history = chatRoomService.getChatHistory(
         customUserDetails.getUser().getId(), roomId);
     return ResponseEntity.ok(history);
   }
