@@ -6,13 +6,13 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class MeetingListReadResponse {
+public class MeetingsResponse {
 
   private List<MeetingDto> meetings;
   private boolean hasNext;
   private MeetingCursor cursor;
 
-  public static MeetingListReadResponse of(
+  public static MeetingsResponse of(
       List<MeetingDto> meetings,
       MeetingCursor meetingCursor,
       int pageSize
@@ -20,7 +20,7 @@ public class MeetingListReadResponse {
     boolean hasNext = meetings.size() > pageSize;
     MeetingCursor nextCursor = hasNext ? meetingCursor : null;
 
-    return MeetingListReadResponse.builder()
+    return MeetingsResponse.builder()
         .meetings(meetings)
         .hasNext(hasNext)
         .cursor(nextCursor)
