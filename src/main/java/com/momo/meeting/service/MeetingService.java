@@ -9,10 +9,11 @@ import com.momo.meeting.dto.MeetingDto;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
-import com.momo.meeting.validation.MeetingValidator;
 import com.momo.user.entity.User;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.repository.MeetingRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,17 +26,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class MeetingService {
 
   private final MeetingRepository meetingRepository;
-  private final MeetingValidator meetingValidator;
 
   public MeetingCreateResponse createMeeting(User user, MeetingCreateRequest request) {
-    meetingValidator.validateDailyPostLimit(user.getId());
+    validateDailyPostLimit(user.getId());
     Meeting meeting = request.toEntity(request, user);
 
-    Meeting saved = meetingRepository.save(meeting);
-    return MeetingCreateResponse.from(saved);
+    meetingRepository.save(meeting);
+    return MeetingCreateResponse.from(meeting);
   }
 
   public MeetingListReadResponse getNearbyMeetings(MeetingListReadRequest request) {
+    // TODO: 각 모집글 주최자 아이디 같이 반환 필요.
     List<MeetingToMeetingDtoProjection> meetingProjections = getMeetingList(request);
 
     return MeetingListReadResponse.of(
@@ -48,7 +49,7 @@ public class MeetingService {
   public MeetingCreateResponse updateMeeting(
       Long userId, Long meetingId, MeetingCreateRequest request
   ) {
-    Meeting meeting = meetingValidator.validateForMeetingUpdate(userId, meetingId);
+    Meeting meeting = validateForMeetingUpdate(userId, meetingId);
     meeting.update(request);
 
     return MeetingCreateResponse.from(meeting);
@@ -74,5 +75,27 @@ public class MeetingService {
     MeetingToMeetingDtoProjection lastProjection = meetingProjections
         .get(meetingProjections.size() - 1);
     return MeetingCursor.of(lastProjection.getId(), lastProjection.getDistance());
+  }
+
+  private void validateDailyPostLimit(Long userId) {
+    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+    LocalDateTime endOfDay = startOfDay.plusDays(1);
+
+    int todayPostCount = meetingRepository.countByUser_IdAndCreatedAtBetween(
+        userId, startOfDay, endOfDay
+    );
+    if (todayPostCount >= 10) {
+      throw new MeetingException(MeetingErrorCode.DAILY_POSTING_LIMIT_EXCEEDED);
+    }
+  }
+
+  private Meeting validateForMeetingUpdate(Long userId, Long meetingId) {
+    Meeting meeting = meetingRepository.findById(meetingId)
+        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
+
+    if (!meeting.isOwner(userId)) {
+      throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
+    }
+    return meeting;
   }
 }
