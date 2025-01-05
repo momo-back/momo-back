@@ -19,6 +19,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -35,9 +36,9 @@ public class MeetingService {
     return MeetingCreateResponse.from(meeting);
   }
 
-  public MeetingListReadResponse getNearbyMeetings(MeetingListReadRequest request) {
-    // TODO: 각 모집글 주최자 아이디 같이 반환 필요.
-    List<MeetingToMeetingDtoProjection> meetingProjections = getMeetingList(request);
+  public MeetingsResponse getMeetings(MeetingsRequest request) {
+// TODO: 각 모집글 주최자 아이디 같이 반환 필요.
+    List<MeetingToMeetingDtoProjection> meetingProjections;
 
     if (request.getSortType() == SortType.DISTANCE) {
       meetingProjections = getNearbyMeetings(request);
@@ -52,19 +53,7 @@ public class MeetingService {
     );
   }
 
-  @Transactional
-  public MeetingCreateResponse updateMeeting(
-      Long userId, Long meetingId, MeetingCreateRequest request
-  ) {
-    Meeting meeting = validateForMeetingUpdate(userId, meetingId);
-    meeting.update(request);
-
-    return MeetingCreateResponse.from(meeting);
-  }
-
-  private List<MeetingToMeetingDtoProjection> getMeetingList(
-      MeetingListReadRequest request
-  ) {
+  public List<MeetingToMeetingDtoProjection> getNearbyMeetings(MeetingsRequest request) {
     return meetingRepository.findNearbyMeetingsWithCursor(
         request.getUserLatitude(),
         request.getUserLongitude(),
@@ -73,6 +62,16 @@ public class MeetingService {
         request.getCursorDistance(),
         request.getPageSize() + 1 // 다음 페이지 존재 여부를 알기 위해 + 1
     );
+  }
+
+  @Transactional
+  public MeetingCreateResponse updateMeeting(
+      Long userId, Long meetingId, MeetingCreateRequest request
+  ) {
+    Meeting meeting = validateForMeetingUpdate(userId, meetingId);
+    meeting.update(request);
+
+    return MeetingCreateResponse.from(meeting);
   }
 
   private List<MeetingToMeetingDtoProjection> getMeetingsByDate(

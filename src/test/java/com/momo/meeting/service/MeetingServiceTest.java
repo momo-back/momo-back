@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -92,7 +91,7 @@ class MeetingServiceTest {
   @DisplayName("모집글 목록 조회 - 성공")
   void getNearbyMeetings_Success() {
     // given
-    MeetingsRequest request = createaMeetingListReadRequest();
+    MeetingsRequest request = createMeetingListReadRequest();
     List<MeetingToMeetingDtoProjection> mockProjections = createMockProjections();
 
     when(meetingRepository.findNearbyMeetingsWithCursor(
@@ -147,8 +146,8 @@ class MeetingServiceTest {
     verify(meetingRepository).countByUser_IdAndCreatedAtBetween(eq(user.getId()), any(), any());
   }
 
-  private static MeetingListReadRequest createaMeetingListReadRequest() {
-    return MeetingListReadRequest.createCursorRequest(
+  private static MeetingsRequest createMeetingListReadRequest() {
+    return MeetingsRequest.createRequest(
         userLatitude,
         userLongitude,
         null,
