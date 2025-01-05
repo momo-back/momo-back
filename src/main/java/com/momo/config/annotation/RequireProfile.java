@@ -1,4 +1,4 @@
-package com.momo.common.annotation;
+package com.momo.config.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

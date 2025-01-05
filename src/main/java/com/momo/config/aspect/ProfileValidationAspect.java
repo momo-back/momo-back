@@ -1,4 +1,4 @@
-package com.momo.common.aspect;
+package com.momo.config.aspect;
 
 import com.momo.common.exception.CustomException;
 import com.momo.common.exception.ErrorCode;
