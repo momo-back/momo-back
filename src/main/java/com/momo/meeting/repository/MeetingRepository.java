@@ -4,6 +4,7 @@ import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -59,6 +60,8 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
       @Param("lastDistance") double lastDistance,
       @Param("pageSize") int pageSize
   );
+
+  Optional<Meeting> findByIdAndUser_Id(Long id, Long userId);
 
   /*@Query(value =
       "SELECT m.id as id, "

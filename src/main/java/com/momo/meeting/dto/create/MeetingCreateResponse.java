@@ -19,9 +19,9 @@ public class MeetingCreateResponse {
   private Double longitude;
   private String address;
   private LocalDateTime meetingDateTime;
-  private Integer approvedCount;
   private Integer maxCount;
-  private Set<FoodCategory> categories;
+  private Integer approvedCount;
+  private Set<FoodCategory> category;
   private String content;
   private String thumbnailUrl;
   private MeetingStatus meetingStatus;
@@ -35,9 +35,9 @@ public class MeetingCreateResponse {
         .longitude(meeting.getLongitude())
         .address(meeting.getAddress())
         .meetingDateTime(meeting.getMeetingDateTime())
-        .approvedCount(meeting.getApprovedCount())
         .maxCount(meeting.getMaxCount())
-        .categories(meeting.getCategory())
+        .approvedCount(meeting.getApprovedCount())
+        .category(meeting.getCategory())
         .content(meeting.getContent())
         .thumbnailUrl(meeting.getThumbnailUrl())
         .meetingStatus(meeting.getMeetingStatus())

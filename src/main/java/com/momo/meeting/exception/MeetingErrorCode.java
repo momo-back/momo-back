@@ -10,6 +10,8 @@ public enum MeetingErrorCode {
 
   MEETING_NOT_FOUND("존재하지 않는 모임입니다.", HttpStatus.NOT_FOUND),
 
+  NOT_MEETING_OWNER("해당 모임의 작성자가 아닙니다.", HttpStatus.FORBIDDEN),
+
   DAILY_POSTING_LIMIT_EXCEEDED(
       "하루 포스팅 개수 제한을 초과하였습니다.", HttpStatus.TOO_MANY_REQUESTS),
 
