@@ -13,14 +13,16 @@ import org.hibernate.validator.constraints.Range;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("api/v1/meetings")
+@RequestMapping("/api/v1/meetings")
 @RequiredArgsConstructor
 public class MeetingController {
 
@@ -51,5 +53,16 @@ public class MeetingController {
     MeetingListReadRequest request = MeetingListReadRequest
         .createCursorRequest(latitude, longitude, lastId, lastDistance, pageSize);
     return ResponseEntity.ok(meetingService.getNearbyMeetings(request));
+  }
+
+  @PutMapping("/{meetingId}")
+  public ResponseEntity<?> updateMeeting(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long meetingId,
+      @Valid @RequestBody MeetingCreateRequest request
+  ) {
+    MeetingCreateResponse response = meetingService.updateMeeting(
+        customUserDetails.getId(), meetingId, request);
+    return ResponseEntity.ok(response);
   }
 }
