@@ -1,5 +1,6 @@
 package com.momo.meeting.validation;
 
+import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.repository.MeetingRepository;
@@ -14,12 +15,7 @@ public class MeetingValidator {
 
   private final MeetingRepository meetingRepository;
 
-  public void validateForMeetingCreation(Long userId, LocalDateTime meetingDateTime) {
-    validateDailyPostLimit(userId);
-    validateMeetingDateTime(meetingDateTime);
-  }
-
-  private void validateDailyPostLimit(Long userId) {
+  public void validateDailyPostLimit(Long userId) {
     LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
     LocalDateTime endOfDay = startOfDay.plusDays(1);
 
@@ -31,9 +27,13 @@ public class MeetingValidator {
     }
   }
 
-  private void validateMeetingDateTime(LocalDateTime meetingDateTime) {
-    if (meetingDateTime.isBefore(LocalDateTime.now())) {
-      throw new MeetingException(MeetingErrorCode.INVALID_MEETING_DATE_TIME);
+  public Meeting validateForMeetingUpdate(Long userId, Long meetingId) {
+    Meeting meeting = meetingRepository.findById(meetingId)
+        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
+
+    if (!meeting.isOwner(userId)) {
+      throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
     }
+    return meeting;
   }
 }
