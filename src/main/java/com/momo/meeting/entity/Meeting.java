@@ -3,6 +3,7 @@ package com.momo.meeting.entity;
 import com.momo.common.entity.BaseEntity;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
+import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.user.entity.User;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -73,4 +74,21 @@ public class Meeting extends BaseEntity {
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private MeetingStatus meetingStatus;
+
+  public void update(MeetingCreateRequest request) {
+    this.title = request.getTitle();
+    this.locationId = request.getLocationId();
+    this.latitude = request.getLatitude();
+    this.longitude = request.getLongitude();
+    this.address = request.getAddress();
+    this.meetingDateTime = request.getMeetingDateTime();
+    this.maxCount = request.getMaxCount();
+    this.content = request.getContent();
+    this.thumbnailUrl = request.getThumbnailUrl();
+    this.category = request.getCategory();
+  }
+
+  public boolean isOwner(Long userId) {
+    return this.user.getId().equals(userId);
+  }
 }

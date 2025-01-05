@@ -3,7 +3,6 @@ package com.momo.meeting.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -21,13 +20,16 @@ import com.momo.meeting.dto.MeetingsResponse;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
 import com.momo.meeting.entity.Meeting;
+import com.momo.meeting.exception.MeetingErrorCode;
+import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import com.momo.meeting.repository.MeetingRepository;
-import com.momo.meeting.validation.MeetingValidator;
 import com.momo.user.entity.User;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,9 +44,6 @@ class MeetingServiceTest {
   @Mock
   private MeetingRepository meetingRepository;
 
-  @Mock
-  private MeetingValidator meetingValidator;
-
   @InjectMocks
   private MeetingService meetingService;
 
@@ -53,82 +52,37 @@ class MeetingServiceTest {
   void createMeeting_Success() {
     // given
     User user = createUser();
-    MeetingCreateRequest request = createValidRequest();
-    Meeting meeting = createMeeting(user, request);
+    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+    LocalDateTime endOfDay = startOfDay.plusDays(1);
+    MeetingCreateRequest request = createRequest();
 
-    doNothing().when(meetingValidator).validateForMeetingCreation(eq(user.getId()), any());
-    when(meetingRepository.save(any(Meeting.class))).thenReturn(meeting);
+    when(meetingRepository.countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay))
+        .thenReturn(0);
 
     // when
     MeetingCreateResponse response = meetingService.createMeeting(user, request);
 
     // then
-    verify(meetingRepository).save(any(Meeting.class));
     assertThat(response)
         .extracting(
-            "id", "title",
-            "meetingDateTime", "approvedCount", "maxCount",
-            "locationId", "categories", "content",
+            "title", "locationId",
+            "latitude", "longitude",
+            "address", "meetingDateTime",
+            "maxCount", "approvedCount",
+            "category", "content",
             "thumbnailUrl", "meetingStatus"
         ).containsExactly(
-            1L, response.getTitle(),
-            response.getMeetingDateTime(), response.getApprovedCount(),
-            response.getMaxCount(), response.getLocationId(),
-            response.getCategories(), response.getContent(),
-            response.getThumbnailUrl(), response.getMeetingStatus());
+            request.getTitle(), request.getLocationId(),
+            request.getLatitude(), request.getLongitude(),
+            request.getAddress(), request.getMeetingDateTime(),
+            request.getMaxCount(), 1,
+            request.getCategory(), request.getContent(),
+            request.getThumbnailUrl(), MeetingStatus.RECRUITING
+        );
+
+    verify(meetingRepository).countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay);
   }
 
-  @Test
-  @DisplayName("존재하지 않는 사용자 - 예외 발생")
-  void createMeeting_UserNotFound_ThrowsException() {
-    // given
-    User mockUser = mock(User.class);
-    MeetingCreateRequest request = createValidRequest();
-
-    // when & then
-    assertThatThrownBy(() ->
-        meetingService.createMeeting(mockUser, request))
-        .isInstanceOf(RuntimeException.class);
-  }
-
-  private static User createUser() {
-    return User.builder()
-        .id(1L)
-        .email("test@gmail.com")
-        .password("testapssword")
-        .phone("01012345678")
-        .enabled(true)
-        .verificationToken("asdasdsad")
-        .build();
-  }
-
-  private static Meeting createMeeting(User user, MeetingCreateRequest request) {
-    return Meeting.builder()
-        .id(1L)
-        .user(user)
-        .title(request.getTitle())
-        .meetingDateTime(request.getMeetingDateTime())
-        .approvedCount(1)
-        .maxCount(request.getMaxCount())
-        .locationId(request.getLocationId())
-        //.categories(request.getCategories())
-        .content(request.getContent())
-        .thumbnailUrl(request.getThumbnailUrl())
-        .meetingStatus(MeetingStatus.RECRUITING)
-        .build();
-  }
-
-  private MeetingCreateRequest createValidRequest() {
-    return MeetingCreateRequest.builder()
-        .title("테스트 모임")
-        .meetingDateTime(LocalDateTime.now().plusDays(1))
-        .locationId(123456L)
-        .maxCount(6)
-        .categories(Set.of(FoodCategory.KOREAN, FoodCategory.JAPANESE))
-        .content("테스트 내용")
-        .thumbnailUrl("test-thumbnail-url.jpg")
-        .build();
-  }
 
   private static final Double userLatitude = 37.502942;
   private static final Double userLongitude = 126.947629;
@@ -170,8 +124,31 @@ class MeetingServiceTest {
     );
   }
 
-  private static MeetingsRequest createaMeetingListReadRequest() {
-    return MeetingsRequest.createRequest(
+  @Test
+  @DisplayName("하루 게시글 제한(10개) 초과 - 예외 발생")
+  void createMeeting_ExceedDailyLimit_ThrowsException() {
+    // given
+    User user = createUser();
+    MeetingCreateRequest request = createRequest();
+    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+    LocalDateTime endOfDay = startOfDay.plusDays(1);
+
+    when(meetingRepository.countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay))
+        .thenReturn(10);
+
+    // when
+    // then
+    assertThatThrownBy(() -> meetingService.createMeeting(user, request))
+        .isInstanceOf(MeetingException.class)
+        .hasFieldOrPropertyWithValue(
+            "meetingErrorCode",
+            MeetingErrorCode.DAILY_POSTING_LIMIT_EXCEEDED);
+
+    verify(meetingRepository).countByUser_IdAndCreatedAtBetween(eq(user.getId()), any(), any());
+  }
+
+  private static MeetingListReadRequest createaMeetingListReadRequest() {
+    return MeetingListReadRequest.createCursorRequest(
         userLatitude,
         userLongitude,
         null,
@@ -235,5 +212,136 @@ class MeetingServiceTest {
     MeetingDto meetingDto = meetingDtos.get(meetingDtos.size() - 1);
     MeetingCursor cursor = response.getCursor();
     assertEquals(cursor.getId(), meetingDto.getId());
+  }
+
+  @Test
+  @DisplayName("모임 수정 - 성공")
+  void updateMeeting_Success() {
+    // given
+    User user = createUser();
+    MeetingCreateRequest request = createRequest();
+    Meeting meeting = createMeeting(user, request);
+    MeetingCreateRequest updateRequest = createUpdateRequest();
+
+    when(meetingRepository.findById(meeting.getId())).thenReturn(Optional.of(meeting));
+
+    // when
+    MeetingCreateResponse response =
+        meetingService.updateMeeting(user.getId(), meeting.getId(), updateRequest);
+
+    // then
+    assertThat(response)
+        .extracting(
+            "id", "title",
+            "locationId", "latitude",
+            "longitude", "address",
+            "meetingDateTime", "maxCount",
+            "approvedCount", "category",
+            "content", "thumbnailUrl",
+            "meetingStatus"
+        ).containsExactly(
+            1L, updateRequest.getTitle(),
+            updateRequest.getLocationId(), updateRequest.getLatitude(),
+            updateRequest.getLongitude(), updateRequest.getAddress(),
+            updateRequest.getMeetingDateTime(), updateRequest.getMaxCount(),
+            1, updateRequest.getCategory(),
+            updateRequest.getContent(), updateRequest.getThumbnailUrl(),
+            MeetingStatus.RECRUITING
+        );
+
+    verify(meetingRepository).findById(meeting.getId());
+  }
+
+  @Test
+  @DisplayName("존재하지 않는 모임 수정 - 예외 발생")
+  void updateMeeting_MeetingNotFound_ThrowsException() {
+    // given
+    User user = createUser();
+    MeetingCreateRequest request = createRequest();
+
+    when(meetingRepository.findById(1L)).thenReturn(Optional.empty());
+
+    // when & then
+    assertThatThrownBy(() ->
+        meetingService.updateMeeting(user.getId(), 1L, request))
+        .isInstanceOf(MeetingException.class)
+        .hasFieldOrPropertyWithValue("meetingErrorCode", MeetingErrorCode.MEETING_NOT_FOUND);
+  }
+
+  @Test
+  @DisplayName("모임 작성자가 아닌 경우 - 예외 발생")
+  void updateMeeting_NotOwner_ThrowsException() {
+    // given
+    User user = createUser();
+    MeetingCreateRequest request = createRequest();
+    Meeting meeting = createMeeting(user, request);
+
+    when(meetingRepository.findById(meeting.getId())).thenReturn(Optional.of(meeting));
+
+    // when & then
+    assertThatThrownBy(() ->
+        meetingService.updateMeeting(2L, meeting.getId(), request))
+        .isInstanceOf(MeetingException.class)
+        .hasFieldOrPropertyWithValue("meetingErrorCode", MeetingErrorCode.NOT_MEETING_OWNER);
+  }
+
+  private static User createUser() {
+    return User.builder()
+        .id(1L)
+        .email("test@gmail.com")
+        .password("testapssword")
+        .phone("01012345678")
+        .enabled(true)
+        .verificationToken("asdasdsad")
+        .build();
+  }
+
+  private static Meeting createMeeting(User user, MeetingCreateRequest request) {
+    return Meeting.builder()
+        .id(1L)
+        .user(user)
+        .title(request.getTitle())
+        .locationId(request.getLocationId())
+        .latitude(request.getLatitude())
+        .longitude(request.getLongitude())
+        .address(request.getAddress())
+        .meetingDateTime(request.getMeetingDateTime())
+        .maxCount(request.getMaxCount())
+        .approvedCount(1)
+        .category(request.getCategory())
+        .content(request.getContent())
+        .thumbnailUrl(request.getThumbnailUrl())
+        .meetingStatus(MeetingStatus.RECRUITING)
+        .build();
+  }
+
+  private MeetingCreateRequest createRequest() {
+    return MeetingCreateRequest.builder()
+        .title("테스트 모임")
+        .locationId(123456L)
+        .latitude(37.123123)
+        .longitude(127.123123)
+        .address("테스트 주소")
+        .meetingDateTime(LocalDateTime.now().plusDays(1))
+        .maxCount(6)
+        .category(Set.of(FoodCategory.KOREAN, FoodCategory.JAPANESE))
+        .content("테스트 내용")
+        .thumbnailUrl("test-thumbnail-url.jpg")
+        .build();
+  }
+
+  private static MeetingCreateRequest createUpdateRequest() {
+    return MeetingCreateRequest.builder()
+        .title("업데이트 테스트 제목")
+        .locationId(123456L)
+        .latitude(37.123123)
+        .longitude(127.123123)
+        .address("테스트 주소")
+        .meetingDateTime(LocalDateTime.now().plusHours(3))
+        .maxCount(5)
+        .category(Set.of(FoodCategory.DESSERT))
+        .content("업데이트 내용")
+        .thumbnailUrl("")
+        .build();
   }
 }
