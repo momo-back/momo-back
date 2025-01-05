@@ -21,7 +21,7 @@ public class MeetingCreateResponse {
   private LocalDateTime meetingDateTime;
   private Integer approvedCount;
   private Integer maxCount;
-  private Set<FoodCategory> categories;
+  private Set<FoodCategory> category;
   private String content;
   private String thumbnailUrl;
   private MeetingStatus meetingStatus;
@@ -37,7 +37,7 @@ public class MeetingCreateResponse {
         .meetingDateTime(meeting.getMeetingDateTime())
         .approvedCount(meeting.getApprovedCount())
         .maxCount(meeting.getMaxCount())
-        .categories(meeting.getCategory())
+        .category(meeting.getCategory())
         .content(meeting.getContent())
         .thumbnailUrl(meeting.getThumbnailUrl())
         .meetingStatus(meeting.getMeetingStatus())
