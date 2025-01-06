@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -76,6 +77,15 @@ public class MeetingController {
       @RequestBody @NotNull MeetingStatus meetingStatus
   ) {
     meetingService.updateMeetingStatus(customUserDetails.getId(), meetingId, meetingStatus);
+    return ResponseEntity.ok().build();
+  }
+
+  @DeleteMapping("/{meetingId}")
+  public ResponseEntity<Void> deleteMeeting(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long meetingId
+  ) {
+    meetingService.deleteMeeting(customUserDetails.getId(), meetingId);
     return ResponseEntity.ok().build();
   }
 }
