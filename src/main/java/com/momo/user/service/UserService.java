@@ -12,6 +12,7 @@ import com.momo.auth.dto.KakaoProfile;
 import com.momo.auth.dto.LoginDTO;
 import com.momo.auth.dto.OAuthToken;
 import com.momo.user.dto.UserInfoResponse;
+import com.momo.user.dto.UserUpdateRequest;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import java.util.ArrayList;
@@ -228,4 +229,41 @@ public class UserService {
         .oauthProvider(user.isOauthUser() ? "KAKAO" : "LOCAL") // 회원 타입 구분
         .build();
   }
+
+  @Transactional
+  public void updateUser(UserUpdateRequest updateRequest) {
+    String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+    // User 엔티티 조회
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    // Profile 엔티티 조회 및 업데이트
+    Profile profile = profileRepository.findByUser(user)
+        .orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
+
+    // User 엔티티 업데이트
+    if (updateRequest.getNickname() != null) {
+      user.setNickname(updateRequest.getNickname());
+    }
+    if (updateRequest.getPhone() != null) {
+      user.setPhone(updateRequest.getPhone());
+    }
+    userRepository.save(user);
+
+    // Profile 엔티티 업데이트
+    if (updateRequest.getProfileImageUrl() != null) {
+      profile.setProfileImageUrl(updateRequest.getProfileImageUrl());
+    }
+    if (updateRequest.getIntroduction() != null) {
+      profile.setIntroduction(updateRequest.getIntroduction());
+    }
+    if (updateRequest.getMbti() != null) {
+      profile.setMbti(updateRequest.getMbti());
+    }
+    profileRepository.save(profile);
+
+    log.debug("User and Profile updated successfully for email: {}", email);
+  }
+
 }

@@ -3,6 +3,7 @@ package com.momo.user.controller;
 import com.momo.user.dto.EmailRequest;
 import com.momo.user.dto.PasswordResetRequest;
 import com.momo.user.dto.UserInfoResponse;
+import com.momo.user.dto.UserUpdateRequest;
 import com.momo.user.service.EmailService;
 import com.momo.user.service.UserService;
 import lombok.Data;
@@ -14,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -60,12 +62,18 @@ public class UserController {
     return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
   }
 
-  // 마이페이지 회원정보 조회
-  // 회원정보 조회 (일반 로그인 회원 및 카카오 로그인 회원 모두 처리)
+  // 본인 회원정보 조회 (일반 로그인 회원 및 카카오 로그인 회원 모두 처리)
   @GetMapping("/me")
   public ResponseEntity<UserInfoResponse> getUserInfo() {
     String email = SecurityContextHolder.getContext().getAuthentication().getName();
     UserInfoResponse userInfo = userService.getUserInfoByEmail(email);
     return ResponseEntity.ok(userInfo);
+  }
+
+  // 회원정보 수정
+  @PutMapping("/me")
+  public ResponseEntity<String> updateUser(@RequestBody UserUpdateRequest updateRequest) {
+    userService.updateUser(updateRequest);
+    return ResponseEntity.ok("회원정보가 성공적으로 수정되었습니다.");
   }
 }
