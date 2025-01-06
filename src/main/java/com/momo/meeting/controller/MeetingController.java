@@ -3,8 +3,8 @@ package com.momo.meeting.controller;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
-import com.momo.meeting.dto.MeetingListReadRequest;
-import com.momo.meeting.dto.MeetingListReadResponse;
+import com.momo.meeting.dto.MeetingsRequest;
+import com.momo.meeting.dto.MeetingsResponse;
 import com.momo.meeting.service.MeetingService;
 import com.momo.user.dto.CustomUserDetails;
 import java.net.URI;
@@ -18,13 +18,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("api/v1/meetings")
+@RequestMapping("/api/v1/meetings")
 @RequiredArgsConstructor
 public class MeetingController {
 
@@ -45,16 +46,27 @@ public class MeetingController {
   }
 
   @GetMapping
-  public ResponseEntity<MeetingListReadResponse> getNearbyMeetings(
-      @RequestParam @Range(min = -90, max = 90) double latitude,
-      @RequestParam @Range(min = -180, max = 180) double longitude,
+  public ResponseEntity<MeetingsResponse> getMeetings(
+      @RequestParam(required = false) @Range(min = -90, max = 90) Double latitude,
+      @RequestParam(required = false) @Range(min = -180, max = 180) Double longitude,
       @RequestParam(required = false) Long lastId,
       @RequestParam(required = false) Double lastDistance,
       @RequestParam(defaultValue = "20") @Range(min = 1, max = 100) int pageSize
   ) {
-    MeetingListReadRequest request = MeetingListReadRequest
-        .createCursorRequest(latitude, longitude, lastId, lastDistance, pageSize);
-    return ResponseEntity.ok(meetingService.getNearbyMeetings(request));
+    MeetingsRequest request = MeetingsRequest
+        .createRequest(latitude, longitude, lastId, lastDistance, pageSize);
+    return ResponseEntity.ok(meetingService.getMeetings(request));
+  }
+
+  @PutMapping("/{meetingId}")
+  public ResponseEntity<?> updateMeeting(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long meetingId,
+      @Valid @RequestBody MeetingCreateRequest request
+  ) {
+    MeetingCreateResponse response = meetingService.updateMeeting(
+        customUserDetails.getId(), meetingId, request);
+    return ResponseEntity.ok(response);
   }
 
   @PatchMapping("/{meetingId}/status")
