@@ -1,5 +1,6 @@
 package com.momo.meeting.service;
 
+import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.constant.SortType;
 import com.momo.meeting.dto.MeetingCursor;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
@@ -52,6 +53,20 @@ public class MeetingService {
         request.getPageSize()
     );
   }
+
+  @Transactional
+  public void updateMeetingStatus(Long userId, Long meetingId, MeetingStatus newStatus) {
+    Meeting meeting = meetingRepository.findById(meetingId)
+        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
+    /*if (!meeting.isOwner(userId)) {
+      // TODO: merge 후 구현
+    }*/
+    meeting.updateStatus(newStatus);
+  }
+
+  private List<MeetingToMeetingDtoProjection> getMeetingList(
+      MeetingListReadRequest request
+  ) {
 
   public List<MeetingToMeetingDtoProjection> getNearbyMeetings(MeetingsRequest request) {
     return meetingRepository.findNearbyMeetingsWithCursor(
