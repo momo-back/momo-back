@@ -64,10 +64,6 @@ public class MeetingService {
     meeting.updateStatus(newStatus);
   }
 
-  private List<MeetingToMeetingDtoProjection> getMeetingList(
-      MeetingListReadRequest request
-  ) {
-
   public List<MeetingToMeetingDtoProjection> getNearbyMeetings(MeetingsRequest request) {
     return meetingRepository.findNearbyMeetingsWithCursor(
         request.getUserLatitude(),
