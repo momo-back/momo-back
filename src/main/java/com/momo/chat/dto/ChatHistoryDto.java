@@ -6,7 +6,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class ChatHistoryResponseDto {
+public class ChatHistoryDto {
   private Long userId;
   private String userNickname;
   private String userProfileImageUrl;
@@ -14,7 +14,7 @@ public class ChatHistoryResponseDto {
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
 
-  public ChatHistoryResponseDto(Long userId, String userNickname, String userProfileImageUrl,
+  public ChatHistoryDto(Long userId, String userNickname, String userProfileImageUrl,
       String message, LocalDateTime createdAt, LocalDateTime updatedAt) {
     this.userId = userId;
     this.userNickname = userNickname;

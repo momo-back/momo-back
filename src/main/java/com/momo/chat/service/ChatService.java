@@ -4,9 +4,14 @@ import com.momo.chat.dto.ChatRequestDto;
 import com.momo.chat.dto.ChatResponseDto;
 import com.momo.chat.entity.Chat;
 import com.momo.chat.entity.ChatRoom;
+import com.momo.chat.exception.ChatErrorCode;
+import com.momo.chat.exception.ChatException;
 import com.momo.chat.repository.ChatRepository;
-import com.momo.chat.validator.ChatValidator;
+import com.momo.chat.repository.ChatRoomRepository;
+import com.momo.common.exception.CustomException;
+import com.momo.common.exception.ErrorCode;
 import com.momo.user.entity.User;
+import com.momo.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
@@ -18,12 +23,15 @@ public class ChatService {
 
   private final SimpMessageSendingOperations messagingTemplate;
   private final ChatRepository chatRepository;
-  private final ChatValidator chatValidator;
+  private final ChatRoomRepository chatRoomRepository;
+  private final UserRepository userRepository;
 
   @Transactional
   public void sendMessage(Long userId, ChatRequestDto dto) {
-    ChatRoom chatRoom = chatValidator.validateChatRoomExists(dto.getRoomId());
-    User user = chatValidator.validateUserExists(userId);
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    ChatRoom chatRoom = chatRoomRepository.findById(dto.getRoomId())
+        .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
 
     Chat chat = Chat.builder()
         .sender(user)
@@ -43,14 +51,16 @@ public class ChatService {
 
   @Transactional
   public void enterRoom(Long userId, ChatRequestDto dto) {
-    User user = chatValidator.validateUserExists(userId);
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     messagingTemplate.convertAndSend("/sub/chat/room/" + dto.getRoomId(),
         user.getNickname() + "님이 입장했습니다.");
   }
 
   @Transactional
   public void leaveRoom(Long userId, ChatRequestDto dto) {
-    User user = chatValidator.validateUserExists(userId);
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     messagingTemplate.convertAndSend("/sub/chat/room/" + dto.getRoomId(),
         user.getNickname() + "님이 퇴장했습니다.");
   }
