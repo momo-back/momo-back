@@ -2,6 +2,7 @@ package com.momo.config;
 
 import com.momo.auth.security.CustomLogoutFilter;
 import com.momo.auth.security.LoginFilter;
+import com.momo.auth.service.KakaoAuthService;
 import com.momo.config.constants.EndpointConstants;
 import com.momo.config.token.repository.RefreshTokenRepository;
 import com.momo.user.service.CustomUserDetailsService;
@@ -65,8 +66,8 @@ public class SecurityConfig {
   }
 
   @Bean
-  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    JWTFilter jwtFilter = new JWTFilter(userRepository, jwtUtil);
+  public SecurityFilterChain filterChain(HttpSecurity http, KakaoAuthService kakaoAuthService) throws Exception {
+    JWTFilter jwtFilter = new JWTFilter(userRepository, jwtUtil,kakaoAuthService);
     LoginFilter loginFilter = new LoginFilter(authenticationManager(), jwtUtil, refreshTokenRepository, userRepository);
     CustomLogoutFilter logoutFilter = new CustomLogoutFilter(jwtUtil, refreshTokenRepository);
 

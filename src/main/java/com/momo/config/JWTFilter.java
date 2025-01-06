@@ -1,10 +1,13 @@
 package com.momo.config;
 
+import com.momo.auth.dto.KakaoProfile;
+import com.momo.auth.service.KakaoAuthService;
 import com.momo.user.dto.CustomUserDetails;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -18,15 +21,12 @@ import java.io.IOException;
 
 
 @Slf4j
+@RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter {
 
   private final UserRepository userRepository;
   private final JWTUtil jwtUtil;
-
-  public JWTFilter(UserRepository userRepository, JWTUtil jwtUtil) {
-    this.userRepository = userRepository;
-    this.jwtUtil = jwtUtil;
-  }
+  private final KakaoAuthService kakaoAuthService;
 
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
@@ -47,18 +47,36 @@ public class JWTFilter extends OncePerRequestFilter {
       return;
     }
 
-    String token = authorizationHeader.substring(7);  // "Bearer "를 제외한 토큰 값 추출
+    String token = authorizationHeader.substring(7); // "Bearer " 이후의 토큰 값 추출
     log.debug("Extracted JWT Token: {}", token);
 
-    // 카카오는 JWT 형식이 아니므로 카카오 토큰 처리를 하지 않음
+    // 카카오 토큰 처리
     if (isKakaoToken(token)) {
-      // 카카오는 JWT 형식이 아니므로 별도로 처리 (JWT 파싱을 건너뛰고 진행)
-      log.debug("Kakao token detected, skipping JWT parsing.");
+      log.debug("카카오 토큰 처리 중...");
+
+      // 카카오 API를 통해 사용자 정보 조회
+      KakaoProfile kakaoProfile = kakaoAuthService.getKakaoProfile(token);
+      String email = kakaoProfile.getKakao_account().getEmail();
+      log.debug("카카오 프로필에서 추출된 이메일: {}", email);
+
+      // DB에서 사용자 조회
+      User user = userRepository.findByEmail(email)
+          .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+      // 사용자 인증 정보 설정
+      CustomUserDetails userDetails = new CustomUserDetails(user);
+      UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+          userDetails, null, userDetails.getAuthorities());
+      org.springframework.security.core.context.SecurityContextHolder.getContext()
+          .setAuthentication(authentication);
+
+      log.debug("SecurityContext에 카카오 사용자 인증 정보 설정 완료: {}", userDetails);
+
       filterChain.doFilter(request, response);
       return;
     }
 
-    // JWT 형식 검증 (엑세스 토큰 또는 리프레시 토큰에 대해 검증)
+    // JWT 형식 검증 (JWT 토큰이 유효한지 확인)
     if (!isValidJwtFormat(token)) {
       log.error("Invalid JWT format: {}", token);
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -66,27 +84,22 @@ public class JWTFilter extends OncePerRequestFilter {
       return;
     }
 
+    // JWT 검증 및 이메일 추출
     try {
-      // 엑세스 토큰 또는 리프레시 토큰에 대한 만료 체크 및 타입 체크
-      if (isRefreshToken(token)) {
-        if (jwtUtil.isExpired(token)) {
-          response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-          response.getWriter().print("Refresh token expired");
-          return;
-        }
-      } else {
-        if (jwtUtil.isExpired(token)) {
-          response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-          response.getWriter().print("Access token expired");
-          return;
-        }
+      String email = jwtUtil.getEmail(token);
+      log.debug("Extracted email from JWT: {}", email);
 
-        if (!"access".equals(jwtUtil.getTokenType(token))) {
-          response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-          response.getWriter().print("Invalid access token");
-          return;
-        }
-      }
+      User user = userRepository.findByEmail(email)
+          .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+      // 사용자 인증 정보 설정
+      CustomUserDetails userDetails = new CustomUserDetails(user);
+      UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+          userDetails, null, userDetails.getAuthorities());
+      org.springframework.security.core.context.SecurityContextHolder.getContext()
+          .setAuthentication(authentication);
+
+      log.debug("SecurityContext에 사용자 인증 정보 설정 완료: {}", userDetails);
     } catch (ExpiredJwtException e) {
       log.error("토큰 만료: ", e);
       response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -99,25 +112,10 @@ public class JWTFilter extends OncePerRequestFilter {
       return;
     }
 
-    // 이메일로 사용자 정보 조회
-    String email = jwtUtil.getEmail(token);
-    log.debug("Extracted email from token: {}", email);
-
-    User user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-
-    // 사용자 인증 정보 설정
-    CustomUserDetails userDetails = new CustomUserDetails(user);
-    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-        userDetails, null, userDetails.getAuthorities());
-    org.springframework.security.core.context.SecurityContextHolder.getContext()
-        .setAuthentication(authentication);
-
-    log.debug("SecurityContext에 사용자 인증 정보 설정 완료: {}", userDetails);
-
     // 필터 체인 계속 실행
     filterChain.doFilter(request, response);
   }
+
 
   private boolean isValidJwtFormat(String token) {
     // JWT 형식 확인: "header.payload.signature"

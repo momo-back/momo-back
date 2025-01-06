@@ -5,15 +5,19 @@ import com.momo.common.exception.ErrorCode;
 import com.momo.config.JWTUtil;
 import com.momo.config.token.entity.RefreshToken;
 import com.momo.config.token.repository.RefreshTokenRepository;
+import com.momo.profile.entity.Profile;
+import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.dto.CustomUserDetails;
 import com.momo.auth.dto.KakaoProfile;
 import com.momo.auth.dto.LoginDTO;
 import com.momo.auth.dto.OAuthToken;
+import com.momo.user.dto.UserInfoResponse;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +26,7 @@ import javax.transaction.Transactional;
 import java.util.UUID;
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -31,6 +36,7 @@ public class UserService {
   private final JWTUtil jwtUtil;
   private final RefreshTokenRepository refreshTokenRepository;
   private final EmailService emailService;
+  private final ProfileRepository profileRepository;
 
   private final HashMap<String, String> passwordResetTokens = new HashMap<>();
 
@@ -48,6 +54,7 @@ public class UserService {
   }
 
   // 회원 탈퇴
+  @Transactional
   public void deleteUser() {
     String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -55,14 +62,17 @@ public class UserService {
     User user = userRepository.findByEmail(email)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-    // RefreshToken 삭제
-    if (refreshTokenRepository.existsByToken(email)) {
-      refreshTokenRepository.deleteByEmail(email);
-    }
+    // RefreshToken 삭제 (명시적으로 수행)
+    refreshTokenRepository.deleteByUser(user);
 
-    // User 삭제
+    // User 삭제 (연관된 Profile과 RefreshToken은 자동 삭제)
+    log.debug("Deleting user: {}", user.getEmail());
     userRepository.delete(user);
+    log.debug("User deleted successfully.");
   }
+
+
+
 
   // 비밀번호 재설정 토큰 생성
   public String generateResetToken(String email) {
@@ -172,5 +182,50 @@ public class UserService {
     refreshTokenRepository.deleteByUser(user);
 
     createRefreshToken(user, newTokenValue);
+  }
+
+  public UserInfoResponse getUserInfo() {
+    String email = SecurityContextHolder.getContext().getAuthentication().getName();
+
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
+    Profile profile = profileRepository.findByUser(user)
+        .orElseThrow(() -> new RuntimeException("Profile not found"));
+
+    return UserInfoResponse.builder()
+        .nickname(user.getNickname())
+        .phone(user.getPhone())
+        .email(user.getEmail())
+        .gender(profile.getGender())
+        .birth(profile.getBirth())
+        .profileImageUrl(profile.getProfileImageUrl())
+        .introduction(profile.getIntroduction())
+        .mbti(profile.getMbti())
+        .build();
+  }
+
+  // 카카오 로그인 회원정보 조회
+  public UserInfoResponse getUserInfoByEmail(String email) {
+    // User 엔티티 조회
+    User user = userRepository.findByEmail(email)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    // Profile 엔티티 조회
+    Profile profile = profileRepository.findByUser(user)
+        .orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
+
+    // UserInfoResponse 생성 및 반환
+    return UserInfoResponse.builder()
+        .nickname(user.getNickname())
+        .phone(user.getPhone())
+        .email(user.getEmail())
+        .gender(profile.getGender())
+        .birth(profile.getBirth())
+        .profileImageUrl(profile.getProfileImageUrl())
+        .introduction(profile.getIntroduction())
+        .mbti(profile.getMbti())
+        .oauthProvider(user.isOauthUser() ? "KAKAO" : "LOCAL") // 회원 타입 구분
+        .build();
   }
 }
