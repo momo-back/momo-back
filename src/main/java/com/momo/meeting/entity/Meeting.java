@@ -77,6 +77,7 @@ public class Meeting extends BaseEntity {
 
   public void updateStatus(MeetingStatus newStatus) {
     this.meetingStatus = newStatus;
+  }
 
   public void update(MeetingCreateRequest request) {
     this.title = request.getTitle();
