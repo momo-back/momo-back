@@ -53,7 +53,7 @@ class MeetingServiceTest {
     User user = createUser();
     LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
     LocalDateTime endOfDay = startOfDay.plusDays(1);
-    MeetingCreateRequest request = createRequest();
+    MeetingCreateRequest request = createMeetingRequest();
 
     when(meetingRepository.countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay))
         .thenReturn(0);
@@ -91,7 +91,7 @@ class MeetingServiceTest {
   @DisplayName("모집글 목록 조회 - 성공")
   void getNearbyMeetings_Success() {
     // given
-    MeetingsRequest request = createMeetingListReadRequest();
+    MeetingsRequest request = createMeetingsRequest();
     List<MeetingToMeetingDtoProjection> mockProjections = createMockProjections();
 
     when(meetingRepository.findNearbyMeetingsWithCursor(
@@ -128,7 +128,7 @@ class MeetingServiceTest {
   void createMeeting_ExceedDailyLimit_ThrowsException() {
     // given
     User user = createUser();
-    MeetingCreateRequest request = createRequest();
+    MeetingCreateRequest request = createMeetingRequest();
     LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
     LocalDateTime endOfDay = startOfDay.plusDays(1);
 
@@ -146,7 +146,7 @@ class MeetingServiceTest {
     verify(meetingRepository).countByUser_IdAndCreatedAtBetween(eq(user.getId()), any(), any());
   }
 
-  private static MeetingsRequest createMeetingListReadRequest() {
+  private static MeetingsRequest createMeetingsRequest() {
     return MeetingsRequest.createRequest(
         userLatitude,
         userLongitude,
@@ -218,7 +218,7 @@ class MeetingServiceTest {
   void updateMeeting_Success() {
     // given
     User user = createUser();
-    MeetingCreateRequest request = createRequest();
+    MeetingCreateRequest request = createMeetingRequest();
     Meeting meeting = createMeeting(user, request);
     MeetingCreateRequest updateRequest = createUpdateRequest();
 
@@ -256,7 +256,7 @@ class MeetingServiceTest {
   void updateMeeting_MeetingNotFound_ThrowsException() {
     // given
     User user = createUser();
-    MeetingCreateRequest request = createRequest();
+    MeetingCreateRequest request = createMeetingRequest();
 
     when(meetingRepository.findById(1L)).thenReturn(Optional.empty());
 
@@ -272,7 +272,7 @@ class MeetingServiceTest {
   void updateMeeting_NotOwner_ThrowsException() {
     // given
     User user = createUser();
-    MeetingCreateRequest request = createRequest();
+    MeetingCreateRequest request = createMeetingRequest();
     Meeting meeting = createMeeting(user, request);
 
     when(meetingRepository.findById(meeting.getId())).thenReturn(Optional.of(meeting));
@@ -282,6 +282,24 @@ class MeetingServiceTest {
         meetingService.updateMeeting(2L, meeting.getId(), request))
         .isInstanceOf(MeetingException.class)
         .hasFieldOrPropertyWithValue("meetingErrorCode", MeetingErrorCode.NOT_MEETING_OWNER);
+  }
+
+  @Test
+  @DisplayName("모임 상태 변경  - 성공")
+  void updateMeetingStatus_Success() {
+    // given
+    User user = createUser();
+    MeetingCreateRequest request = createMeetingRequest();
+    Meeting meeting = createMeeting(user, request);
+
+    when(meetingRepository.findById(user.getId())).thenReturn(Optional.of(meeting));
+
+    // when
+    meetingService.updateMeetingStatus(user.getId(), meeting.getId(), MeetingStatus.CLOSED);
+
+    // then
+    assertEquals(MeetingStatus.CLOSED, meeting.getMeetingStatus());
+    verify(meetingRepository).findById(user.getId());
   }
 
   private static User createUser() {
@@ -314,7 +332,7 @@ class MeetingServiceTest {
         .build();
   }
 
-  private MeetingCreateRequest createRequest() {
+  private MeetingCreateRequest createMeetingRequest() {
     return MeetingCreateRequest.builder()
         .title("테스트 모임")
         .locationId(123456L)
