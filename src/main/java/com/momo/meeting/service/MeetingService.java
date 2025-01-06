@@ -56,15 +56,11 @@ public class MeetingService {
 
   @Transactional
   public void updateMeetingStatus(Long userId, Long meetingId, MeetingStatus newStatus) {
-    Meeting meeting = meetingRepository.findById(meetingId)
-        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
-    /*if (!meeting.isOwner(userId)) {
-      // TODO: merge 후 구현
-    }*/
+    Meeting meeting = validateForMeetingOwner(userId, meetingId);
     meeting.updateStatus(newStatus);
   }
 
-  public List<MeetingToMeetingDtoProjection> getNearbyMeetings(MeetingsRequest request) {
+  private List<MeetingToMeetingDtoProjection> getNearbyMeetings(MeetingsRequest request) {
     return meetingRepository.findNearbyMeetingsWithCursor(
         request.getUserLatitude(),
         request.getUserLongitude(),
@@ -79,7 +75,7 @@ public class MeetingService {
   public MeetingCreateResponse updateMeeting(
       Long userId, Long meetingId, MeetingCreateRequest request
   ) {
-    Meeting meeting = validateForMeetingUpdate(userId, meetingId);
+    Meeting meeting = validateForMeetingOwner(userId, meetingId);
     meeting.update(request);
 
     return MeetingCreateResponse.from(meeting);
@@ -115,7 +111,7 @@ public class MeetingService {
     }
   }
 
-  private Meeting validateForMeetingUpdate(Long userId, Long meetingId) {
+  private Meeting validateForMeetingOwner(Long userId, Long meetingId) {
     Meeting meeting = meetingRepository.findById(meetingId)
         .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
 

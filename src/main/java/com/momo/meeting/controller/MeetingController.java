@@ -59,7 +59,7 @@ public class MeetingController {
   }
 
   @PutMapping("/{meetingId}")
-  public ResponseEntity<?> updateMeeting(
+  public ResponseEntity<MeetingCreateResponse> updateMeeting(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long meetingId,
       @Valid @RequestBody MeetingCreateRequest request
@@ -70,7 +70,7 @@ public class MeetingController {
   }
 
   @PatchMapping("/{meetingId}/status")
-  public ResponseEntity<?> modifyMeetingStatus(
+  public ResponseEntity<Void> modifyMeetingStatus(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long meetingId,
       @RequestBody @NotNull MeetingStatus meetingStatus
