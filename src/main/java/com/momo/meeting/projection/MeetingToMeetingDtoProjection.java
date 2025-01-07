@@ -6,6 +6,8 @@ public interface MeetingToMeetingDtoProjection {
 
   Long getId();
 
+  Long getAuthorId();
+
   String getTitle();
 
   Long getLocationId();
