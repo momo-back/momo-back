@@ -8,10 +8,12 @@ import com.momo.meeting.dto.MeetingsResponse;
 import com.momo.meeting.service.MeetingService;
 import com.momo.user.dto.CustomUserDetails;
 import java.net.URI;
+import java.time.LocalDateTime;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Range;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,10 +53,12 @@ public class MeetingController {
       @RequestParam(required = false) @Range(min = -180, max = 180) Double longitude,
       @RequestParam(required = false) Long lastId,
       @RequestParam(required = false) Double lastDistance,
+      @RequestParam(required = false)
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastMeetingDateTime,
       @RequestParam(defaultValue = "20") @Range(min = 1, max = 100) int pageSize
   ) {
     MeetingsRequest request = MeetingsRequest
-        .createRequest(latitude, longitude, lastId, lastDistance, pageSize);
+        .createRequest(latitude, longitude, lastId, lastDistance, lastMeetingDateTime, pageSize);
     return ResponseEntity.ok(meetingService.getMeetings(request));
   }
 
