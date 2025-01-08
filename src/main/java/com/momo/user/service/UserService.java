@@ -1,5 +1,6 @@
 package com.momo.user.service;
 
+import com.momo.auth.service.KakaoAuthService;
 import com.momo.common.exception.CustomException;
 import com.momo.common.exception.ErrorCode;
 import com.momo.config.JWTUtil;
@@ -17,6 +18,9 @@ import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.HashMap;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,6 +42,7 @@ public class UserService {
   private final RefreshTokenRepository refreshTokenRepository;
   private final EmailService emailService;
   private final ProfileRepository profileRepository;
+  private final KakaoAuthService kakaoAuthService;
 
   private final HashMap<String, String> passwordResetTokens = new HashMap<>();
 
@@ -54,22 +59,49 @@ public class UserService {
     return jwtUtil.createJwt("access", user, 600000L); // 10분 만료
   }
 
-  // 회원 탈퇴
   @Transactional
-  public void deleteUser() {
+  public void deleteUserWithKakaoUnlink(HttpServletRequest request, HttpServletResponse response) {
     String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
-    // User 조회
     User user = userRepository.findByEmail(email)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-    // RefreshToken 삭제 (명시적으로 수행)
+    // 카카오 로그인 회원인지 확인
+    if (user.isOauthUser()) {
+      String accessToken = extractAccessTokenFromAuthorizationHeader(request);
+      if (accessToken != null) {
+        // 카카오 탈퇴 API 호출
+        kakaoAuthService.unlinkKakaoAccount(accessToken);
+      }
+    }
+
+    // RefreshToken 삭제
     refreshTokenRepository.deleteByUser(user);
 
-    // User 삭제 (연관된 Profile과 RefreshToken은 자동 삭제)
-    log.debug("Deleting user: {}", user.getEmail());
+    // Profile 삭제
+    profileRepository.findByUser(user).ifPresent(profileRepository::delete);
+
+    // User 삭제
     userRepository.delete(user);
-    log.debug("User deleted successfully.");
+
+    // Refresh 쿠키 삭제
+    clearRefreshCookie(response);
+
+    log.debug("User and related data deleted successfully for email: {}", email);
+  }
+  private String extractAccessTokenFromAuthorizationHeader(HttpServletRequest request) {
+    String authorizationHeader = request.getHeader("Authorization");
+    if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+      return authorizationHeader.substring(7);
+    }
+    return null;
+  }
+
+  private void clearRefreshCookie(HttpServletResponse response) {
+    Cookie cookie = new Cookie("refresh", null);
+    cookie.setMaxAge(0);
+    cookie.setHttpOnly(true);
+    cookie.setPath("/");
+    response.addCookie(cookie);
   }
 
 
