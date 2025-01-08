@@ -1,6 +1,5 @@
 package com.momo.participation.service;
 
-import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
@@ -90,13 +89,14 @@ public class ParticipationService {
     participation.updateStatus(newStatus);
   }
 
-  private Participation validateForParticipationOwner(Long id, Long participationId) {
+  private Participation validateForParticipationOwner(Long meetingOwnerId, Long participationId) {
     Participation participation = participationRepository.findById(participationId)
         .orElseThrow(() ->
             new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
 
-    if (!participation.isOwner(id)) {
-      throw new ParticipationException(ParticipationErrorCode.NOT_PARTICIPATION_OWNER);
+    // 현재 회원이 해당 모임 신청을 받은 모임글의 작성자인지 검증
+    if (!participation.isMeetingOwner(meetingOwnerId)) {
+      throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
     }
     return participation;
   }
