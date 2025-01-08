@@ -31,6 +31,18 @@ public class AppliedMeetingDto {
   private String content;
   private String thumbnailUrl;
 
+  public static List<AppliedMeetingDto> convertToAppliedMeetingDtos(
+      List<AppliedMeetingProjection> appliedMeetingProjections
+  ) {
+    List<AppliedMeetingDto> appliedMeetingDtos = new ArrayList<>();
+
+    for (AppliedMeetingProjection appliedMeetingProjection : appliedMeetingProjections) {
+      AppliedMeetingDto appliedMeeting = AppliedMeetingDto.from(appliedMeetingProjection);
+      appliedMeetingDtos.add(appliedMeeting);
+    }
+    return appliedMeetingDtos;
+  }
+
   public static AppliedMeetingDto from(AppliedMeetingProjection appliedMeeting) {
     Set<String> foodCategories = FoodCategory.convertToFoodCategories(appliedMeeting.getCategory());
 
@@ -51,17 +63,5 @@ public class AppliedMeetingDto {
         .content(appliedMeeting.getContent())
         .thumbnailUrl(appliedMeeting.getThumbnailUrl())
         .build();
-  }
-
-  public static List<AppliedMeetingDto> convertToAppliedMeetingDtos(
-      List<AppliedMeetingProjection> appliedMeetingProjections
-  ) {
-    List<AppliedMeetingDto> appliedMeetingDtos = new ArrayList<>();
-
-    for (AppliedMeetingProjection appliedMeetingProjection : appliedMeetingProjections) {
-      AppliedMeetingDto appliedMeeting = AppliedMeetingDto.from(appliedMeetingProjection);
-      appliedMeetingDtos.add(appliedMeeting);
-    }
-    return appliedMeetingDtos;
   }
 }
