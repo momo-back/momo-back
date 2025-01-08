@@ -1,11 +1,13 @@
 package com.momo.participation.service;
 
+import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.repository.MeetingRepository;
 import com.momo.notification.constant.NotificationType;
 import com.momo.notification.service.NotificationService;
+import com.momo.participation.constant.ParticipationStatus;
 import com.momo.participation.dto.AppliedMeetingsResponse;
 import com.momo.participation.entity.Participation;
 import com.momo.participation.exception.ParticipationErrorCode;
@@ -16,6 +18,7 @@ import com.momo.user.entity.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -77,5 +80,24 @@ public class ParticipationService {
         lastId,
         pageSize + 1// 다음 페이지 존재 여부를 알기 위해 + 1
     );
+  }
+
+  @Transactional
+  public void updateParticipationStatus(
+      Long id, Long participationId, ParticipationStatus newStatus
+  ) {
+    Participation participation = validateForParticipationOwner(id, participationId);
+    participation.updateStatus(newStatus);
+  }
+
+  private Participation validateForParticipationOwner(Long id, Long participationId) {
+    Participation participation = participationRepository.findById(participationId)
+        .orElseThrow(() ->
+            new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
+
+    if (!participation.isOwner(id)) {
+      throw new ParticipationException(ParticipationErrorCode.NOT_PARTICIPATION_OWNER);
+    }
+    return participation;
   }
 }
