@@ -196,7 +196,7 @@ class ParticipationServiceTest {
 
     // when
     participationService.updateParticipationStatus(
-        user.getId(), participation.getId(), ParticipationStatus.APPROVED
+        meetingOwner.getId(), participation.getId(), ParticipationStatus.APPROVED
     );
 
     // then
