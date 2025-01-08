@@ -1,7 +1,6 @@
 package com.momo.participation.dto;
 
-import com.momo.participation.projection.AppliedMeetingsProjection;
-import java.util.ArrayList;
+import com.momo.participation.projection.AppliedMeetingProjection;
 import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,37 +15,23 @@ public class AppliedMeetingsResponse {
 
 
   public static AppliedMeetingsResponse of(
-      List<AppliedMeetingsProjection> appliedMeetingProjections, int pageSize
+      List<AppliedMeetingProjection> appliedMeetingProjections, int pageSize
   ) {
-    boolean hasNext = appliedMeetingProjections.size() > pageSize;
+    List<AppliedMeetingDto> appliedMeetingDtos =
+        AppliedMeetingDto.convertToAppliedMeetingDtos(appliedMeetingProjections);
 
-    appliedMeetingProjections = hasNext ?
-        appliedMeetingProjections.subList(0, pageSize) :
-        appliedMeetingProjections.subList(0, appliedMeetingProjections.size());
+    boolean hasNext = appliedMeetingDtos.size() > pageSize;
+
+    appliedMeetingDtos = hasNext ?
+        appliedMeetingDtos.subList(0, pageSize) :
+        appliedMeetingDtos.subList(0, appliedMeetingDtos.size());
+
+    Long lastId = hasNext ? appliedMeetingDtos.get(appliedMeetingDtos.size() - 1).getId() : null;
 
     return AppliedMeetingsResponse.builder()
-        .appliedMeetings(convertToAppliedMeetingDtos(appliedMeetingProjections))
-        .lastId(getLastId(appliedMeetingProjections))
+        .lastId(lastId)
+        .appliedMeetings(appliedMeetingDtos)
         .hasNext(hasNext)
         .build();
-  }
-
-  private static List<AppliedMeetingDto> convertToAppliedMeetingDtos(
-      List<AppliedMeetingsProjection> appliedMeetingProjections
-  ) {
-    List<AppliedMeetingDto> appliedMeetingDtos = new ArrayList<>();
-
-    for (AppliedMeetingsProjection appliedMeetingProjection : appliedMeetingProjections) {
-      AppliedMeetingDto appliedMeeting = AppliedMeetingDto.from(appliedMeetingProjection);
-      appliedMeetingDtos.add(appliedMeeting);
-    }
-    return appliedMeetingDtos;
-  }
-
-  private static Long getLastId(List<AppliedMeetingsProjection> appliedMeetingProjections) {
-    if (appliedMeetingProjections.isEmpty()) {
-      return null;
-    }
-    return appliedMeetingProjections.get(appliedMeetingProjections.size() - 1).getId();
   }
 }

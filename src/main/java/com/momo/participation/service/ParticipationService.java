@@ -68,7 +68,7 @@ public class ParticipationService {
         getAppliedMeetingsProjections(userId, lastId, pageSize);
 
     return AppliedMeetingsResponse.of(
-        AppliedMeetingDto.convertToAppliedMeetingDtos(appliedMeetingsProjections),
+        appliedMeetingsProjections,
         pageSize
     );
   }
