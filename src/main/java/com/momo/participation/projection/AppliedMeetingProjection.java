@@ -3,7 +3,7 @@ package com.momo.participation.projection;
 import com.momo.participation.constant.ParticipationStatus;
 import java.time.LocalDateTime;
 
-public interface AppliedMeetingsProjection {
+public interface AppliedMeetingProjection {
 
   Long getId();
 
