@@ -16,7 +16,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
   int countByUser_IdAndCreatedAtBetween(
       Long userId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 
-  // 모집글 목록을 meeting_date_time을 기준으로 오름차순 정렬하여 반환 (커서 기반)
+  // 모집글 목록을 meeting_date_time 을 기준으로 오름차순 정렬하여 반환 (커서 기반)
   @Query(value =
       "SELECT "
           + "m.id as id, "
