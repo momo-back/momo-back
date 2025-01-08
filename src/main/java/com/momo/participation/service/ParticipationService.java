@@ -65,21 +65,12 @@ public class ParticipationService {
 
   public AppliedMeetingsResponse getAppliedMeetings(Long userId, Long lastId, int pageSize) {
     List<AppliedMeetingProjection> appliedMeetingsProjections =
-        getAppliedMeetingsProjections(userId, lastId, pageSize);
+        participationRepository.findAppliedMeetingsWithLastId(userId, lastId, pageSize + 1);
+    // 다음 페이지 존재 여부를 알기 위해 + 1
 
     return AppliedMeetingsResponse.of(
         appliedMeetingsProjections,
         pageSize
-    );
-  }
-
-  private List<AppliedMeetingProjection> getAppliedMeetingsProjections(
-      Long userId, Long lastId, int pageSize
-  ) {
-    return participationRepository.findAppliedMeetingsWithLastId(
-        userId,
-        lastId,
-        pageSize + 1// 다음 페이지 존재 여부를 알기 위해 + 1
     );
   }
 }
