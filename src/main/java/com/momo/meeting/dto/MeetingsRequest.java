@@ -30,9 +30,10 @@ public class MeetingsRequest {
       int pageSize
   ) {
     lastId = lastId == null ? DEFAULT_LAST_ID : lastId;
+
     lastDistance = lastDistance == null ? Double.MIN_VALUE : lastDistance;
-    lastMeetingDateTime = lastMeetingDateTime == null ?
-        DEFAULT_LAST_DATETIME : lastMeetingDateTime;
+
+    lastMeetingDateTime = lastMeetingDateTime == null ? DEFAULT_LAST_DATETIME : lastMeetingDateTime;
 
     return MeetingsRequest.builder()
         .userLatitude(userLatitude)

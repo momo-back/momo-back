@@ -81,7 +81,7 @@ public class MeetingService {
   }
 
   public void deleteMeeting(Long userId, Long meetingId) {
-    Meeting meeting = validateForMeetingUpdate(userId, meetingId);
+    Meeting meeting = validateForMeetingOwner(userId, meetingId);
     meetingRepository.delete(meeting);
   }
 
