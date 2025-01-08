@@ -2,6 +2,7 @@ package com.momo.participation.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
+import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
@@ -180,6 +182,29 @@ class ParticipationServiceTest {
         .findAppliedMeetingsWithLastId(userId, lastId, pageSize + 1);
   }
 
+  @Test
+  @DisplayName("모임 참여 신청 상태 변경  - 성공")
+  void updateMeetingStatus_Success() {
+    // given
+    User user = createUser(1L);
+    User meetingOwner = createUser(2L);
+    Meeting meeting = createMeeting(meetingOwner, MeetingStatus.RECRUITING);
+    Participation participation = createParticipation(user, meeting);
+
+    when(participationRepository.findById(participation.getId()))
+        .thenReturn(Optional.of(participation));
+
+    // when
+    participationService.updateParticipationStatus(
+        user.getId(), participation.getId(), ParticipationStatus.APPROVED
+    );
+
+    // then
+    assertEquals(MeetingStatus.RECRUITING, meeting.getMeetingStatus());
+    assertEquals(ParticipationStatus.APPROVED, participation.getParticipationStatus());
+    verify(participationRepository).findById(participation.getId());
+  }
+
   private static User createUser(Long userId) {
     return User.builder().id(userId).email("test@gmail.com").password("testapssword")
         .phone("01012345678").enabled(true).verificationToken("asdasdsad").build();
@@ -194,8 +219,12 @@ class ParticipationServiceTest {
   }
 
   private Participation createParticipation(User user, Meeting meeting) {
-    return Participation.builder().id(1L).user(user).meeting(meeting)
-        .participationStatus(ParticipationStatus.PENDING).build();
+    return Participation.builder()
+        .id(1L)
+        .user(user)
+        .meeting(meeting)
+        .participationStatus(ParticipationStatus.PENDING)
+        .build();
   }
 
   private List<AppliedMeetingsProjection> createMockProjections(int pageSize) {
