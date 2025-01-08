@@ -49,4 +49,12 @@ public class Participation extends BaseEntity {
         .participationStatus(ParticipationStatus.PENDING)
         .build();
   }
+
+  public void updateStatus(ParticipationStatus newStatus) {
+    this.participationStatus = newStatus;
+  }
+
+  public boolean isOwner(Long userId) {
+    return this.user.getId().equals(userId);
+  }
 }
