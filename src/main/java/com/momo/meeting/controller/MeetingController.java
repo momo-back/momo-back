@@ -1,7 +1,7 @@
 package com.momo.meeting.controller;
 
 import com.momo.meeting.constant.MeetingStatus;
-import com.momo.meeting.dto.CreatedMeetingsResponse;
+import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
 import com.momo.meeting.dto.MeetingsRequest;
