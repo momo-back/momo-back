@@ -49,7 +49,7 @@ public class ParticipationController {
     return ResponseEntity.ok(response);
   }
 
-  @PatchMapping
+  @PatchMapping("/{participationId}")
   public ResponseEntity<Void> updateParticipationStatus(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long participationId,
@@ -58,7 +58,7 @@ public class ParticipationController {
     participationService.updateParticipationStatus(
         customUserDetails.getId(), participationId, participationStatus
     );
-    return ResponseEntity.ok().build();
+    return ResponseEntity.ok()
+        .build();
   }
-
 }
