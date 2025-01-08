@@ -50,7 +50,7 @@ public class ChatService {
   }
 
   @Transactional
-  public void enterRoom(Long userId, ChatRequestDto dto) {
+  public void enterRoomMessage(Long userId, ChatRequestDto dto) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     messagingTemplate.convertAndSend("/sub/chat/room/" + dto.getRoomId(),
@@ -58,7 +58,7 @@ public class ChatService {
   }
 
   @Transactional
-  public void leaveRoom(Long userId, ChatRequestDto dto) {
+  public void leaveRoomMessage(Long userId, ChatRequestDto dto) {
     User user = userRepository.findById(userId)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     messagingTemplate.convertAndSend("/sub/chat/room/" + dto.getRoomId(),

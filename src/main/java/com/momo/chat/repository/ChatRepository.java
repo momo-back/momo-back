@@ -10,4 +10,6 @@ public interface ChatRepository extends JpaRepository<Chat, Long> {
 
   List<Chat> findAllByChatRoomId(Long chatRoomId);
 
+  void deleteByChatRoomId(Long chatRoomId);
+
 }

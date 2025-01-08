@@ -23,7 +23,7 @@ public class ChatRoomController {
 
   private final ChatRoomService chatRoomService;
   // 채팅방 생성, 입장 시 채팅방 구독, 채팅방 삭제, 퇴장, 강퇴시 채팅방 구독 해제 필요
-  // 채팅방 생성
+  // 채팅방 생성 (모임생성)
   @PostMapping("/{meetingId}")
   public ResponseEntity<ChatRoomDto> createRoom(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
@@ -34,7 +34,7 @@ public class ChatRoomController {
     return ResponseEntity.ok().body(roomData);
   }
 
-  // 채팅방 입장
+  // 채팅방 입장 (모임입장)
   @PostMapping("/{roomId}/join")
   public ResponseEntity<ChatRoomDto> joinRoom(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
@@ -45,13 +45,34 @@ public class ChatRoomController {
     return ResponseEntity.ok().body(roomData);
   }
 
-  // 채팅방 퇴장
+  // 채팅방 퇴장 (모임퇴장)
   @PostMapping("/{roomId}/leave")
   public ResponseEntity<ChatRoomDto> leaveRoom(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long roomId
   ) {
     ChatRoomDto roomData = chatRoomService.leaveRoom(
+        customUserDetails.getUser().getId(), roomId);
+    return ResponseEntity.ok().body(roomData);
+  }
+
+  // 채팅방 들어가기 (채팅 기록 조회)
+  @PostMapping("/{roomId}/in")
+  public ResponseEntity<List<ChatHistoryDto>> inRoom(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long roomId) {
+    List<ChatHistoryDto> history = chatRoomService.getChatHistory(
+        customUserDetails.getUser().getId(), roomId);
+    return ResponseEntity.ok(history);
+  }
+
+  // 채팅방 나가기 (뒤로가기)
+  @PostMapping("/{roomId}/out")
+  public ResponseEntity<List<ChatRoomDto>> outRoom(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long roomId
+  ) {
+    List<ChatRoomDto> roomData = chatRoomService.outRoom(
         customUserDetails.getUser().getId(), roomId);
     return ResponseEntity.ok().body(roomData);
   }
@@ -110,13 +131,4 @@ public class ChatRoomController {
     return ResponseEntity.ok().body(roomData);
   }
 
-  // 채팅 기록 조회
-  @GetMapping("/{roomId}/messages")
-  public ResponseEntity<List<ChatHistoryDto>> getChatHistory(
-      @AuthenticationPrincipal CustomUserDetails customUserDetails,
-      @PathVariable Long roomId) {
-    List<ChatHistoryDto> history = chatRoomService.getChatHistory(
-        customUserDetails.getUser().getId(), roomId);
-    return ResponseEntity.ok(history);
-  }
 }

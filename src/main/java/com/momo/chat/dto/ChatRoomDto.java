@@ -19,6 +19,7 @@ public class ChatRoomDto {
   private String lastMessage;
   private Long hostId;
   private List<Long> readerId;
+  private Integer unreadMessagesCount;
 
   public ChatRoomDto(Long roomId, Long meetingId, String meetingThumbnailUrl,
       String meetingTitle, String lastMessage, Long hostId, List<Long> readerId) {
@@ -29,6 +30,18 @@ public class ChatRoomDto {
     this.lastMessage = lastMessage;
     this.hostId = hostId;
     this.readerId = readerId;
+  }
+
+  public ChatRoomDto(Long roomId, Long meetingId, String meetingThumbnailUrl, String meetingTitle,
+      String lastMessage, Long hostId, List<Long> readerId, Integer unreadMessagesCount) {
+    this.roomId = roomId;
+    this.meetingId = meetingId;
+    this.meetingThumbnailUrl = meetingThumbnailUrl;
+    this.meetingTitle = meetingTitle;
+    this.lastMessage = lastMessage;
+    this.hostId = hostId;
+    this.readerId = readerId;
+    this.unreadMessagesCount = unreadMessagesCount == null ? 0 : unreadMessagesCount;
   }
 
   public static ChatRoomDto of(ChatRoom chatRoom) {
