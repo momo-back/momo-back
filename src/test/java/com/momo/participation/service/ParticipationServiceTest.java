@@ -200,10 +200,9 @@ class ParticipationServiceTest {
 
   private List<AppliedMeetingProjection> createMockProjections(int pageSize) {
     List<AppliedMeetingProjection> projections = new ArrayList<>();
-    for (int i = 0; i < pageSize; i++) {
+    for (int i = 0; i < pageSize + 1; i++) {
       createMockProjection(projections, i);
     }
-    projections.add(mock(AppliedMeetingProjection.class));
     return projections;
   }
 
