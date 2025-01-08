@@ -6,6 +6,8 @@ import com.momo.user.dto.UserInfoResponse;
 import com.momo.user.dto.UserUpdateRequest;
 import com.momo.user.service.EmailService;
 import com.momo.user.service.UserService;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,10 +32,10 @@ public class UserController {
   private final UserService userService;
   private final EmailService emailService;
 
-  // 회원 탈퇴
+  // 회원 탈퇴 (일반 로그인 + 카카오 로그인 통합)
   @DeleteMapping
-  public ResponseEntity<String> deleteUser() {
-    userService.deleteUser();
+  public ResponseEntity<String> deleteUser(HttpServletRequest request, HttpServletResponse response) {
+    userService.deleteUserWithKakaoUnlink(request, response);
     return ResponseEntity.ok("회원 탈퇴가 완료되었습니다.");
   }
 
