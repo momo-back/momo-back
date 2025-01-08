@@ -81,6 +81,11 @@ public class MeetingService {
     return MeetingCreateResponse.from(meeting);
   }
 
+  public void deleteMeeting(Long userId, Long meetingId) {
+    Meeting meeting = validateForMeetingUpdate(userId, meetingId);
+    meetingRepository.delete(meeting);
+  }
+
   private List<MeetingToMeetingDtoProjection> getMeetingsByDate(
       MeetingsRequest request
   ) {
