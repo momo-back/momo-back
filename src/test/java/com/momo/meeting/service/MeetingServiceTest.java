@@ -26,6 +26,7 @@ import com.momo.meeting.repository.MeetingRepository;
 import com.momo.user.entity.User;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -82,16 +83,16 @@ class MeetingServiceTest {
     verify(meetingRepository).countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay);
   }
 
-
-  private static final Double userLatitude = 37.502942;
-  private static final Double userLongitude = 126.947629;
+  private static final Double USER_LATITUDE = 37.502942;
+  private static final Double USER_LONGITUDE = 126.947629;
   private static final int TEST_PAGE_SIZE = 10;
 
   @Test
-  @DisplayName("모집글 목록 조회 - 성공")
+  @DisplayName("모집글 목록 조회 기리 기준으로 정렬 - 성공")
   void getNearbyMeetings_Success() {
     // given
-    MeetingsRequest request = createMeetingsRequest();
+    MeetingsRequest request = createMeetingsRequest(
+        USER_LATITUDE, USER_LONGITUDE, null, null, null);
     List<MeetingToMeetingDtoProjection> mockProjections = createMockProjections();
 
     when(meetingRepository.findNearbyMeetingsWithCursor(
@@ -124,6 +125,42 @@ class MeetingServiceTest {
   }
 
   @Test
+  @DisplayName("모집글 목록 조회 모임 날짜를 기준으로 정렬 - 성공")
+  void getMeetingsByDate_Success() {
+    // given
+    MeetingsRequest request = createMeetingsRequest(
+        null,
+        null,
+        null,
+        null,
+        LocalDateTime.now());
+    List<MeetingToMeetingDtoProjection> mockProjections = createMockProjections();
+
+    when(meetingRepository.findOrderByMeetingDateWithCursor(
+        request.getCursorId(),
+        request.getCursorMeetingDateTime(),
+        request.getPageSize() + 1
+    )).thenReturn(mockProjections);
+
+    // when
+    MeetingsResponse response = meetingService.getMeetings(request);
+
+    // then
+    assertEquals(TEST_PAGE_SIZE + 1, response.getMeetings().size());
+    verifyMeetingDtos(response.getMeetings());
+    assertTrue(response.isHasNext());
+
+    verifyCursor(response);
+
+    verify(meetingRepository).findOrderByMeetingDateWithCursor(
+        request.getCursorId(),
+        request.getCursorMeetingDateTime(),
+        request.getPageSize() + 1
+    );
+  }
+
+
+  @Test
   @DisplayName("하루 게시글 제한(10개) 초과 - 예외 발생")
   void createMeeting_ExceedDailyLimit_ThrowsException() {
     // given
@@ -146,10 +183,17 @@ class MeetingServiceTest {
     verify(meetingRepository).countByUser_IdAndCreatedAtBetween(eq(user.getId()), any(), any());
   }
 
-  private static MeetingsRequest createMeetingsRequest() {
+  private static MeetingsRequest createMeetingsRequest(
+      Double userLatitude,
+      Double userLongitude,
+      Long lastId,
+      Double lastDistance,
+      LocalDateTime lastMeetingDateTime
+  ) {
     return MeetingsRequest.createRequest(
         userLatitude,
         userLongitude,
+        null,
         null,
         null,
         TEST_PAGE_SIZE
@@ -168,14 +212,14 @@ class MeetingServiceTest {
   private static void createMockProjection(List<MeetingToMeetingDtoProjection> projections, int i) {
     MeetingToMeetingDtoProjection projection = mock(MeetingToMeetingDtoProjection.class);
     when(projection.getId()).thenReturn((long) i);
+    when(projection.getAuthorId()).thenReturn((long) i * 100);
     when(projection.getTitle()).thenReturn("title" + i);
     when(projection.getLocationId()).thenReturn((long) i);
     when(projection.getLatitude()).thenReturn((double) i);
     when(projection.getLongitude()).thenReturn((double) i);
     when(projection.getAddress()).thenReturn("address" + i);
     when(projection.getMeetingDateTime())
-        .thenReturn(LocalDateTime.of(2025, 1, 23, 3, 0)
-            .plusDays(i));
+        .thenReturn(LocalDateTime.now().plusDays(1 + i));
     when(projection.getMaxCount()).thenReturn(2 + i);
     when(projection.getApprovedCount()).thenReturn(1 + i);
     when(projection.getCategory()).thenReturn("KOREAN,JAPANESE");
@@ -192,13 +236,13 @@ class MeetingServiceTest {
   private static void verifyMeetingDto(List<MeetingDto> meetingDtos, int i) {
     MeetingDto meetingDto = meetingDtos.get(i - 1);
     assertEquals(i, meetingDto.getId());
+    assertEquals(i * 100L, meetingDto.getAuthorId());
     assertEquals("title" + i, meetingDto.getTitle());
     assertEquals(i, meetingDto.getLocationId());
     assertEquals(i, meetingDto.getLatitude());
     assertEquals(i, meetingDto.getLongitude());
     assertEquals("address" + i, meetingDto.getAddress());
-    assertEquals(LocalDateTime.of(2025, 1, 23, 3, 0)
-            .plusDays(i),
+    assertEquals(LocalDateTime.now().plusDays(1 + i).truncatedTo(ChronoUnit.MINUTES),
         meetingDto.getMeetingDateTime());
     assertEquals(2 + i, meetingDto.getMaxCount());
     assertEquals(1 + i, meetingDto.getApprovedCount());

@@ -38,7 +38,6 @@ public class MeetingService {
   }
 
   public MeetingsResponse getMeetings(MeetingsRequest request) {
-// TODO: 각 모집글 주최자 아이디 같이 반환 필요.
     List<MeetingToMeetingDtoProjection> meetingProjections;
 
     if (request.getSortType() == SortType.DISTANCE) {
@@ -89,8 +88,9 @@ public class MeetingService {
   private List<MeetingToMeetingDtoProjection> getMeetingsByDate(
       MeetingsRequest request
   ) {
-    return meetingRepository.findOrderByCreatedAtWithCursor(
+    return meetingRepository.findOrderByMeetingDateWithCursor(
         request.getCursorId(),
+        request.getCursorMeetingDateTime(),
         request.getPageSize() + 1 // 다음 페이지 존재 여부를 알기 위해 + 1
     );
   }
@@ -101,7 +101,11 @@ public class MeetingService {
     }
     MeetingToMeetingDtoProjection lastProjection = meetingProjections
         .get(meetingProjections.size() - 1);
-    return MeetingCursor.of(lastProjection.getId(), lastProjection.getDistance());
+    return MeetingCursor.of(
+        lastProjection.getId(),
+        lastProjection.getDistance(),
+        lastProjection.getMeetingDateTime()
+    );
   }
 
   private void validateDailyPostLimit(Long userId) {

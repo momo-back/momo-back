@@ -1,16 +1,11 @@
 package com.momo.meeting.dto;
 
 import com.momo.meeting.constant.FoodCategory;
-import com.momo.meeting.exception.MeetingErrorCode;
-import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MeetingDto {
 
   private Long id;
+  private Long authorId;
   private String title;
   private Long locationId;
   private Double latitude;
@@ -51,6 +47,7 @@ public class MeetingDto {
     Set<String> foodCategories = FoodCategory.convertToFoodCategories(meeting.getCategory());
     return MeetingDto.builder()
         .id(meeting.getId())
+        .authorId(meeting.getAuthorId())
         .title(meeting.getTitle())
         .locationId(meeting.getLocationId())
         .latitude(meeting.getLatitude())

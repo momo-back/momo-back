@@ -4,7 +4,6 @@ import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,6 +18,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
   @Query(value =
       "SELECT "
           + "m.id as id, "
+          + "m.user_id as authorId, "
           + "m.title as title, "
           + "m.location_id as locationId, "
           + "m.latitude as latitude, "
@@ -28,21 +28,31 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
           + "m.max_count as maxCount, "
           + "m.approved_count as approvedCount, "
           + "m.content as content, "
-          + "m.thumbnail_url as thumbnailUrl "
+          + "m.thumbnail_url as thumbnailUrl, "
+          + "("
+          + "  SELECT GROUP_CONCAT(mc.category) "
+          + "  FROM meeting_category mc "
+          + "  WHERE mc.meeting_id = m.id "
+          + ") as category "
           + "FROM meeting m "
-          + "WHERE m.id > :lastId "
-          + "AND m.meeting_status = 'RECRUITING' "
-          + "ORDER BY m.created_at ASC "
+          + "WHERE m.meeting_status = 'RECRUITING' "
+          + "AND ("
+          + "    m.meeting_date_time > :lastDateTime "
+          + "    OR (m.meeting_date_time = :lastDateTime AND m.id > :lastId) "
+          + ") "
+          + "ORDER BY m.meeting_date_time ASC, m.id ASC  "
           + "LIMIT :pageSize",
       nativeQuery = true)
-  List<MeetingToMeetingDtoProjection> findOrderByCreatedAtWithCursor(
+  List<MeetingToMeetingDtoProjection> findOrderByMeetingDateWithCursor(
       @Param("lastId") Long lastId,
+      @Param("lastDateTime") LocalDateTime lastDateTime,
       @Param("pageSize") int pageSize
   );
 
   @Query(value =
       "SELECT "
           + "dm.id as id, "
+          + "dm.user_id as authorId, "
           + "dm.title as title, "
           + "dm.location_id as locationId, "
           + "dm.latitude as latitude, "
@@ -60,7 +70,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
           + ") as category, "
           + "dm.distance as distance "
           + "FROM ("
-          + "  SELECT m.id, m.title, m.location_id, m.latitude, m.longitude, m.address, "
+          + "  SELECT m.id, m.user_id, m.title, m.location_id, m.latitude, m.longitude, m.address, "
           + "  m.meeting_date_time, m.max_count, m.approved_count, m.content, m.thumbnail_url, "
           + "    ST_Distance_Sphere( "
           + "        POINT(:userLongitude, :userLatitude), "
