@@ -31,6 +31,7 @@ public class MeetingDto {
   private Set<String> category;
   private String content;
   private String thumbnailUrl;
+  private Double distance;
 
   public static List<MeetingDto> convertToMeetingDtos(
       List<MeetingToMeetingDtoProjection> meetingProjections
@@ -43,22 +44,23 @@ public class MeetingDto {
     return meetingDtos;
   }
 
-  public static MeetingDto from(MeetingToMeetingDtoProjection meeting) {
-    Set<String> foodCategories = FoodCategory.convertToFoodCategories(meeting.getCategory());
+  public static MeetingDto from(MeetingToMeetingDtoProjection meetingProjection) {
+    Set<String> foodCategories = FoodCategory.convertToFoodCategories(meetingProjection.getCategory());
     return MeetingDto.builder()
-        .id(meeting.getId())
-        .authorId(meeting.getAuthorId())
-        .title(meeting.getTitle())
-        .locationId(meeting.getLocationId())
-        .latitude(meeting.getLatitude())
-        .longitude(meeting.getLongitude())
-        .address(meeting.getAddress())
-        .meetingDateTime(meeting.getMeetingDateTime().truncatedTo(ChronoUnit.MINUTES))
-        .maxCount(meeting.getMaxCount())
-        .approvedCount(meeting.getApprovedCount())
+        .id(meetingProjection.getId())
+        .authorId(meetingProjection.getAuthorId())
+        .title(meetingProjection.getTitle())
+        .locationId(meetingProjection.getLocationId())
+        .latitude(meetingProjection.getLatitude())
+        .longitude(meetingProjection.getLongitude())
+        .address(meetingProjection.getAddress())
+        .meetingDateTime(meetingProjection.getMeetingDateTime().truncatedTo(ChronoUnit.MINUTES))
+        .maxCount(meetingProjection.getMaxCount())
+        .approvedCount(meetingProjection.getApprovedCount())
         .category(foodCategories)
-        .content(meeting.getContent())
-        .thumbnailUrl(meeting.getThumbnailUrl())
+        .content(meetingProjection.getContent())
+        .thumbnailUrl(meetingProjection.getThumbnailUrl())
+        .distance(meetingProjection.getDistance())
         .build();
   }
 }

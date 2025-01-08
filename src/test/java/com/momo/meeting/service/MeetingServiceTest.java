@@ -108,7 +108,7 @@ class MeetingServiceTest {
     MeetingsResponse response = meetingService.getMeetings(request);
 
     // then
-    assertEquals(TEST_PAGE_SIZE + 1, response.getMeetings().size());
+    assertEquals(TEST_PAGE_SIZE, response.getMeetings().size());
     verifyMeetingDtos(response.getMeetings());
     assertTrue(response.isHasNext());
 
@@ -146,7 +146,7 @@ class MeetingServiceTest {
     MeetingsResponse response = meetingService.getMeetings(request);
 
     // then
-    assertEquals(TEST_PAGE_SIZE + 1, response.getMeetings().size());
+    assertEquals(TEST_PAGE_SIZE, response.getMeetings().size());
     verifyMeetingDtos(response.getMeetings());
     assertTrue(response.isHasNext());
 
@@ -219,7 +219,7 @@ class MeetingServiceTest {
     when(projection.getLongitude()).thenReturn((double) i);
     when(projection.getAddress()).thenReturn("address" + i);
     when(projection.getMeetingDateTime())
-        .thenReturn(LocalDateTime.now().plusDays(1 + i));
+        .thenReturn(LocalDateTime.now().plusDays(1 + i).truncatedTo(ChronoUnit.MINUTES));
     when(projection.getMaxCount()).thenReturn(2 + i);
     when(projection.getApprovedCount()).thenReturn(1 + i);
     when(projection.getCategory()).thenReturn("KOREAN,JAPANESE");

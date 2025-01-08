@@ -6,11 +6,12 @@ import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.repository.MeetingRepository;
 import com.momo.notification.constant.NotificationType;
 import com.momo.notification.service.NotificationService;
+import com.momo.participation.dto.AppliedMeetingDto;
 import com.momo.participation.dto.AppliedMeetingsResponse;
 import com.momo.participation.entity.Participation;
 import com.momo.participation.exception.ParticipationErrorCode;
 import com.momo.participation.exception.ParticipationException;
-import com.momo.participation.projection.AppliedMeetingsProjection;
+import com.momo.participation.projection.AppliedMeetingProjection;
 import com.momo.participation.repository.ParticipationRepository;
 import com.momo.user.entity.User;
 import java.util.List;
@@ -63,13 +64,16 @@ public class ParticipationService {
   }
 
   public AppliedMeetingsResponse getAppliedMeetings(Long userId, Long lastId, int pageSize) {
+    List<AppliedMeetingProjection> appliedMeetingsProjections =
+        getAppliedMeetingsProjections(userId, lastId, pageSize);
+
     return AppliedMeetingsResponse.of(
-        getAppliedMeetingsProjections(userId, lastId, pageSize),
+        appliedMeetingsProjections,
         pageSize
     );
   }
 
-  private List<AppliedMeetingsProjection> getAppliedMeetingsProjections(
+  private List<AppliedMeetingProjection> getAppliedMeetingsProjections(
       Long userId, Long lastId, int pageSize
   ) {
     return participationRepository.findAppliedMeetingsWithLastId(

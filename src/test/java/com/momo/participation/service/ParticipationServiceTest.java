@@ -23,7 +23,7 @@ import com.momo.participation.dto.AppliedMeetingsResponse;
 import com.momo.participation.entity.Participation;
 import com.momo.participation.exception.ParticipationErrorCode;
 import com.momo.participation.exception.ParticipationException;
-import com.momo.participation.projection.AppliedMeetingsProjection;
+import com.momo.participation.projection.AppliedMeetingProjection;
 import com.momo.participation.repository.ParticipationRepository;
 import com.momo.user.entity.User;
 import java.time.LocalDateTime;
@@ -162,7 +162,7 @@ class ParticipationServiceTest {
     Long lastId = 0L;
     int pageSize = 10;
 
-    List<AppliedMeetingsProjection> projections = createMockProjections(pageSize);
+    List<AppliedMeetingProjection> projections = createMockProjections(pageSize);
 
     given(participationRepository.findAppliedMeetingsWithLastId(
         userId, lastId, pageSize + 1)).willReturn(projections);
@@ -198,17 +198,16 @@ class ParticipationServiceTest {
         .participationStatus(ParticipationStatus.PENDING).build();
   }
 
-  private List<AppliedMeetingsProjection> createMockProjections(int pageSize) {
-    List<AppliedMeetingsProjection> projections = new ArrayList<>();
-    for (int i = 0; i < pageSize; i++) {
+  private List<AppliedMeetingProjection> createMockProjections(int pageSize) {
+    List<AppliedMeetingProjection> projections = new ArrayList<>();
+    for (int i = 0; i < pageSize + 1; i++) {
       createMockProjection(projections, i);
     }
-    projections.add(mock(AppliedMeetingsProjection.class));
     return projections;
   }
 
-  private static void createMockProjection(List<AppliedMeetingsProjection> projections, int i) {
-    AppliedMeetingsProjection projection = mock(AppliedMeetingsProjection.class);
+  private static void createMockProjection(List<AppliedMeetingProjection> projections, int i) {
+    AppliedMeetingProjection projection = mock(AppliedMeetingProjection.class);
     given(projection.getId()).willReturn((long) i);
     given(projection.getMeetingId()).willReturn((long) i * 10);
     given(projection.getUserId()).willReturn((long) i * 100);
