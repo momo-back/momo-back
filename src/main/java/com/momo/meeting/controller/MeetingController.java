@@ -74,7 +74,7 @@ public class MeetingController {
     return ResponseEntity.ok(response);
   }
 
-  @PatchMapping("/{meetingId}/status")
+  @PatchMapping("/{meetingId}")
   public ResponseEntity<Void> modifyMeetingStatus(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long meetingId,
