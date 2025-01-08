@@ -2,12 +2,10 @@ package com.momo.meeting.service;
 
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.constant.SortType;
-import com.momo.meeting.dto.MeetingCursor;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
 import com.momo.meeting.dto.MeetingsRequest;
 import com.momo.meeting.dto.MeetingsResponse;
-import com.momo.meeting.dto.MeetingDto;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
@@ -47,8 +45,7 @@ public class MeetingService {
     }
 
     return MeetingsResponse.of(
-        MeetingDto.convertToMeetingDtos(meetingProjections),
-        createCursor(meetingProjections),
+        meetingProjections,
         request.getPageSize()
     );
   }
@@ -95,18 +92,6 @@ public class MeetingService {
     );
   }
 
-  private MeetingCursor createCursor(List<MeetingToMeetingDtoProjection> meetingProjections) {
-    if (meetingProjections.isEmpty()) {
-      return null;
-    }
-    MeetingToMeetingDtoProjection lastProjection = meetingProjections
-        .get(meetingProjections.size() - 1);
-    return MeetingCursor.of(
-        lastProjection.getId(),
-        lastProjection.getDistance(),
-        lastProjection.getMeetingDateTime()
-    );
-  }
 
   private void validateDailyPostLimit(Long userId) {
     LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
