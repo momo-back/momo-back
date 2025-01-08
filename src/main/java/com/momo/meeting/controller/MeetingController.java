@@ -90,6 +90,6 @@ public class MeetingController {
       @PathVariable Long meetingId
   ) {
     meetingService.deleteMeeting(customUserDetails.getId(), meetingId);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.noContent().build();
   }
 }
