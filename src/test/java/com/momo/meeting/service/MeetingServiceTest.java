@@ -6,12 +6,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
+import com.momo.meeting.dto.createdMeeting.CreatedMeetingDto;
+import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
 import com.momo.meeting.dto.MeetingCursor;
 import com.momo.meeting.dto.MeetingDto;
 import com.momo.meeting.dto.MeetingsRequest;
@@ -21,6 +24,7 @@ import com.momo.meeting.dto.create.MeetingCreateResponse;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
+import com.momo.meeting.projection.CreatedMeetingProjection;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import com.momo.meeting.repository.MeetingRepository;
 import com.momo.user.entity.User;
@@ -404,5 +408,85 @@ class MeetingServiceTest {
         .content("업데이트 내용")
         .thumbnailUrl("")
         .build();
+  }
+
+  @Test
+  @DisplayName("작성한 모임 목록 조회 - 성공")
+  void getCreatedMeetings_Success() {
+    // given
+    Long userId = 1L;
+    Long lastId = 0L;
+
+    List<CreatedMeetingProjection> projections = createdMeetingsMockProjections();
+
+    given(meetingRepository.findAllByUser_IdOrderByCreatedAtAsc(
+        userId, lastId, TEST_PAGE_SIZE + 1)).willReturn(projections);
+
+    // when
+    CreatedMeetingsResponse response =
+        meetingService.getCreatedMeetings(userId, lastId, TEST_PAGE_SIZE);
+
+    // then
+    List<CreatedMeetingDto> createdMeetingDtos = response.getCreatedMeetingDtos();
+    assertThat(createdMeetingDtos).hasSize(TEST_PAGE_SIZE);
+
+    assertThatCreatedMeetingDtos(createdMeetingDtos);
+    verify(meetingRepository)
+        .findAllByUser_IdOrderByCreatedAtAsc(userId, lastId, TEST_PAGE_SIZE + 1);
+  }
+
+  private List<CreatedMeetingProjection> createdMeetingsMockProjections() {
+    List<CreatedMeetingProjection> projections = new ArrayList<>();
+    for (int i = 0; i < TEST_PAGE_SIZE + 1; i++) {
+      createdMeetingMockProjection(projections, i);
+    }
+    return projections;
+  }
+
+  private static void createdMeetingMockProjection(
+      List<CreatedMeetingProjection> projections, int i
+  ) {
+    CreatedMeetingProjection projection = mock(CreatedMeetingProjection.class);
+    given(projection.getId()).willReturn((long) i);
+    given(projection.getMeetingId()).willReturn((long) i * 10);
+    given(projection.getMeetingStatus()).willReturn(MeetingStatus.RECRUITING);
+    given(projection.getTitle()).willReturn("Test Meeting " + i);
+    given(projection.getLocationId()).willReturn((long) i);
+    given(projection.getLatitude()).willReturn((double) i);
+    given(projection.getLongitude()).willReturn((double) i);
+    given(projection.getAddress()).willReturn("Test Address " + i);
+    given(projection.getMeetingDateTime())
+        .willReturn(LocalDateTime.now().minusHours(1 + i).truncatedTo(ChronoUnit.MINUTES));
+    given(projection.getMaxCount()).willReturn(i + 2);
+    given(projection.getApprovedCount()).willReturn(i + 1);
+    given(projection.getCategory()).willReturn("KOREAN,DESSERT");
+    given(projection.getContent()).willReturn("Test Content " + i);
+    given(projection.getThumbnailUrl()).willReturn("test_" + i + "_thumbnail_url.jpg");
+    projections.add(projection);
+  }
+
+  private static void assertThatCreatedMeetingDtos(List<CreatedMeetingDto> createdMeetingDtos) {
+    for (int i = 0; i < createdMeetingDtos.size(); i++) {
+      AssertThatAppliedMeeting(createdMeetingDtos, i);
+    }
+  }
+
+  private static void AssertThatAppliedMeeting(List<CreatedMeetingDto> createdMeetingDto, int i) {
+    assertThat(createdMeetingDto.get(i).getId()).isEqualTo(i);
+    assertThat(createdMeetingDto.get(i).getMeetingId()).isEqualTo(i * 10L);
+    assertThat(createdMeetingDto.get(i).getMeetingStatus()).isEqualTo(MeetingStatus.RECRUITING);
+    assertThat(createdMeetingDto.get(i).getTitle()).isEqualTo("Test Meeting " + i);
+    assertThat(createdMeetingDto.get(i).getLocationId()).isEqualTo(i);
+    assertThat(createdMeetingDto.get(i).getLatitude()).isEqualTo(i);
+    assertThat(createdMeetingDto.get(i).getLongitude()).isEqualTo(i);
+    assertThat(createdMeetingDto.get(i).getAddress()).isEqualTo("Test Address " + i);
+    assertThat(createdMeetingDto.get(i).getMeetingDateTime())
+        .isEqualTo(LocalDateTime.now().minusHours(1 + i).truncatedTo(ChronoUnit.MINUTES));
+    assertThat(createdMeetingDto.get(i).getMaxCount()).isEqualTo(i + 2);
+    assertThat(createdMeetingDto.get(i).getApprovedCount()).isEqualTo(i + 1);
+    assertThat(createdMeetingDto.get(i).getCategory()).isEqualTo(Set.of("한식", "디저트"));
+    assertThat(createdMeetingDto.get(i).getContent()).isEqualTo("Test Content " + i);
+    assertThat(createdMeetingDto.get(i).getThumbnailUrl())
+        .isEqualTo("test_" + i + "_thumbnail_url.jpg");
   }
 }
