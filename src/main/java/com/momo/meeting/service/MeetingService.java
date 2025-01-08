@@ -16,11 +16,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MeetingService {
@@ -82,16 +80,13 @@ public class MeetingService {
     meetingRepository.delete(meeting);
   }
 
-  private List<MeetingToMeetingDtoProjection> getMeetingsByDate(
-      MeetingsRequest request
-  ) {
+  private List<MeetingToMeetingDtoProjection> getMeetingsByDate(MeetingsRequest request) {
     return meetingRepository.findOrderByMeetingDateWithCursor(
         request.getCursorId(),
         request.getCursorMeetingDateTime(),
         request.getPageSize() + 1 // 다음 페이지 존재 여부를 알기 위해 + 1
     );
   }
-
 
   private void validateDailyPostLimit(Long userId) {
     LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
