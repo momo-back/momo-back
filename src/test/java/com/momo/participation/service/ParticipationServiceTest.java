@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
-import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
@@ -73,10 +72,9 @@ class ParticipationServiceTest {
     when(participationRepository.save(any(Participation.class))).thenReturn(participation);
 
     // when
-    Long participationId = participationService.createParticipation(user, meeting.getId());
+    participationService.createParticipation(user, meeting.getId());
 
     // then
-    assertThat(participationId).isEqualTo(participation.getId());
     verify(participationRepository).save(any(Participation.class));
     verify(notificationService).sendNotification(meetingOwner,
         user.getNickname() + PARTICIPATION_NOTIFICATION_MESSAGE,
@@ -239,7 +237,7 @@ class ParticipationServiceTest {
     AppliedMeetingProjection projection = mock(AppliedMeetingProjection.class);
     given(projection.getId()).willReturn((long) i);
     given(projection.getMeetingId()).willReturn((long) i * 10);
-    given(projection.getUserId()).willReturn((long) i * 100);
+    given(projection.getAuthorId()).willReturn((long) i * 100);
     given(projection.getParticipationStatus()).willReturn(ParticipationStatus.PENDING);
     given(projection.getTitle()).willReturn("Test Meeting " + i);
     given(projection.getLocationId()).willReturn((long) i);
@@ -265,7 +263,7 @@ class ParticipationServiceTest {
   private static void AssertThatAppliedMeeting(List<AppliedMeetingDto> appliedMeetings, int i) {
     assertThat(appliedMeetings.get(i).getId()).isEqualTo(i);
     assertThat(appliedMeetings.get(i).getMeetingId()).isEqualTo(i * 10L);
-    assertThat(appliedMeetings.get(i).getUserId()).isEqualTo(i * 100L);
+    assertThat(appliedMeetings.get(i).getAuthorId()).isEqualTo(i * 100L);
     assertThat(appliedMeetings.get(i).getParticipationStatus())
         .isEqualTo(ParticipationStatus.PENDING);
     assertThat(appliedMeetings.get(i).getTitle()).isEqualTo("Test Meeting " + i);

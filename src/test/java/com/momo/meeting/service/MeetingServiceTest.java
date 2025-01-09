@@ -447,7 +447,7 @@ class MeetingServiceTest {
       List<CreatedMeetingProjection> projections, int i
   ) {
     CreatedMeetingProjection projection = mock(CreatedMeetingProjection.class);
-    given(projection.getId()).willReturn((long) i);
+    given(projection.getUserId()).willReturn((long) i);
     given(projection.getMeetingId()).willReturn((long) i * 10);
     given(projection.getMeetingStatus()).willReturn(MeetingStatus.RECRUITING);
     given(projection.getTitle()).willReturn("Test Meeting " + i);
@@ -472,7 +472,7 @@ class MeetingServiceTest {
   }
 
   private static void AssertThatAppliedMeeting(List<CreatedMeetingDto> createdMeetingDto, int i) {
-    assertThat(createdMeetingDto.get(i).getId()).isEqualTo(i);
+    assertThat(createdMeetingDto.get(i).getUserId()).isEqualTo(i);
     assertThat(createdMeetingDto.get(i).getMeetingId()).isEqualTo(i * 10L);
     assertThat(createdMeetingDto.get(i).getMeetingStatus()).isEqualTo(MeetingStatus.RECRUITING);
     assertThat(createdMeetingDto.get(i).getTitle()).isEqualTo("Test Meeting " + i);
