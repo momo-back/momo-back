@@ -22,8 +22,12 @@ public class NotificationController {
 
   private final NotificationService notificationService;
 
+
   /**
    * SSE 연결 설정 엔드포인트
+   *
+   * @param customUserDetails 회원 정보
+   * @return 단방향 통신 시작
    */
   @GetMapping(value = "subscribe", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public SseEmitter subscribe(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
@@ -32,7 +36,11 @@ public class NotificationController {
 
   /**
    * 알림 목록 조회
+   *
+   * @param customUserDetails 회원 정보
+   * @return 알림 목록
    */
+  // TODO: 정렬기준 정하고 커서 기반으로 수정
   @GetMapping
   public ResponseEntity<List<NotificationResponse>> getNotifications(
       @AuthenticationPrincipal CustomUserDetails customUserDetails
@@ -44,6 +52,10 @@ public class NotificationController {
 
   /**
    * 특정 알림 삭제
+   *
+   * @param customUserDetails 회원 정보
+   * @param notificationId    삭제할 알림 ID
+   * @return 204 No Content
    */
   @DeleteMapping("/{notificationId}")
   public ResponseEntity<Void> deleteNotification(
@@ -56,6 +68,9 @@ public class NotificationController {
 
   /**
    * 전체 알림 삭제
+   *
+   * @param customUserDetails 회원 정보
+   * @return 204 No Content
    */
   @DeleteMapping
   public ResponseEntity<Void> deleteAllNotifications(
