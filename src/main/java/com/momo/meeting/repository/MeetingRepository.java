@@ -105,7 +105,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
 
   // 개최한 모임 목록을 생성된 순서대로 반환 (커서 기반)
   @Query(value = "SELECT "
-      + "m.user_id as id, "
+      + "m.user_id as userId, "
       + "m.id as meetingId, "
       + "m.meeting_status as meetingStatus, "
       + "m.title as title, "
@@ -116,16 +116,17 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
       + "m.meeting_date_time as meetingDateTime, "
       + "m.max_count as maxCount, "
       + "m.approved_count as approvedCount, "
-      + "("
-      + "  SELECT GROUP_CONCAT(mc.category) "
-      + "  FROM meeting_category mc "
-      + "  WHERE mc.meeting_id = m.id "
-      + ") as category, "
+      + "GROUP_CONCAT(mc.category) as category, "
       + "m.content as content, "
       + "m.thumbnail_url as thumbnailUrl "
       + "FROM meeting as m "
+      + "INNER JOIN meeting_category mc ON mc.meeting_id = m.id "
       + "WHERE m.user_id = :userId "
       + "AND m.id > :lastId "
+      + "GROUP BY m.id, m.user_id, m.meeting_status, m.title, "
+      + "m.location_id, m.latitude, m.longitude, m.address, "
+      + "m.meeting_date_time, m.max_count, m.approved_count, "
+      + "m.content, m.thumbnail_url "
       + "ORDER BY m.meeting_date_time ASC, m.id ASC  "
       + "LIMIT :pageSize",
       nativeQuery = true)

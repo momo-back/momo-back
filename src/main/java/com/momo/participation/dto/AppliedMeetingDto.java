@@ -17,7 +17,7 @@ public class AppliedMeetingDto {
 
   private Long id;
   private Long meetingId;
-  private Long userId;
+  private Long authorId;
   private ParticipationStatus participationStatus;
   private String title;
   private Long locationId;
@@ -49,7 +49,7 @@ public class AppliedMeetingDto {
     return AppliedMeetingDto.builder()
         .id(appliedMeeting.getId())
         .meetingId(appliedMeeting.getMeetingId())
-        .userId(appliedMeeting.getUserId())
+        .authorId(appliedMeeting.getAuthorId())
         .participationStatus(appliedMeeting.getParticipationStatus())
         .title(appliedMeeting.getTitle())
         .locationId(appliedMeeting.getLocationId())

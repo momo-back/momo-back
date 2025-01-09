@@ -35,6 +35,13 @@ public class MeetingController {
 
   private final MeetingService meetingService;
 
+  /**
+   * 모임 생성
+   *
+   * @param customUserDetails 회원 정보
+   * @param request           생성할 모임 정보
+   * @return 생성된 모임의 uri, 생성된 모임 정보
+   */
   @PostMapping
   public ResponseEntity<MeetingCreateResponse> createMeeting(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
@@ -45,10 +52,21 @@ public class MeetingController {
         request
     );
     return ResponseEntity
-        .created(URI.create("/api/meetings/" + response.getId()))
+        .created(URI.create("/api/v1/meetings/" + response.getId()))
         .body(response);
   }
 
+  /**
+   * 모집글 목록 조회
+   *
+   * @param latitude            사용자의 위도
+   * @param longitude           사용자의 경도
+   * @param lastId              마지막으로 조회된 모임 ID
+   * @param lastDistance        마지막으로 조회된 모임 위치 거리
+   * @param lastMeetingDateTime 마지막으로 조회된 모임 날짜
+   * @param pageSize            조회할 개수
+   * @return 조회된 모임 정보, 다음 페이지 여부, 다음 페이지 조회에 사용될 커서
+   */
   @GetMapping
   public ResponseEntity<MeetingsResponse> getMeetings(
       @RequestParam(required = false) @Range(min = -90, max = 90) Double latitude,
@@ -83,27 +101,32 @@ public class MeetingController {
     return ResponseEntity.ok(response);
   }
 
+  /**
+   * 모임 수정
+   *
+   * @param customUserDetails 회원 정보
+   * @param meetingId         수정할 모임 ID
+   * @param request           수정할 모임 값
+   * @return 수정된 모임의 값
+   */
   @PutMapping("/{meetingId}")
   public ResponseEntity<MeetingCreateResponse> updateMeeting(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long meetingId,
       @Valid @RequestBody MeetingCreateRequest request
   ) {
-    MeetingCreateResponse response = meetingService.updateMeeting(
-        customUserDetails.getId(), meetingId, request);
+    MeetingCreateResponse response =
+        meetingService.updateMeeting(customUserDetails.getId(), meetingId, request);
     return ResponseEntity.ok(response);
   }
 
-  @PatchMapping("/{meetingId}/status")
-  public ResponseEntity<Void> updateMeetingStatus(
-      @AuthenticationPrincipal CustomUserDetails customUserDetails,
-      @PathVariable Long meetingId,
-      @RequestBody @NotNull MeetingStatus meetingStatus
-  ) {
-    meetingService.updateMeetingStatus(customUserDetails.getId(), meetingId, meetingStatus);
-    return ResponseEntity.ok().build();
-  }
-
+  /**
+   * 모임 삭제
+   *
+   * @param customUserDetails 회원 정보
+   * @param meetingId         삭제할 모임 ID
+   * @return 204 No Content
+   */
   @DeleteMapping("/{meetingId}")
   public ResponseEntity<Void> deleteMeeting(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
@@ -111,5 +134,23 @@ public class MeetingController {
   ) {
     meetingService.deleteMeeting(customUserDetails.getId(), meetingId);
     return ResponseEntity.noContent().build();
+  }
+
+  /**
+   * 모임 상태 변경
+   *
+   * @param customUserDetails 회원 정보
+   * @param meetingId         상태를 변경할 모임 ID
+   * @param meetingStatus     변경할 상태
+   * @return 200 OK
+   */
+  @PatchMapping("/{meetingId}")
+  public ResponseEntity<Void> updateMeetingStatus(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long meetingId,
+      @RequestBody @NotNull MeetingStatus meetingStatus
+  ) {
+    meetingService.updateMeetingStatus(customUserDetails.getId(), meetingId, meetingStatus);
+    return ResponseEntity.ok().build();
   }
 }

@@ -31,11 +31,11 @@ public class ParticipationService {
   private final MeetingRepository meetingRepository;
   private final NotificationService notificationService;
 
-  public Long createParticipation(User user, Long meetingId) {
+  public void createParticipation(User user, Long meetingId) {
     Meeting meeting = validateForParticipate(user.getId(), meetingId);
 
     Participation participation = Participation.createMeetingParticipant(user, meeting);
-    Participation saved = participationRepository.save(participation);
+    participationRepository.save(participation);
 
     // 모임 주최자에게 새로운 참여 알림 발송
     notificationService.sendNotification(
@@ -43,7 +43,6 @@ public class ParticipationService {
         user.getNickname() + PARTICIPATION_NOTIFICATION_MESSAGE,
         NotificationType.NEW_PARTICIPATION_REQUEST
     );
-    return saved.getId();
   }
 
   private Meeting validateForParticipate(Long userId, Long meetingId) {
