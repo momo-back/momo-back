@@ -51,7 +51,7 @@ public class NotificationController {
       @PathVariable Long notificationId
   ) {
     notificationService.deleteNotification(customUserDetails.getId(), notificationId);
-    return ResponseEntity.ok().build();
+    return ResponseEntity.noContent().build();
   }
 
   /**
@@ -62,6 +62,6 @@ public class NotificationController {
       @AuthenticationPrincipal CustomUserDetails customUserDetails
   ) {
     notificationService.deleteAllNotifications(customUserDetails.getId());
-    return ResponseEntity.ok().build();
+    return ResponseEntity.noContent().build();
   }
 }
