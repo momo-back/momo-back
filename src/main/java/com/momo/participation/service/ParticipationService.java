@@ -1,12 +1,13 @@
 package com.momo.participation.service;
 
+import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.repository.MeetingRepository;
 import com.momo.notification.constant.NotificationType;
 import com.momo.notification.service.NotificationService;
-import com.momo.participation.dto.AppliedMeetingDto;
+import com.momo.participation.constant.ParticipationStatus;
 import com.momo.participation.dto.AppliedMeetingsResponse;
 import com.momo.participation.entity.Participation;
 import com.momo.participation.exception.ParticipationErrorCode;
@@ -45,8 +46,7 @@ public class ParticipationService {
   }
 
   private Meeting validateForParticipate(Long userId, Long meetingId) {
-    Meeting meeting = meetingRepository.findById(meetingId)
-        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
+    Meeting meeting = findByMeetingId(meetingId);
 
     if (!meeting.getMeetingStatus().isParticipate()) { // 참여 가능한 상태의 모임글인지 검증
       throw new ParticipationException(ParticipationErrorCode.INVALID_MEETING_STATUS);
@@ -72,5 +72,40 @@ public class ParticipationService {
         appliedMeetingsProjections,
         pageSize
     );
+  }
+
+  public void cancelParticipation(Long userId, Long participationId) {
+    Participation participation = validateForCancelParticipation(userId, participationId);
+    participationRepository.delete(participation);
+  }
+
+  private Participation validateForCancelParticipation(Long userId, Long participationId) {
+    // 참여 신청이 존재하는지 검증
+    Participation participation = participationRepository.findById(participationId)
+        .orElseThrow(() ->
+            new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
+
+    // 참여 신청의 주인인지 검증
+    if (!participation.isOwner(userId)) {
+      throw new ParticipationException(ParticipationErrorCode.NOT_PARTICIPATION_OWNER);
+    }
+
+    // 참여 신청을 취소할 수 있는 상태인지 검증
+    if (!(participation.getParticipationStatus() == ParticipationStatus.PENDING)) {
+      throw new ParticipationException(ParticipationErrorCode.INVALID_PARTICIPATION_STATUS);
+    }
+
+    Meeting meeting = findByMeetingId(participation.getMeetingId()); // 모임이 존재하는지 검증
+
+    // 모임 상태가 모임 신청을 취소할 수 있는 상태인지 검증
+    if (!(meeting.getMeetingStatus() == MeetingStatus.RECRUITING)) {
+      throw new MeetingException(MeetingErrorCode.INVALID_MEETING_STATUS);
+    }
+    return participation;
+  }
+
+  private Meeting findByMeetingId(Long meetingId) {
+    return meetingRepository.findById(meetingId)
+        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
   }
 }

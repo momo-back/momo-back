@@ -17,6 +17,8 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
       Long userId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 
   // 모집글 목록을 meeting_date_time 을 기준으로 오름차순 정렬하여 반환 (커서 기반)
+  // meeting_date_time이 초단위까지 저장되면 현재 방식에서는 중복데이터가 발생할 수 있음.
+  // lastMeetingDateTime이 분단위까지만 표현하고 있기 때문.
   @Query(value =
       "SELECT "
           + "m.id as id, "
@@ -31,17 +33,19 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
           + "m.approved_count as approvedCount, "
           + "m.content as content, "
           + "m.thumbnail_url as thumbnailUrl, "
-          + "("
-          + "  SELECT GROUP_CONCAT(mc.category) "
-          + "  FROM meeting_category mc "
-          + "  WHERE mc.meeting_id = m.id "
-          + ") as category "
+          + "GROUP_CONCAT(mc.category) as category "
           + "FROM meeting m "
+          + "INNER JOIN meeting_category mc ON m.id = mc.meeting_id "
           + "WHERE m.meeting_status = 'RECRUITING' "
           + "AND ("
-          + "    m.meeting_date_time > :lastDateTime "
-          + "    OR (m.meeting_date_time = :lastDateTime AND m.id > :lastId) "
+          + "  m.meeting_date_time > :lastDateTime "
+          + "  OR (m.meeting_date_time = :lastDateTime AND m.id > :lastId) "
           + ") "
+          + "GROUP BY "
+          + "  m.id, m.user_id, m.title, "
+          + "  m.location_id, m.latitude, m.longitude, "
+          + "  m.address, m.meeting_date_time, m.max_count, "
+          + "  m.approved_count, m.content, m.thumbnail_url "
           + "ORDER BY m.meeting_date_time ASC, m.id ASC  "
           + "LIMIT :pageSize",
       nativeQuery = true)

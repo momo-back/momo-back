@@ -49,4 +49,12 @@ public class Participation extends BaseEntity {
         .participationStatus(ParticipationStatus.PENDING)
         .build();
   }
+
+  public boolean isOwner(Long userId) {
+    return this.user.getId().equals(userId);
+  }
+
+  public Long getMeetingId() {
+    return this.meeting.getId();
+  }
 }
