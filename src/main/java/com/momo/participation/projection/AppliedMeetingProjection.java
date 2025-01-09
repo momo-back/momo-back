@@ -9,7 +9,7 @@ public interface AppliedMeetingProjection {
 
   Long getMeetingId();
 
-  Long getUserId();
+  Long getAuthorId();
 
   ParticipationStatus getParticipationStatus();
 
