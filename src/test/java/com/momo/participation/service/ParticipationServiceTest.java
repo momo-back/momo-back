@@ -199,6 +199,11 @@ class ParticipationServiceTest {
     assertEquals(MeetingStatus.RECRUITING, meeting.getMeetingStatus());
     assertEquals(ParticipationStatus.APPROVED, participation.getParticipationStatus());
     verify(participationRepository).findById(participation.getId());
+    verify(notificationService).sendNotification(
+        participation.getUser(),
+        participation.getMeeting().getTitle()
+            + NotificationType.PARTICIPANT_APPROVED.getDescription(),
+        NotificationType.PARTICIPANT_APPROVED);
   }
 
   @Test
@@ -220,6 +225,11 @@ class ParticipationServiceTest {
     assertEquals(MeetingStatus.RECRUITING, meeting.getMeetingStatus());
     assertEquals(ParticipationStatus.REJECTED, participation.getParticipationStatus());
     verify(participationRepository).findById(participation.getId());
+    verify(notificationService).sendNotification(
+        participation.getUser(),
+        participation.getMeeting().getTitle()
+            + NotificationType.PARTICIPANT_REJECTED.getDescription(),
+        NotificationType.PARTICIPANT_REJECTED);
   }
 
   private static User createUser(Long userId) {
