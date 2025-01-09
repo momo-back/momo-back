@@ -110,20 +110,31 @@ public class ParticipationService {
   }
 
   @Transactional
-  public void updateParticipationStatus(
-      Long id, Long participationId, ParticipationStatus newStatus
-  ) {
-    Participation participation = validateForParticipationOwner(id, participationId);
-    participation.updateStatus(newStatus);
+  public void approveParticipation(Long authorId, Long participationId) {
+    Participation participation = validateForParticipationOwner(authorId, participationId);
+    participation.updateStatus(ParticipationStatus.APPROVED);
+    // TODO: 참여 승인되면 채팅방 입장
   }
 
-  private Participation validateForParticipationOwner(Long meetingOwnerId, Long participationId) {
+  @Transactional
+  public void rejectParticipation(Long authorId, Long participationId) {
+    Participation participation = validateForParticipationOwner(authorId, participationId);
+    participation.updateStatus(ParticipationStatus.REJECTED);
+  }
+
+  private Participation validateForParticipationOwner(Long authorId, Long participationId) {
+    // 존재하는 참여 신청인지 확인
     Participation participation = participationRepository.findById(participationId)
         .orElseThrow(() ->
             new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
 
+    // 참여 상태가 "PENDING"인지 확인
+    if (!(participation.getParticipationStatus() == ParticipationStatus.PENDING)) {
+      throw new ParticipationException(ParticipationErrorCode.INVALID_PARTICIPATION_STATUS);
+    }
+
     // 현재 회원이 해당 모임 신청을 받은 모임글의 작성자인지 검증
-    if (!participation.isMeetingOwner(meetingOwnerId)) {
+    if (!participation.isMeetingAuthor(authorId)) {
       throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
     }
     return participation;
