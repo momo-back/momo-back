@@ -1,6 +1,7 @@
 package com.momo.meeting.controller;
 
 import com.momo.meeting.constant.MeetingStatus;
+import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
 import com.momo.meeting.dto.MeetingsRequest;
@@ -61,6 +62,25 @@ public class MeetingController {
     MeetingsRequest request = MeetingsRequest
         .createRequest(latitude, longitude, lastId, lastDistance, lastMeetingDateTime, pageSize);
     return ResponseEntity.ok(meetingService.getMeetings(request));
+  }
+
+  /**
+   * 주최한 모집글 목록 조회
+   *
+   * @param customUserDetails 회원 정보
+   * @param lastId            마지막으로 조회된 모임 ID
+   * @param pageSize          조회할 모임 수
+   * @return CreatedMeetingsResponse
+   */
+  @GetMapping("/created")
+  public ResponseEntity<CreatedMeetingsResponse> getCreatedMeetings(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @RequestParam(defaultValue = "0") Long lastId,
+      @RequestParam(defaultValue = "20") @Range(min = 1, max = 100) int pageSize
+  ) {
+    CreatedMeetingsResponse response =
+        meetingService.getCreatedMeetings(customUserDetails.getId(), lastId, pageSize);
+    return ResponseEntity.ok(response);
   }
 
   @PutMapping("/{meetingId}")

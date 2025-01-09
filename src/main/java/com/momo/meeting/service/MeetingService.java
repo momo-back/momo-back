@@ -2,12 +2,14 @@ package com.momo.meeting.service;
 
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.constant.SortType;
+import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
 import com.momo.meeting.dto.MeetingsRequest;
 import com.momo.meeting.dto.MeetingsResponse;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
+import com.momo.meeting.projection.CreatedMeetingProjection;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import com.momo.user.entity.User;
 import com.momo.meeting.entity.Meeting;
@@ -108,5 +110,16 @@ public class MeetingService {
       throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
     }
     return meeting;
+  }
+
+  public CreatedMeetingsResponse getCreatedMeetings(Long userId, Long lastId, int pageSize) {
+    List<CreatedMeetingProjection> createdMeetings =
+        meetingRepository.findAllByUser_IdOrderByCreatedAtAsc(userId, lastId, pageSize + 1);
+    // 다음 페이지 존재 여부를 알기 위해 + 1
+
+    return CreatedMeetingsResponse.of(
+        createdMeetings,
+        pageSize
+    );
   }
 }
