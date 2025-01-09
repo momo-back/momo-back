@@ -2,9 +2,11 @@ package com.momo.participation.dto;
 
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.participation.constant.ParticipationStatus;
-import com.momo.participation.projection.AppliedMeetingsProjection;
+import com.momo.participation.projection.AppliedMeetingProjection;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,7 +31,19 @@ public class AppliedMeetingDto {
   private String content;
   private String thumbnailUrl;
 
-  public static AppliedMeetingDto from(AppliedMeetingsProjection appliedMeeting) {
+  public static List<AppliedMeetingDto> convertToAppliedMeetingDtos(
+      List<AppliedMeetingProjection> appliedMeetingProjections
+  ) {
+    List<AppliedMeetingDto> appliedMeetingDtos = new ArrayList<>();
+
+    for (AppliedMeetingProjection appliedMeetingProjection : appliedMeetingProjections) {
+      AppliedMeetingDto appliedMeeting = AppliedMeetingDto.from(appliedMeetingProjection);
+      appliedMeetingDtos.add(appliedMeeting);
+    }
+    return appliedMeetingDtos;
+  }
+
+  public static AppliedMeetingDto from(AppliedMeetingProjection appliedMeeting) {
     Set<String> foodCategories = FoodCategory.convertToFoodCategories(appliedMeeting.getCategory());
 
     return AppliedMeetingDto.builder()

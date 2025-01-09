@@ -57,4 +57,12 @@ public class Participation extends BaseEntity {
   public boolean isMeetingOwner(Long meetingOwnerId) {
     return this.meeting.getUser().getId().equals(meetingOwnerId);
   }
+  
+  public boolean isOwner(Long userId) {
+    return this.user.getId().equals(userId);
+  }
+
+  public Long getMeetingId() {
+    return this.meeting.getId();
+  }
 }

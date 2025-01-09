@@ -81,6 +81,22 @@ public class KakaoAuthService {
       throw new RuntimeException("카카오 프로필 정보 파싱 실패", e);
     }
   }
+
+  public void unlinkKakaoAccount(String accessToken) {
+    String kakaoDeleteUrl = "https://kapi.kakao.com/v1/user/unlink";
+
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + accessToken);
+
+    HttpEntity<String> entity = new HttpEntity<>(headers);
+    ResponseEntity<String> response = restTemplate.exchange(kakaoDeleteUrl, HttpMethod.POST, entity, String.class);
+
+    if (response.getStatusCode() != HttpStatus.OK) {
+      throw new CustomException(ErrorCode.KAKAO_UNLINK_FAILED);
+    }
+
+    log.debug("Kakao account unlinked successfully: {}", response.getBody());
+  }
   /**
    * 공통 JSON 응답 파싱 메서드
    */

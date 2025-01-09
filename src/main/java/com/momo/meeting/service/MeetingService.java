@@ -2,14 +2,14 @@ package com.momo.meeting.service;
 
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.constant.SortType;
-import com.momo.meeting.dto.MeetingCursor;
+import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
 import com.momo.meeting.dto.MeetingsRequest;
 import com.momo.meeting.dto.MeetingsResponse;
-import com.momo.meeting.dto.MeetingDto;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
+import com.momo.meeting.projection.CreatedMeetingProjection;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import com.momo.user.entity.User;
 import com.momo.meeting.entity.Meeting;
@@ -18,11 +18,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MeetingService {
@@ -47,8 +45,7 @@ public class MeetingService {
     }
 
     return MeetingsResponse.of(
-        MeetingDto.convertToMeetingDtos(meetingProjections),
-        createCursor(meetingProjections),
+        meetingProjections,
         request.getPageSize()
     );
   }
@@ -85,26 +82,11 @@ public class MeetingService {
     meetingRepository.delete(meeting);
   }
 
-  private List<MeetingToMeetingDtoProjection> getMeetingsByDate(
-      MeetingsRequest request
-  ) {
+  private List<MeetingToMeetingDtoProjection> getMeetingsByDate(MeetingsRequest request) {
     return meetingRepository.findOrderByMeetingDateWithCursor(
         request.getCursorId(),
         request.getCursorMeetingDateTime(),
         request.getPageSize() + 1 // 다음 페이지 존재 여부를 알기 위해 + 1
-    );
-  }
-
-  private MeetingCursor createCursor(List<MeetingToMeetingDtoProjection> meetingProjections) {
-    if (meetingProjections.isEmpty()) {
-      return null;
-    }
-    MeetingToMeetingDtoProjection lastProjection = meetingProjections
-        .get(meetingProjections.size() - 1);
-    return MeetingCursor.of(
-        lastProjection.getId(),
-        lastProjection.getDistance(),
-        lastProjection.getMeetingDateTime()
     );
   }
 
@@ -128,5 +110,16 @@ public class MeetingService {
       throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
     }
     return meeting;
+  }
+
+  public CreatedMeetingsResponse getCreatedMeetings(Long userId, Long lastId, int pageSize) {
+    List<CreatedMeetingProjection> createdMeetings =
+        meetingRepository.findAllByUser_IdOrderByCreatedAtAsc(userId, lastId, pageSize + 1);
+    // 다음 페이지 존재 여부를 알기 위해 + 1
+
+    return CreatedMeetingsResponse.of(
+        createdMeetings,
+        pageSize
+    );
   }
 }

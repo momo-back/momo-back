@@ -1,5 +1,6 @@
 package com.momo.meeting.dto;
 
+import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,15 +14,20 @@ public class MeetingsResponse {
   private MeetingCursor cursor;
 
   public static MeetingsResponse of(
-      List<MeetingDto> meetings,
-      MeetingCursor meetingCursor,
+      List<MeetingToMeetingDtoProjection> meetingProjections,
       int pageSize
   ) {
-    boolean hasNext = meetings.size() > pageSize;
-    MeetingCursor nextCursor = hasNext ? meetingCursor : null;
+    List<MeetingDto> meetingDtos = MeetingDto.convertToMeetingDtos(meetingProjections);
+    boolean hasNext = meetingDtos.size() > pageSize;
+
+    meetingDtos =
+        hasNext ? meetingDtos.subList(0, pageSize) : meetingDtos.subList(0, meetingDtos.size());
+
+    MeetingCursor cursor = MeetingCursor.createCursor(meetingDtos);
+    MeetingCursor nextCursor = hasNext ? cursor : null;
 
     return MeetingsResponse.builder()
-        .meetings(meetings)
+        .meetings(meetingDtos)
         .hasNext(hasNext)
         .cursor(nextCursor)
         .build();

@@ -1,7 +1,7 @@
 package com.momo.participation.repository;
 
 import com.momo.participation.entity.Participation;
-import com.momo.participation.projection.AppliedMeetingsProjection;
+import com.momo.participation.projection.AppliedMeetingProjection;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -42,7 +42,7 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
           + "ORDER BY p.id ASC "
           + "LIMIT :pageSize",
       nativeQuery = true)
-  List<AppliedMeetingsProjection> findAppliedMeetingsWithLastId(
+  List<AppliedMeetingProjection> findAppliedMeetingsWithLastId(
       @Param("userId") Long userId,
       @Param("lastId") Long lastId,
       @Param("pageSize") int pageSize

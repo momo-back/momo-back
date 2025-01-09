@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,7 +50,7 @@ public class ParticipationController {
     return ResponseEntity.ok(response);
   }
 
-  @PatchMapping("/{participationId}")
+  @PatchMapping("/{participationId}/status")
   public ResponseEntity<Void> updateParticipationStatus(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long participationId,
@@ -60,5 +61,14 @@ public class ParticipationController {
     );
     return ResponseEntity.ok()
         .build();
+    }
+
+  @DeleteMapping("/{participationId}/cancel")
+  public ResponseEntity<Void> cancelParticipation(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long participationId
+  ) {
+    participationService.cancelParticipation(customUserDetails.getId(), participationId);
+    return ResponseEntity.noContent().build();
   }
 }
