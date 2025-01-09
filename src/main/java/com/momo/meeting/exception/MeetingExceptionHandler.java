@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE) // 높은 우선순위로 설정
-@RestControllerAdvice(basePackages = "com.momo.meeting")
+@RestControllerAdvice(basePackages = {"com.momo.meeting", "com.momo.participation"})
 public class MeetingExceptionHandler {
 
   @ExceptionHandler(MeetingException.class)

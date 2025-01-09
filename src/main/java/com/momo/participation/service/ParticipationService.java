@@ -18,6 +18,7 @@ import com.momo.user.entity.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -107,5 +108,25 @@ public class ParticipationService {
   private Meeting findByMeetingId(Long meetingId) {
     return meetingRepository.findById(meetingId)
         .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
+  }
+
+  @Transactional
+  public void updateParticipationStatus(
+      Long id, Long participationId, ParticipationStatus newStatus
+  ) {
+    Participation participation = validateForParticipationOwner(id, participationId);
+    participation.updateStatus(newStatus);
+  }
+
+  private Participation validateForParticipationOwner(Long meetingOwnerId, Long participationId) {
+    Participation participation = participationRepository.findById(participationId)
+        .orElseThrow(() ->
+            new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
+
+    // 현재 회원이 해당 모임 신청을 받은 모임글의 작성자인지 검증
+    if (!participation.isMeetingOwner(meetingOwnerId)) {
+      throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
+    }
+    return participation;
   }
 }

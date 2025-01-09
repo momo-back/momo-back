@@ -50,6 +50,14 @@ public class Participation extends BaseEntity {
         .build();
   }
 
+  public void updateStatus(ParticipationStatus newStatus) {
+    this.participationStatus = newStatus;
+  }
+
+  public boolean isMeetingOwner(Long meetingOwnerId) {
+    return this.meeting.getUser().getId().equals(meetingOwnerId);
+  }
+  
   public boolean isOwner(Long userId) {
     return this.user.getId().equals(userId);
   }
