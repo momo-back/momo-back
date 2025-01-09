@@ -133,7 +133,7 @@ public class ParticipationService {
       throw new ParticipationException(ParticipationErrorCode.INVALID_PARTICIPATION_STATUS);
     }
 
-    // 현재 회원이 해당 모임 신청을 받은 모임글의 작성자인지 검증
+    // 현재 회원이 해당 모임 신청을 받은 모임의 작성자인지 검증
     if (!participation.isMeetingAuthor(authorId)) {
       throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
     }
