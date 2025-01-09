@@ -24,9 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ParticipationService {
 
-  private static final String PARTICIPATION_NOTIFICATION_MESSAGE =
-      "님이 모임 참여를 신청했습니다.";
-
   private final ParticipationRepository participationRepository;
   private final MeetingRepository meetingRepository;
   private final NotificationService notificationService;
@@ -40,7 +37,7 @@ public class ParticipationService {
     // 모임 주최자에게 새로운 참여 알림 발송
     notificationService.sendNotification(
         meeting.getUser(),
-        user.getNickname() + PARTICIPATION_NOTIFICATION_MESSAGE,
+        user.getNickname() + NotificationType.NEW_PARTICIPATION_REQUEST.getDescription(),
         NotificationType.NEW_PARTICIPATION_REQUEST
     );
   }
@@ -113,6 +110,14 @@ public class ParticipationService {
   public void approveParticipation(Long authorId, Long participationId) {
     Participation participation = validateForParticipationOwner(authorId, participationId);
     participation.updateStatus(ParticipationStatus.APPROVED);
+
+    // 참여 신청을 보낸 회원에게 알림 발송
+    notificationService.sendNotification(
+        participation.getUser(),
+        participation.getMeeting().getTitle()
+            + NotificationType.PARTICIPANT_APPROVED.getDescription(),
+        NotificationType.PARTICIPANT_APPROVED
+    );
     // TODO: 참여 승인되면 채팅방 입장
   }
 
@@ -120,6 +125,14 @@ public class ParticipationService {
   public void rejectParticipation(Long authorId, Long participationId) {
     Participation participation = validateForParticipationOwner(authorId, participationId);
     participation.updateStatus(ParticipationStatus.REJECTED);
+
+    // 참여 신청을 보낸 회원에게 알림 발송
+    notificationService.sendNotification(
+        participation.getUser(),
+        participation.getMeeting().getTitle()
+            + NotificationType.PARTICIPANT_REJECTED.getDescription(),
+        NotificationType.PARTICIPANT_REJECTED
+    );
   }
 
   private Participation validateForParticipationOwner(Long authorId, Long participationId) {
