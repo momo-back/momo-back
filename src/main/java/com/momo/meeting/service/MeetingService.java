@@ -94,9 +94,9 @@ public class MeetingService {
     LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
     LocalDateTime endOfDay = startOfDay.plusDays(1);
 
-    int todayPostCount = meetingRepository.countByUser_IdAndCreatedAtBetween(
-        userId, startOfDay, endOfDay
-    );
+    int todayPostCount =
+        meetingRepository.countByUser_IdAndCreatedAtBetween(userId, startOfDay, endOfDay);
+    
     if (todayPostCount >= 10) {
       throw new MeetingException(MeetingErrorCode.DAILY_POSTING_LIMIT_EXCEEDED);
     }
