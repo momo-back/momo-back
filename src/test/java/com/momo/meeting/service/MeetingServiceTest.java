@@ -25,8 +25,11 @@ import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.projection.CreatedMeetingProjection;
+import com.momo.meeting.projection.MeetingParticipantProjection;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import com.momo.meeting.repository.MeetingRepository;
+import com.momo.participation.constant.ParticipationStatus;
+import com.momo.participation.repository.ParticipationRepository;
 import com.momo.user.entity.User;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,6 +50,9 @@ class MeetingServiceTest {
 
   @Mock
   private MeetingRepository meetingRepository;
+
+  @Mock
+  private ParticipationRepository participationRepository;
 
   @InjectMocks
   private MeetingService meetingService;
@@ -437,6 +443,7 @@ class MeetingServiceTest {
 
   private List<CreatedMeetingProjection> createdMeetingsMockProjections() {
     List<CreatedMeetingProjection> projections = new ArrayList<>();
+
     for (int i = 0; i < TEST_PAGE_SIZE + 1; i++) {
       createdMeetingMockProjection(projections, i);
     }
@@ -488,5 +495,67 @@ class MeetingServiceTest {
     assertThat(createdMeetingDto.get(i).getContent()).isEqualTo("Test Content " + i);
     assertThat(createdMeetingDto.get(i).getThumbnailUrl())
         .isEqualTo("test_" + i + "_thumbnail_url.jpg");
+  }
+
+  @Test
+  @DisplayName("모임 신청자 목록 조회 - 성공")
+  void getParticipants_Success() {
+    // given
+    User user = createUser();
+    MeetingCreateRequest request = createMeetingRequest();
+    Meeting meeting = createMeeting(user, request);
+    List<MeetingParticipantProjection> projections = createMockParticipantProjections();
+
+    given(meetingRepository.findById(meeting.getId())).willReturn(Optional.of(meeting));
+    given(participationRepository.findMeetingParticipantsByMeeting_Id(meeting.getId()))
+        .willReturn(projections);
+
+    // when
+    List<MeetingParticipantProjection> participants =
+        meetingService.getParticipants(user.getId(), meeting.getId());
+
+    // then
+    assertThat(participants).hasSize(TEST_PAGE_SIZE + 1);
+
+    assertThatMeetingParticipants(participants);
+    verify(meetingRepository).findById(meeting.getId());
+    verify(participationRepository).findMeetingParticipantsByMeeting_Id(meeting.getId());
+  }
+
+  private static List<MeetingParticipantProjection> createMockParticipantProjections() {
+    List<MeetingParticipantProjection> projections = new ArrayList<>();
+
+    for (int i = 0; i < TEST_PAGE_SIZE + 1; i++) {
+      createMockParticipantProjection(projections, i);
+    }
+    return projections;
+  }
+
+  private static void createMockParticipantProjection(
+      List<MeetingParticipantProjection> projections, int i
+  ) {
+    MeetingParticipantProjection projection = mock(MeetingParticipantProjection.class);
+    given(projection.getUserId()).willReturn((long) i);
+    given(projection.getNickname()).willReturn("test-nickname" + i);
+    given(projection.getProfileImageUrl()).willReturn("test_" + i + "_profile_image_url.jpg");
+    given(projection.getParticipationStatus()).willReturn(ParticipationStatus.PENDING);
+    projections.add(projection);
+  }
+
+  private static void assertThatMeetingParticipants(
+      List<MeetingParticipantProjection> projections) {
+    for (int i = 0; i < projections.size(); i++) {
+      assertThatMeetingParticipant(projections, i);
+    }
+  }
+
+  private static void assertThatMeetingParticipant(
+      List<MeetingParticipantProjection> projections, int i
+  ) {
+    assertThat(projections.get(i).getUserId()).isEqualTo(i);
+    assertThat(projections.get(i).getNickname()).isEqualTo("test-nickname" + i);
+    assertThat(projections.get(i).getProfileImageUrl())
+        .isEqualTo("test_" + i + "_profile_image_url.jpg");
+    assertThat(projections.get(i).getParticipationStatus()).isEqualTo(ParticipationStatus.PENDING);
   }
 }
