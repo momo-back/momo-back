@@ -15,7 +15,7 @@ import lombok.Getter;
 @Builder
 public class CreatedMeetingDto {
 
-  private Long id;
+  private Long userId;
   private Long meetingId;
   private MeetingStatus meetingStatus;
   private String title;
@@ -47,7 +47,7 @@ public class CreatedMeetingDto {
         .convertToFoodCategories(createdMeetingProjection.getCategory());
 
     return CreatedMeetingDto.builder()
-        .id(createdMeetingProjection.getId())
+        .userId(createdMeetingProjection.getUserId())
         .meetingId(createdMeetingProjection.getMeetingId())
         .meetingStatus(createdMeetingProjection.getMeetingStatus())
         .title(createdMeetingProjection.getTitle())

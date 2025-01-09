@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public interface CreatedMeetingProjection {
 
-  Long getId();
+  Long getUserId();
 
   Long getMeetingId();
 
