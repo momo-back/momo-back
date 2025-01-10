@@ -2,6 +2,8 @@ package com.momo.meeting.service;
 
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.constant.SortType;
+import com.momo.meeting.dto.MeetingCursor;
+import com.momo.meeting.dto.MeetingDto;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
@@ -19,6 +21,9 @@ import com.momo.meeting.repository.MeetingRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -129,5 +134,60 @@ public class MeetingService {
         createdMeetings,
         pageSize
     );
+  }
+
+  public MeetingsResponse filterMeetings(
+      MeetingsRequest request,
+      String kind,
+      String keyword,
+      Set<String> categorySet,
+      int pageSize
+  ) {
+    // 기본 모임 목록 조회
+    MeetingsResponse response = getMeetings(request);
+    Stream<MeetingDto> meetingStream = response.getMeetings().stream();
+
+    // 카테고리 필터링 적용
+    if (categorySet != null && !categorySet.isEmpty()) {
+      meetingStream = meetingStream.filter(
+          meeting -> meeting.getCategory().containsAll(categorySet));
+    }
+
+    // 검색 유형 및 키워드 필터링 적용
+    if (keyword != null && !keyword.isEmpty()) {
+      switch (kind) {
+        case "title":
+          meetingStream = meetingStream.filter(
+              meeting -> meeting.getTitle() != null && meeting.getTitle().contains(keyword));
+          break;
+        case "address":
+          meetingStream = meetingStream.filter(
+              meeting -> meeting.getAddress() != null && meeting.getAddress().contains(keyword));
+          break;
+        case "content":
+          meetingStream = meetingStream.filter(
+              meeting -> meeting.getContent() != null && meeting.getContent().contains(keyword));
+          break;
+        default:
+          break; // 유효하지 않은 'kind' 무시
+      }
+    }
+
+    List<MeetingDto> filteredMeetings = meetingStream.collect(Collectors.toList());
+    return processFilteredMeetings(filteredMeetings, pageSize);
+  }
+
+  private MeetingsResponse processFilteredMeetings(
+      List<MeetingDto> filteredMeetings, int pageSize
+  ) {
+    boolean hasNext = filteredMeetings.size() > pageSize;
+    filteredMeetings = hasNext ? filteredMeetings.subList(0, pageSize) : filteredMeetings;
+    MeetingCursor nextCursor = hasNext ? MeetingCursor.createCursor(filteredMeetings) : null;
+
+    return MeetingsResponse.builder()
+        .meetings(filteredMeetings)
+        .hasNext(hasNext)
+        .cursor(nextCursor)
+        .build();
   }
 }
