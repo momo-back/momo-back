@@ -1,5 +1,6 @@
 package com.momo.participation.repository;
 
+import com.momo.meeting.projection.MeetingParticipantProjection;
 import com.momo.participation.entity.Participation;
 import com.momo.participation.projection.AppliedMeetingProjection;
 import java.util.List;
@@ -46,5 +47,21 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
       @Param("userId") Long userId,
       @Param("lastId") Long lastId,
       @Param("pageSize") int pageSize
+  );
+
+  // 해당 모임에 참여 신청한 회원 목록을 조회
+  @Query(value = "SELECT "
+      + "u.user_id as userId, "
+      + "u.nickname as nickname, "
+      + "p.profile_image_url as profileImageUrl, "
+      + "mp.participation_status as participationStatus "
+      + "FROM participation mp "
+      + "JOIN users u ON mp.user_id = u.user_id "
+      + "JOIN profile p ON u.user_id = p.user_id "
+      + "WHERE mp.meeting_id = :meetingId "
+      + "ORDER BY mp.created_at ASC",
+      nativeQuery = true)
+  List<MeetingParticipantProjection> findMeetingParticipantsByMeeting_Id(
+      @Param("meetingId") Long meetingId
   );
 }

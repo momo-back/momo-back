@@ -92,7 +92,7 @@ public class Meeting extends BaseEntity {
     this.category = request.getCategory();
   }
 
-  public boolean isOwner(Long userId) {
+  public boolean isAuthor(Long userId) {
     return this.user.getId().equals(userId);
   }
 }
