@@ -12,7 +12,9 @@ import com.momo.meeting.dto.MeetingsResponse;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.projection.CreatedMeetingProjection;
+import com.momo.meeting.projection.MeetingParticipantProjection;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
+import com.momo.participation.repository.ParticipationRepository;
 import com.momo.user.entity.User;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.repository.MeetingRepository;
@@ -31,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MeetingService {
 
   private final MeetingRepository meetingRepository;
+  private final ParticipationRepository participationRepository;
 
   public MeetingCreateResponse createMeeting(User user, MeetingCreateRequest request) {
     validateDailyPostLimit(user.getId());
@@ -38,6 +41,18 @@ public class MeetingService {
 
     meetingRepository.save(meeting);
     return MeetingCreateResponse.from(meeting);
+  }
+
+  private void validateDailyPostLimit(Long userId) {
+    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+    LocalDateTime endOfDay = startOfDay.plusDays(1);
+
+    int todayPostCount =
+        meetingRepository.countByUser_IdAndCreatedAtBetween(userId, startOfDay, endOfDay);
+
+    if (todayPostCount >= 10) {
+      throw new MeetingException(MeetingErrorCode.DAILY_POSTING_LIMIT_EXCEEDED);
+    }
   }
 
   public MeetingsResponse getMeetings(MeetingsRequest request) {
@@ -55,12 +70,6 @@ public class MeetingService {
     );
   }
 
-  @Transactional
-  public void updateMeetingStatus(Long userId, Long meetingId, MeetingStatus newStatus) {
-    Meeting meeting = validateForMeetingOwner(userId, meetingId);
-    meeting.updateStatus(newStatus);
-  }
-
   private List<MeetingToMeetingDtoProjection> getNearbyMeetings(MeetingsRequest request) {
     return meetingRepository.findNearbyMeetingsWithCursor(
         request.getUserLatitude(),
@@ -70,6 +79,19 @@ public class MeetingService {
         request.getCursorDistance(),
         request.getPageSize() + 1 // 다음 페이지 존재 여부를 알기 위해 + 1
     );
+  }
+
+  private List<MeetingToMeetingDtoProjection> getMeetingsByDate(MeetingsRequest request) {
+    return meetingRepository.findOrderByMeetingDateWithCursor(
+        request.getCursorId(),
+        request.getCursorMeetingDateTime(),
+        request.getPageSize() + 1 // 다음 페이지 존재 여부를 알기 위해 + 1
+    );
+  }
+
+  public List<MeetingParticipantProjection> getParticipants(Long userId, Long meetingId) {
+    validateForMeetingOwner(userId, meetingId);
+    return participationRepository.findMeetingParticipantsByMeeting_Id(meetingId);
   }
 
   @Transactional
@@ -82,36 +104,22 @@ public class MeetingService {
     return MeetingCreateResponse.from(meeting);
   }
 
+  @Transactional
+  public void updateMeetingStatus(Long userId, Long meetingId, MeetingStatus newStatus) {
+    Meeting meeting = validateForMeetingOwner(userId, meetingId);
+    meeting.updateStatus(newStatus);
+  }
+
   public void deleteMeeting(Long userId, Long meetingId) {
     Meeting meeting = validateForMeetingOwner(userId, meetingId);
     meetingRepository.delete(meeting);
-  }
-
-  private List<MeetingToMeetingDtoProjection> getMeetingsByDate(MeetingsRequest request) {
-    return meetingRepository.findOrderByMeetingDateWithCursor(
-        request.getCursorId(),
-        request.getCursorMeetingDateTime(),
-        request.getPageSize() + 1 // 다음 페이지 존재 여부를 알기 위해 + 1
-    );
-  }
-
-  private void validateDailyPostLimit(Long userId) {
-    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-    LocalDateTime endOfDay = startOfDay.plusDays(1);
-
-    int todayPostCount =
-        meetingRepository.countByUser_IdAndCreatedAtBetween(userId, startOfDay, endOfDay);
-    
-    if (todayPostCount >= 10) {
-      throw new MeetingException(MeetingErrorCode.DAILY_POSTING_LIMIT_EXCEEDED);
-    }
   }
 
   private Meeting validateForMeetingOwner(Long userId, Long meetingId) {
     Meeting meeting = meetingRepository.findById(meetingId)
         .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
 
-    if (!meeting.isOwner(userId)) {
+    if (!meeting.isAuthor(userId)) {
       throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
     }
     return meeting;

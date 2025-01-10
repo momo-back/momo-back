@@ -181,26 +181,55 @@ class ParticipationServiceTest {
   }
 
   @Test
-  @DisplayName("모임 참여 신청 상태 변경  - 성공")
-  void updateMeetingStatus_Success() {
+  @DisplayName("참여 신청 승인  - 성공")
+  void approveParticipation_Success() {
     // given
     User user = createUser(1L);
-    User meetingOwner = createUser(2L);
-    Meeting meeting = createMeeting(meetingOwner, MeetingStatus.RECRUITING);
+    User author = createUser(2L);
+    Meeting meeting = createMeeting(author, MeetingStatus.RECRUITING);
     Participation participation = createParticipation(user, meeting);
 
     when(participationRepository.findById(participation.getId()))
         .thenReturn(Optional.of(participation));
 
     // when
-    participationService.updateParticipationStatus(
-        meetingOwner.getId(), participation.getId(), ParticipationStatus.APPROVED
-    );
+    participationService.approveParticipation(author.getId(), participation.getId());
 
     // then
     assertEquals(MeetingStatus.RECRUITING, meeting.getMeetingStatus());
     assertEquals(ParticipationStatus.APPROVED, participation.getParticipationStatus());
     verify(participationRepository).findById(participation.getId());
+    verify(notificationService).sendNotification(
+        participation.getUser(),
+        participation.getMeeting().getTitle()
+            + NotificationType.PARTICIPANT_APPROVED.getDescription(),
+        NotificationType.PARTICIPANT_APPROVED);
+  }
+
+  @Test
+  @DisplayName("참여 신청 거절  - 성공")
+  void rejectParticipation_Success() {
+    // given
+    User user = createUser(1L);
+    User author = createUser(2L);
+    Meeting meeting = createMeeting(author, MeetingStatus.RECRUITING);
+    Participation participation = createParticipation(user, meeting);
+
+    when(participationRepository.findById(participation.getId()))
+        .thenReturn(Optional.of(participation));
+
+    // when
+    participationService.rejectParticipation(author.getId(), participation.getId());
+
+    // then
+    assertEquals(MeetingStatus.RECRUITING, meeting.getMeetingStatus());
+    assertEquals(ParticipationStatus.REJECTED, participation.getParticipationStatus());
+    verify(participationRepository).findById(participation.getId());
+    verify(notificationService).sendNotification(
+        participation.getUser(),
+        participation.getMeeting().getTitle()
+            + NotificationType.PARTICIPANT_REJECTED.getDescription(),
+        NotificationType.PARTICIPANT_REJECTED);
   }
 
   private static User createUser(Long userId) {

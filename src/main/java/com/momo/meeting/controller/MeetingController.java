@@ -7,10 +7,12 @@ import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
 import com.momo.meeting.dto.MeetingsRequest;
 import com.momo.meeting.dto.MeetingsResponse;
+import com.momo.meeting.projection.MeetingParticipantProjection;
 import com.momo.meeting.service.MeetingService;
 import com.momo.user.dto.CustomUserDetails;
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -100,6 +102,24 @@ public class MeetingController {
   ) {
     CreatedMeetingsResponse response =
         meetingService.getCreatedMeetings(customUserDetails.getId(), lastId, pageSize);
+    return ResponseEntity.ok(response);
+  }
+
+  /**
+   * 모임 참여 신청자 목로 조회
+   *
+   * @param customUserDetails 회원 정보
+   * @param meetingId         모임 ID
+   * @return 참여 신정자의 ID, 닉네임, 프로필 사진 URL, 참여 상태를 담은 List 반환
+   */
+  @GetMapping("/{meetingId}/participants")
+  public ResponseEntity<List<MeetingParticipantProjection>> getMeetingParticipant(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long meetingId
+  ) {
+    List<MeetingParticipantProjection> response =
+        meetingService.getParticipants(customUserDetails.getId(), meetingId);
+
     return ResponseEntity.ok(response);
   }
 
