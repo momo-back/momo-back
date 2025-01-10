@@ -24,9 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ParticipationService {
 
-  private static final String PARTICIPATION_NOTIFICATION_MESSAGE =
-      "님이 모임 참여를 신청했습니다.";
-
   private final ParticipationRepository participationRepository;
   private final MeetingRepository meetingRepository;
   private final NotificationService notificationService;
@@ -40,7 +37,7 @@ public class ParticipationService {
     // 모임 주최자에게 새로운 참여 알림 발송
     notificationService.sendNotification(
         meeting.getUser(),
-        user.getNickname() + PARTICIPATION_NOTIFICATION_MESSAGE,
+        user.getNickname() + NotificationType.NEW_PARTICIPATION_REQUEST.getDescription(),
         NotificationType.NEW_PARTICIPATION_REQUEST
     );
   }
@@ -110,20 +107,47 @@ public class ParticipationService {
   }
 
   @Transactional
-  public void updateParticipationStatus(
-      Long id, Long participationId, ParticipationStatus newStatus
-  ) {
-    Participation participation = validateForParticipationOwner(id, participationId);
-    participation.updateStatus(newStatus);
+  public void approveParticipation(Long authorId, Long participationId) {
+    Participation participation = validateForParticipationOwner(authorId, participationId);
+    participation.updateStatus(ParticipationStatus.APPROVED);
+
+    // 참여 신청을 보낸 회원에게 알림 발송
+    notificationService.sendNotification(
+        participation.getUser(),
+        participation.getMeeting().getTitle()
+            + NotificationType.PARTICIPANT_APPROVED.getDescription(),
+        NotificationType.PARTICIPANT_APPROVED
+    );
+    // TODO: 참여 승인되면 채팅방 입장
   }
 
-  private Participation validateForParticipationOwner(Long meetingOwnerId, Long participationId) {
+  @Transactional
+  public void rejectParticipation(Long authorId, Long participationId) {
+    Participation participation = validateForParticipationOwner(authorId, participationId);
+    participation.updateStatus(ParticipationStatus.REJECTED);
+
+    // 참여 신청을 보낸 회원에게 알림 발송
+    notificationService.sendNotification(
+        participation.getUser(),
+        participation.getMeeting().getTitle()
+            + NotificationType.PARTICIPANT_REJECTED.getDescription(),
+        NotificationType.PARTICIPANT_REJECTED
+    );
+  }
+
+  private Participation validateForParticipationOwner(Long authorId, Long participationId) {
+    // 존재하는 참여 신청인지 확인
     Participation participation = participationRepository.findById(participationId)
         .orElseThrow(() ->
             new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
 
-    // 현재 회원이 해당 모임 신청을 받은 모임글의 작성자인지 검증
-    if (!participation.isMeetingOwner(meetingOwnerId)) {
+    // 참여 상태가 "PENDING"인지 확인
+    if (!(participation.getParticipationStatus() == ParticipationStatus.PENDING)) {
+      throw new ParticipationException(ParticipationErrorCode.INVALID_PARTICIPATION_STATUS);
+    }
+
+    // 현재 회원이 해당 모임 신청을 받은 모임의 작성자인지 검증
+    if (!participation.isMeetingAuthor(authorId)) {
       throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
     }
     return participation;

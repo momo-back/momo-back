@@ -1,10 +1,8 @@
 package com.momo.participation.controller;
 
-import com.momo.participation.constant.ParticipationStatus;
 import com.momo.participation.dto.AppliedMeetingsResponse;
 import com.momo.participation.service.ParticipationService;
 import com.momo.user.dto.CustomUserDetails;
-import javax.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.validator.constraints.Range;
 import org.springframework.http.HttpStatus;
@@ -15,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,6 +29,7 @@ public class ParticipationController {
    *
    * @param customUserDetails 회원 정보
    * @param meetingId         참여 신청할 모임 ID
+   * @return 201 Created
    */
   @PostMapping("/{meetingId}")
   public ResponseEntity<Void> createParticipation(
@@ -65,16 +63,36 @@ public class ParticipationController {
     return ResponseEntity.ok(response);
   }
 
-  // TODO: 참여 승인과 참여 거절로 분리
-  @PatchMapping("/{participationId}")
-  public ResponseEntity<Void> updateParticipationStatus(
+  /**
+   * 참여 신청 승인
+   *
+   * @param customUserDetails 회원 정보
+   * @param participationId   참여 신청 ID
+   * @return 200 OK
+   */
+  @PatchMapping("/{participationId}/approve")
+  public ResponseEntity<Void> approveParticipation(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
-      @PathVariable Long participationId,
-      @RequestBody @NotNull ParticipationStatus participationStatus
+      @PathVariable Long participationId
   ) {
-    participationService.updateParticipationStatus(
-        customUserDetails.getId(), participationId, participationStatus
-    );
+    participationService.approveParticipation(customUserDetails.getId(), participationId);
+    return ResponseEntity.ok()
+        .build();
+  }
+
+  /**
+   * 참여 신청 거절
+   *
+   * @param customUserDetails 회원 정보
+   * @param participationId   참여 신청 ID
+   * @return 200 OK
+   */
+  @PatchMapping("/{participationId}/reject")
+  public ResponseEntity<Void> rejectParticipation(
+      @AuthenticationPrincipal CustomUserDetails customUserDetails,
+      @PathVariable Long participationId
+  ) {
+    participationService.rejectParticipation(customUserDetails.getId(), participationId);
     return ResponseEntity.ok()
         .build();
   }
