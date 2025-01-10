@@ -12,6 +12,7 @@ import com.momo.user.dto.CustomUserDetails;
 import com.momo.auth.dto.KakaoProfile;
 import com.momo.auth.dto.LoginDTO;
 import com.momo.auth.dto.OAuthToken;
+import com.momo.user.dto.OtherUserInfoResponse;
 import com.momo.user.dto.UserInfoResponse;
 import com.momo.user.dto.UserUpdateRequest;
 import com.momo.user.entity.User;
@@ -296,6 +297,26 @@ public class UserService {
     profileRepository.save(profile);
 
     log.debug("User and Profile updated successfully for email: {}", email);
+  }
+
+  @Transactional
+  public OtherUserInfoResponse getOtherUserProfile(Long userId) {
+    // User 엔티티 조회
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+    // Profile 엔티티 조회
+    Profile profile = profileRepository.findByUser(user)
+        .orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
+
+    // 필요한 정보만 반환
+    return OtherUserInfoResponse.builder()
+        .nickname(user.getNickname())
+        .gender(profile.getGender())
+        .birth(profile.getBirth())
+        .mbti(profile.getMbti())
+        .introduction(profile.getIntroduction())
+        .build();
   }
 
 }
