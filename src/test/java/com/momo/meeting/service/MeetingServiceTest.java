@@ -102,7 +102,7 @@ class MeetingServiceTest {
   void getNearbyMeetings_Success() {
     // given
     MeetingsRequest request = createMeetingsRequest(
-        USER_LATITUDE, USER_LONGITUDE, null, null, null);
+        USER_LATITUDE, USER_LONGITUDE, null);
     List<MeetingToMeetingDtoProjection> mockProjections = createMockProjections();
 
     when(meetingRepository.findNearbyMeetingsWithCursor(
@@ -139,8 +139,6 @@ class MeetingServiceTest {
   void getMeetingsByDate_Success() {
     // given
     MeetingsRequest request = createMeetingsRequest(
-        null,
-        null,
         null,
         null,
         LocalDateTime.now());
@@ -191,80 +189,6 @@ class MeetingServiceTest {
             MeetingErrorCode.DAILY_POSTING_LIMIT_EXCEEDED);
 
     verify(meetingRepository).countByUser_IdAndCreatedAtBetween(eq(user.getId()), any(), any());
-  }
-
-  private static MeetingsRequest createMeetingsRequest(
-      Double userLatitude,
-      Double userLongitude,
-      Long lastId,
-      Double lastDistance,
-      LocalDateTime lastMeetingDateTime
-  ) {
-    return MeetingsRequest.createRequest(
-        userLatitude,
-        userLongitude,
-        null,
-        null,
-        null,
-        TEST_PAGE_SIZE
-    );
-  }
-
-  private List<MeetingToMeetingDtoProjection> createMockProjections() {
-    List<MeetingToMeetingDtoProjection> projections = new ArrayList<>();
-    // 모의 데이터 생성 로직
-    for (int i = 1; i <= TEST_PAGE_SIZE + 1; i++) { // pageSize + 1
-      createMockProjection(projections, i);
-    }
-    return projections;
-  }
-
-  private static void createMockProjection(List<MeetingToMeetingDtoProjection> projections, int i) {
-    MeetingToMeetingDtoProjection projection = mock(MeetingToMeetingDtoProjection.class);
-    when(projection.getId()).thenReturn((long) i);
-    when(projection.getAuthorId()).thenReturn((long) i * 100);
-    when(projection.getTitle()).thenReturn("title" + i);
-    when(projection.getLocationId()).thenReturn((long) i);
-    when(projection.getLatitude()).thenReturn((double) i);
-    when(projection.getLongitude()).thenReturn((double) i);
-    when(projection.getAddress()).thenReturn("address" + i);
-    when(projection.getMeetingDateTime())
-        .thenReturn(LocalDateTime.now().plusDays(1 + i).truncatedTo(ChronoUnit.MINUTES));
-    when(projection.getMaxCount()).thenReturn(2 + i);
-    when(projection.getApprovedCount()).thenReturn(1 + i);
-    when(projection.getCategory()).thenReturn("KOREAN,JAPANESE");
-    when(projection.getThumbnailUrl()).thenReturn("test-url" + i + ".jpg");
-    projections.add(projection);
-  }
-
-  private static void verifyMeetingDtos(List<MeetingDto> meetingDtos) {
-    for (int i = 1; i < TEST_PAGE_SIZE + 1; i++) {
-      verifyMeetingDto(meetingDtos, i);
-    }
-  }
-
-  private static void verifyMeetingDto(List<MeetingDto> meetingDtos, int i) {
-    MeetingDto meetingDto = meetingDtos.get(i - 1);
-    assertEquals(i, meetingDto.getId());
-    assertEquals(i * 100L, meetingDto.getAuthorId());
-    assertEquals("title" + i, meetingDto.getTitle());
-    assertEquals(i, meetingDto.getLocationId());
-    assertEquals(i, meetingDto.getLatitude());
-    assertEquals(i, meetingDto.getLongitude());
-    assertEquals("address" + i, meetingDto.getAddress());
-    assertEquals(LocalDateTime.now().plusDays(1 + i).truncatedTo(ChronoUnit.MINUTES),
-        meetingDto.getMeetingDateTime());
-    assertEquals(2 + i, meetingDto.getMaxCount());
-    assertEquals(1 + i, meetingDto.getApprovedCount());
-    assertEquals(Set.of("한식", "일식"), meetingDto.getCategory());
-    assertEquals("test-url" + i + ".jpg", meetingDto.getThumbnailUrl());
-  }
-
-  private static void verifyCursor(MeetingsResponse response) {
-    List<MeetingDto> meetingDtos = response.getMeetings();
-    MeetingDto meetingDto = meetingDtos.get(meetingDtos.size() - 1);
-    MeetingCursor cursor = response.getCursor();
-    assertEquals(cursor.getId(), meetingDto.getId());
   }
 
   @Test
@@ -356,6 +280,128 @@ class MeetingServiceTest {
     verify(meetingRepository).findById(user.getId());
   }
 
+  @Test
+  @DisplayName("작성한 모임 목록 조회 - 성공")
+  void getCreatedMeetings_Success() {
+    // given
+    Long userId = 1L;
+    Long lastId = 0L;
+
+    List<CreatedMeetingProjection> projections = createdMeetingsMockProjections();
+
+    given(meetingRepository.findAllByUser_IdOrderByCreatedAtAsc(
+        userId, lastId, TEST_PAGE_SIZE + 1)).willReturn(projections);
+
+    // when
+    CreatedMeetingsResponse response =
+        meetingService.getCreatedMeetings(userId, lastId, TEST_PAGE_SIZE);
+
+    // then
+    List<CreatedMeetingDto> createdMeetingDtos = response.getCreatedMeetingDtos();
+    assertThat(createdMeetingDtos).hasSize(TEST_PAGE_SIZE);
+
+    assertThatCreatedMeetingDtos(createdMeetingDtos);
+    verify(meetingRepository)
+        .findAllByUser_IdOrderByCreatedAtAsc(userId, lastId, TEST_PAGE_SIZE + 1);
+  }
+
+  @Test
+  @DisplayName("모임 신청자 목록 조회 - 성공")
+  void getParticipants_Success() {
+    // given
+    User user = createUser();
+    MeetingCreateRequest request = createMeetingRequest();
+    Meeting meeting = createMeeting(user, request);
+    List<MeetingParticipantProjection> projections = createMockParticipantProjections();
+
+    given(meetingRepository.findById(meeting.getId())).willReturn(Optional.of(meeting));
+    given(participationRepository.findMeetingParticipantsByMeeting_Id(meeting.getId()))
+        .willReturn(projections);
+
+    // when
+    List<MeetingParticipantProjection> participants =
+        meetingService.getParticipants(user.getId(), meeting.getId());
+
+    // then
+    assertThat(participants).hasSize(TEST_PAGE_SIZE + 1);
+
+    assertThatMeetingParticipants(participants);
+    verify(meetingRepository).findById(meeting.getId());
+    verify(participationRepository).findMeetingParticipantsByMeeting_Id(meeting.getId());
+  }
+
+  private static MeetingsRequest createMeetingsRequest(
+      Double userLatitude,
+      Double userLongitude,
+      LocalDateTime lastMeetingDateTime
+  ) {
+    return MeetingsRequest.createRequest(
+        userLatitude,
+        userLongitude,
+        null,
+        null,
+        null,
+        TEST_PAGE_SIZE
+    );
+  }
+
+  private List<MeetingToMeetingDtoProjection> createMockProjections() {
+    List<MeetingToMeetingDtoProjection> projections = new ArrayList<>();
+    // 모의 데이터 생성 로직
+    for (int i = 1; i <= TEST_PAGE_SIZE + 1; i++) { // pageSize + 1
+      createMockProjection(projections, i);
+    }
+    return projections;
+  }
+
+  private static void createMockProjection(List<MeetingToMeetingDtoProjection> projections, int i) {
+    MeetingToMeetingDtoProjection projection = mock(MeetingToMeetingDtoProjection.class);
+    when(projection.getId()).thenReturn((long) i);
+    when(projection.getAuthorId()).thenReturn((long) i * 100);
+    when(projection.getTitle()).thenReturn("title" + i);
+    when(projection.getLocationId()).thenReturn((long) i);
+    when(projection.getLatitude()).thenReturn((double) i);
+    when(projection.getLongitude()).thenReturn((double) i);
+    when(projection.getAddress()).thenReturn("address" + i);
+    when(projection.getMeetingDateTime())
+        .thenReturn(LocalDateTime.now().plusDays(1 + i).truncatedTo(ChronoUnit.MINUTES));
+    when(projection.getMaxCount()).thenReturn(2 + i);
+    when(projection.getApprovedCount()).thenReturn(1 + i);
+    when(projection.getCategory()).thenReturn("KOREAN,JAPANESE");
+    when(projection.getThumbnailUrl()).thenReturn("test-url" + i + ".jpg");
+    projections.add(projection);
+  }
+
+  private static void verifyMeetingDtos(List<MeetingDto> meetingDtos) {
+    for (int i = 1; i < TEST_PAGE_SIZE + 1; i++) {
+      verifyMeetingDto(meetingDtos, i);
+    }
+  }
+
+  private static void verifyMeetingDto(List<MeetingDto> meetingDtos, int i) {
+    MeetingDto meetingDto = meetingDtos.get(i - 1);
+    assertEquals(i, meetingDto.getId());
+    assertEquals(i * 100L, meetingDto.getAuthorId());
+    assertEquals("title" + i, meetingDto.getTitle());
+    assertEquals(i, meetingDto.getLocationId());
+    assertEquals(i, meetingDto.getLatitude());
+    assertEquals(i, meetingDto.getLongitude());
+    assertEquals("address" + i, meetingDto.getAddress());
+    assertEquals(LocalDateTime.now().plusDays(1 + i).truncatedTo(ChronoUnit.MINUTES),
+        meetingDto.getMeetingDateTime());
+    assertEquals(2 + i, meetingDto.getMaxCount());
+    assertEquals(1 + i, meetingDto.getApprovedCount());
+    assertEquals(Set.of("한식", "일식"), meetingDto.getCategory());
+    assertEquals("test-url" + i + ".jpg", meetingDto.getThumbnailUrl());
+  }
+
+  private static void verifyCursor(MeetingsResponse response) {
+    List<MeetingDto> meetingDtos = response.getMeetings();
+    MeetingDto meetingDto = meetingDtos.get(meetingDtos.size() - 1);
+    MeetingCursor cursor = response.getCursor();
+    assertEquals(cursor.getId(), meetingDto.getId());
+  }
+
   private static User createUser() {
     return User.builder()
         .id(1L)
@@ -416,31 +462,6 @@ class MeetingServiceTest {
         .build();
   }
 
-  @Test
-  @DisplayName("작성한 모임 목록 조회 - 성공")
-  void getCreatedMeetings_Success() {
-    // given
-    Long userId = 1L;
-    Long lastId = 0L;
-
-    List<CreatedMeetingProjection> projections = createdMeetingsMockProjections();
-
-    given(meetingRepository.findAllByUser_IdOrderByCreatedAtAsc(
-        userId, lastId, TEST_PAGE_SIZE + 1)).willReturn(projections);
-
-    // when
-    CreatedMeetingsResponse response =
-        meetingService.getCreatedMeetings(userId, lastId, TEST_PAGE_SIZE);
-
-    // then
-    List<CreatedMeetingDto> createdMeetingDtos = response.getCreatedMeetingDtos();
-    assertThat(createdMeetingDtos).hasSize(TEST_PAGE_SIZE);
-
-    assertThatCreatedMeetingDtos(createdMeetingDtos);
-    verify(meetingRepository)
-        .findAllByUser_IdOrderByCreatedAtAsc(userId, lastId, TEST_PAGE_SIZE + 1);
-  }
-
   private List<CreatedMeetingProjection> createdMeetingsMockProjections() {
     List<CreatedMeetingProjection> projections = new ArrayList<>();
 
@@ -495,31 +516,6 @@ class MeetingServiceTest {
     assertThat(createdMeetingDto.get(i).getContent()).isEqualTo("Test Content " + i);
     assertThat(createdMeetingDto.get(i).getThumbnailUrl())
         .isEqualTo("test_" + i + "_thumbnail_url.jpg");
-  }
-
-  @Test
-  @DisplayName("모임 신청자 목록 조회 - 성공")
-  void getParticipants_Success() {
-    // given
-    User user = createUser();
-    MeetingCreateRequest request = createMeetingRequest();
-    Meeting meeting = createMeeting(user, request);
-    List<MeetingParticipantProjection> projections = createMockParticipantProjections();
-
-    given(meetingRepository.findById(meeting.getId())).willReturn(Optional.of(meeting));
-    given(participationRepository.findMeetingParticipantsByMeeting_Id(meeting.getId()))
-        .willReturn(projections);
-
-    // when
-    List<MeetingParticipantProjection> participants =
-        meetingService.getParticipants(user.getId(), meeting.getId());
-
-    // then
-    assertThat(participants).hasSize(TEST_PAGE_SIZE + 1);
-
-    assertThatMeetingParticipants(participants);
-    verify(meetingRepository).findById(meeting.getId());
-    verify(participationRepository).findMeetingParticipantsByMeeting_Id(meeting.getId());
   }
 
   private static List<MeetingParticipantProjection> createMockParticipantProjections() {
