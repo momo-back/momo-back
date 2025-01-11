@@ -8,7 +8,6 @@ import com.momo.user.repository.UserRepository;
 import com.momo.user.service.EmailService;
 import java.util.UUID;
 import javax.mail.MessagingException;
-import javax.transaction.Transactional;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +24,6 @@ public class JoinService {
     this.emailService = emailService;
   }
 
-  @Transactional
   public void joinProcess(JoinDTO joinDto) throws MessagingException {
     String email = joinDto.getEmail();
     String password = joinDto.getPassword();
