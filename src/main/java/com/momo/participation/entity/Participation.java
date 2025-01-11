@@ -14,6 +14,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,6 +26,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Participation extends BaseEntity {
+
+  @Version
+  private Long version;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,12 +61,20 @@ public class Participation extends BaseEntity {
   public boolean isMeetingAuthor(Long authorId) {
     return this.meeting.getUser().getId().equals(authorId);
   }
-  
-  public boolean isOwner(Long userId) {
+
+  public boolean isAuthor(Long userId) {
     return this.user.getId().equals(userId);
   }
 
   public Long getMeetingId() {
     return this.meeting.getId();
+  }
+
+  public boolean isAcceptableStatus() {
+    return this.participationStatus == ParticipationStatus.PENDING;
+  }
+
+  public Long getUserId() {
+    return this.getUser().getId();
   }
 }
