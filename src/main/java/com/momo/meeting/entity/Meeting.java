@@ -4,6 +4,8 @@ import com.momo.common.entity.BaseEntity;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
+import com.momo.meeting.exception.MeetingErrorCode;
+import com.momo.meeting.exception.MeetingException;
 import com.momo.user.entity.User;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -18,6 +20,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,6 +32,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Meeting extends BaseEntity {
+
+  @Version
+  private Long version;
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -75,10 +81,6 @@ public class Meeting extends BaseEntity {
   @Column(nullable = false)
   private MeetingStatus meetingStatus;
 
-  public void updateStatus(MeetingStatus newStatus) {
-    this.meetingStatus = newStatus;
-  }
-
   public void update(MeetingCreateRequest request) {
     this.title = request.getTitle();
     this.locationId = request.getLocationId();
@@ -92,7 +94,26 @@ public class Meeting extends BaseEntity {
     this.category = request.getCategory();
   }
 
+  public void updateStatus(MeetingStatus newStatus) {
+    this.meetingStatus = newStatus;
+  }
+
+  public void incrementApprovedCount() {
+    if (isFullCount()) {
+      throw new MeetingException(MeetingErrorCode.ALREADY_MAX_COUNT);
+    }
+    this.approvedCount++;
+  }
+
+  private boolean isFullCount() {
+    return this.approvedCount >= this.maxCount;
+  }
+
   public boolean isAuthor(Long userId) {
     return this.user.getId().equals(userId);
+  }
+
+  public boolean isRecruiting() {
+    return this.meetingStatus == MeetingStatus.RECRUITING;
   }
 }
