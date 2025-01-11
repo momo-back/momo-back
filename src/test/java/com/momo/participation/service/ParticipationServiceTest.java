@@ -10,6 +10,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.momo.chat.entity.ChatRoom;
+import com.momo.chat.repository.ChatRoomRepository;
+import com.momo.chat.service.ChatRoomService;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.entity.Meeting;
@@ -30,6 +33,7 @@ import com.momo.user.entity.User;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -50,7 +54,13 @@ class ParticipationServiceTest {
   private ParticipationRepository participationRepository;
 
   @Mock
+  private ChatRoomRepository chatRoomRepository;
+
+  @Mock
   private NotificationService notificationService;
+
+  @Mock
+  private ChatRoomService chatRoomService;
 
   @InjectMocks
   private ParticipationService participationService;
@@ -188,9 +198,11 @@ class ParticipationServiceTest {
     User author = createUser(2L);
     Meeting meeting = createMeeting(author, MeetingStatus.RECRUITING);
     Participation participation = createParticipation(user, meeting);
+    ChatRoom chatRoom = createChatRoom(author, meeting);
 
     when(participationRepository.findById(participation.getId()))
         .thenReturn(Optional.of(participation));
+    when(chatRoomRepository.findByMeeting_Id(meeting.getId())).thenReturn(Optional.of(chatRoom));
 
     // when
     participationService.approveParticipation(author.getId(), participation.getId());
@@ -198,12 +210,24 @@ class ParticipationServiceTest {
     // then
     assertEquals(MeetingStatus.RECRUITING, meeting.getMeetingStatus());
     assertEquals(ParticipationStatus.APPROVED, participation.getParticipationStatus());
+    assertEquals(2, meeting.getApprovedCount());
+
     verify(participationRepository).findById(participation.getId());
+    verify(chatRoomRepository).findByMeeting_Id(meeting.getId());
     verify(notificationService).sendNotification(
         participation.getUser(),
         participation.getMeeting().getTitle()
             + NotificationType.PARTICIPANT_APPROVED.getDescription(),
         NotificationType.PARTICIPANT_APPROVED);
+  }
+
+  private static ChatRoom createChatRoom(User host, Meeting meeting) {
+    return ChatRoom.builder()
+        .id(1L)
+        .host(host)
+        .meeting(meeting)
+        .reader(new ArrayList<>(Collections.singletonList(host)))
+        .build();
   }
 
   @Test
