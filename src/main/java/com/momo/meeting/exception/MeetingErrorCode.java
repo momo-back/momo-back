@@ -20,7 +20,9 @@ public enum MeetingErrorCode {
   INVALID_MEETING_DATE_TIME(
       "유효한 모임 시간이 아닙니다.", HttpStatus.BAD_REQUEST),
 
-  INVALID_FOOD_CATEGORY("유효한 음식 카테고리가 아닙니다.", HttpStatus.BAD_REQUEST);
+  INVALID_FOOD_CATEGORY("유효한 음식 카테고리가 아닙니다.", HttpStatus.BAD_REQUEST),
+
+  ALREADY_MAX_COUNT("모임 인원이 가득찼습니다.", HttpStatus.CONFLICT);
 
   private final String message;
   private final HttpStatus status;
