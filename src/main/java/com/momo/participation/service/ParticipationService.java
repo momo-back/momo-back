@@ -120,8 +120,8 @@ public class ParticipationService {
 
   @Transactional
   public void approveParticipation(Long authorId, Long participationId) {
-    Participation participation = validateMeetingAuthorForParticipation(authorId,
-        participationId);
+    Participation participation =
+        validateMeetingAuthorForParticipation(authorId, participationId);
     Meeting meeting = participation.getMeeting();
 
     validatePossibleParticipant(participation, meeting); // 검증
@@ -137,7 +137,6 @@ public class ParticipationService {
             + NotificationType.PARTICIPANT_APPROVED.getDescription(),
         NotificationType.PARTICIPANT_APPROVED
     );
-    log.info("트랜잭션 종료 전 Meeting(id={}) 최종 승인 수: {}", meeting.getId(), meeting.getApprovedCount());
   }
 
   private void joinChatRoom(Meeting meeting, Participation participation) {
