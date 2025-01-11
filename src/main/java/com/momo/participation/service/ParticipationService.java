@@ -1,5 +1,12 @@
 package com.momo.participation.service;
 
+import com.momo.chat.entity.ChatRoom;
+import com.momo.chat.exception.ChatErrorCode;
+import com.momo.chat.exception.ChatException;
+import com.momo.chat.repository.ChatRoomRepository;
+import com.momo.chat.service.ChatRoomService;
+import com.momo.common.exception.CustomException;
+import com.momo.common.exception.ErrorCode;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
@@ -17,15 +24,20 @@ import com.momo.participation.repository.ParticipationRepository;
 import com.momo.user.entity.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ParticipationService {
 
   private final ParticipationRepository participationRepository;
   private final MeetingRepository meetingRepository;
+  private final ChatRoomRepository chatRoomRepository;
+  private final ChatRoomService chatRoomService;
   private final NotificationService notificationService;
 
   public void createParticipation(User user, Long meetingId) {
@@ -83,7 +95,7 @@ public class ParticipationService {
             new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
 
     // 참여 신청의 주인인지 검증
-    if (!participation.isOwner(userId)) {
+    if (!participation.isAuthor(userId)) {
       throw new ParticipationException(ParticipationErrorCode.NOT_PARTICIPATION_OWNER);
     }
 
@@ -108,22 +120,48 @@ public class ParticipationService {
 
   @Transactional
   public void approveParticipation(Long authorId, Long participationId) {
-    Participation participation = validateForParticipationOwner(authorId, participationId);
-    participation.updateStatus(ParticipationStatus.APPROVED);
+    Participation participation = validateMeetingAuthorForParticipation(authorId,
+        participationId);
+    Meeting meeting = participation.getMeeting();
 
-    // 참여 신청을 보낸 회원에게 알림 발송
+    validatePossibleParticipant(participation, meeting); // 검증
+    participation.updateStatus(ParticipationStatus.APPROVED); // 참여 신청 상태를 APPROVED로 변경
+    meeting.incrementApprovedCount(); // 현재 인원 증가
+
+    joinChatRoom(meeting, participation); // 채팅방 입장
+
+    // 참여 신청을 보낸 회원에게 알림 발송 TODO: 비동기 처리 고려
     notificationService.sendNotification(
         participation.getUser(),
         participation.getMeeting().getTitle()
             + NotificationType.PARTICIPANT_APPROVED.getDescription(),
         NotificationType.PARTICIPANT_APPROVED
     );
-    // TODO: 참여 승인되면 채팅방 입장
+    log.info("트랜잭션 종료 전 Meeting(id={}) 최종 승인 수: {}", meeting.getId(), meeting.getApprovedCount());
+  }
+
+  private void joinChatRoom(Meeting meeting, Participation participation) {
+    ChatRoom chatRoom = chatRoomRepository.findByMeeting_Id(meeting.getId())
+        .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
+
+    chatRoomService.joinRoom(participation.getUserId(), chatRoom.getId());
+  }
+
+  private static void validatePossibleParticipant(Participation participation, Meeting meeting) {
+    // 참여 상태가 모임에 참여가 가능한 상태인지 확인
+    if (!(participation.isAcceptableStatus())) {
+      throw new ParticipationException(ParticipationErrorCode.INVALID_PARTICIPATION_STATUS);
+    }
+
+    // 모임이 참여 가능 상태인지 검증
+    if (!meeting.isRecruiting()) {
+      throw new MeetingException(MeetingErrorCode.INVALID_MEETING_STATUS);
+    }
   }
 
   @Transactional
   public void rejectParticipation(Long authorId, Long participationId) {
-    Participation participation = validateForParticipationOwner(authorId, participationId);
+    Participation participation = validateMeetingAuthorForParticipation(authorId, participationId);
     participation.updateStatus(ParticipationStatus.REJECTED);
 
     // 참여 신청을 보낸 회원에게 알림 발송
@@ -135,16 +173,11 @@ public class ParticipationService {
     );
   }
 
-  private Participation validateForParticipationOwner(Long authorId, Long participationId) {
+  private Participation validateMeetingAuthorForParticipation(Long authorId, Long participationId) {
     // 존재하는 참여 신청인지 확인
     Participation participation = participationRepository.findById(participationId)
         .orElseThrow(() ->
             new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
-
-    // 참여 상태가 "PENDING"인지 확인
-    if (!(participation.getParticipationStatus() == ParticipationStatus.PENDING)) {
-      throw new ParticipationException(ParticipationErrorCode.INVALID_PARTICIPATION_STATUS);
-    }
 
     // 현재 회원이 해당 모임 신청을 받은 모임의 작성자인지 검증
     if (!participation.isMeetingAuthor(authorId)) {
