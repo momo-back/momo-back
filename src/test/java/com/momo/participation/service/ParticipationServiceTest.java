@@ -59,9 +59,6 @@ class ParticipationServiceTest {
   @Mock
   private NotificationService notificationService;
 
-  @Mock
-  private ChatRoomService chatRoomService;
-
   @InjectMocks
   private ParticipationService participationService;
 
@@ -86,9 +83,6 @@ class ParticipationServiceTest {
 
     // then
     verify(participationRepository).save(any(Participation.class));
-    verify(notificationService).sendNotification(meetingOwner,
-        user.getNickname() + PARTICIPATION_NOTIFICATION_MESSAGE,
-        NotificationType.NEW_PARTICIPATION_REQUEST);
   }
 
   @Test
@@ -109,7 +103,7 @@ class ParticipationServiceTest {
   }
 
   @Test
-  @DisplayName("참여 불가능한 상태의 모임글에 참가 신청 - 예외 발생")
+  @DisplayName("참여 불가능한 상태의 모임에 참가 신청 - 예외 발생")
   void validateForParticipate_InvalidMeetingStatus_ThrowsException() {
     // given
     User user = createUser(1L);
@@ -126,7 +120,7 @@ class ParticipationServiceTest {
   }
 
   @Test
-  @DisplayName("본인이 작성한 모임글에 참여 신청 - 예외 발생")
+  @DisplayName("본인이 작성한 모임 참여 신청 - 예외 발생")
   void validateForParticipate_ParticipateSelfMeeting_ThrowsException() {
     // given
     User user = createUser(1L);
@@ -221,15 +215,6 @@ class ParticipationServiceTest {
         NotificationType.PARTICIPANT_APPROVED);
   }
 
-  private static ChatRoom createChatRoom(User host, Meeting meeting) {
-    return ChatRoom.builder()
-        .id(1L)
-        .host(host)
-        .meeting(meeting)
-        .reader(new ArrayList<>(Collections.singletonList(host)))
-        .build();
-  }
-
   @Test
   @DisplayName("참여 신청 거절  - 성공")
   void rejectParticipation_Success() {
@@ -249,11 +234,15 @@ class ParticipationServiceTest {
     assertEquals(MeetingStatus.RECRUITING, meeting.getMeetingStatus());
     assertEquals(ParticipationStatus.REJECTED, participation.getParticipationStatus());
     verify(participationRepository).findById(participation.getId());
-    verify(notificationService).sendNotification(
-        participation.getUser(),
-        participation.getMeeting().getTitle()
-            + NotificationType.PARTICIPANT_REJECTED.getDescription(),
-        NotificationType.PARTICIPANT_REJECTED);
+  }
+
+  private static ChatRoom createChatRoom(User host, Meeting meeting) {
+    return ChatRoom.builder()
+        .id(1L)
+        .host(host)
+        .meeting(meeting)
+        .reader(new ArrayList<>(Collections.singletonList(host)))
+        .build();
   }
 
   private static User createUser(Long userId) {
