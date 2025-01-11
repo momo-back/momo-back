@@ -1,6 +1,7 @@
 package com.momo.meeting.service;
 
 import com.momo.meeting.constant.MeetingStatus;
+import com.momo.meeting.constant.SearchType;
 import com.momo.meeting.constant.SortType;
 import com.momo.meeting.dto.MeetingCursor;
 import com.momo.meeting.dto.MeetingDto;
@@ -138,7 +139,7 @@ public class MeetingService {
 
   public MeetingsResponse filterMeetings(
       MeetingsRequest request,
-      String kind,
+      SearchType searchType,
       String keyword,
       Set<String> categorySet,
       int pageSize
@@ -155,16 +156,16 @@ public class MeetingService {
 
     // 검색 유형 및 키워드 필터링 적용
     if (keyword != null && !keyword.isEmpty()) {
-      switch (kind) {
-        case "title":
+      switch (searchType) {
+        case TITLE:
           meetingStream = meetingStream.filter(
               meeting -> meeting.getTitle() != null && meeting.getTitle().contains(keyword));
           break;
-        case "address":
+        case ADDRESS:
           meetingStream = meetingStream.filter(
               meeting -> meeting.getAddress() != null && meeting.getAddress().contains(keyword));
           break;
-        case "content":
+        case CONTENT:
           meetingStream = meetingStream.filter(
               meeting -> meeting.getContent() != null && meeting.getContent().contains(keyword));
           break;
