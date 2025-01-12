@@ -22,11 +22,9 @@ import com.momo.participation.repository.ParticipationRepository;
 import com.momo.user.entity.User;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ParticipationService {
@@ -44,8 +42,60 @@ public class ParticipationService {
     participationRepository.save(participation);
 
     // 모임 주최자에게 새로운 참여 알림 발송
+    sendNotificationToAuthor(user);
+  }
+
+  public AppliedMeetingsResponse getAppliedMeetings(Long userId, Long lastId, int pageSize) {
+    List<AppliedMeetingProjection> appliedMeetingsProjections =
+        participationRepository.findAppliedMeetingsWithLastId(userId, lastId, pageSize + 1);
+    // 다음 페이지 존재 여부를 알기 위해 + 1
+
+    return AppliedMeetingsResponse.of(
+        appliedMeetingsProjections,
+        pageSize
+    );
+  }
+
+  public void cancelParticipation(Long userId, Long participationId) {
+    Participation participation = validateForCancelParticipation(userId, participationId);
+    participationRepository.delete(participation);
+  }
+
+  public void approveParticipation(Long authorId, Long participationId) {
+    Participation participation = updateAppoveParticipation(authorId, participationId);
+    joinChatRoom(participation.getMeeting(), participation); // 채팅방 입장
+
+    // 참여 신청을 보낸 회원에게 알림 발송 TODO: 비동기 처리 고려
+    sendNotificationToAppliedUser(participation);
+  }
+
+  public void rejectParticipation(Long authorId, Long participationId) {
+    Participation participation = updateRejectParticipation(authorId, participationId);
+    sendNotificationToAppliedUser(participation); // 참여 신청을 보낸 회원에게 알림 발송
+  }
+
+  @Transactional
+  Participation updateAppoveParticipation(Long authorId, Long participationId) {
+    Participation participation = validateMeetingAuthorForParticipation(authorId, participationId);
+    Meeting meeting = participation.getMeeting();
+
+    validatePossibleParticipant(participation, meeting); // 검증
+    participation.updateStatus(ParticipationStatus.APPROVED); // 참여 신청 상태를 APPROVED로 변경
+    meeting.incrementApprovedCount(); // 현재 인원 증가
+
+    return participation;
+  }
+
+  @Transactional
+  Participation updateRejectParticipation(Long authorId, Long participationId) {
+    Participation participation = validateMeetingAuthorForParticipation(authorId, participationId);
+    participation.updateStatus(ParticipationStatus.REJECTED);
+    return participation;
+  }
+
+  private void sendNotificationToAuthor(User user) {
     notificationService.sendNotification(
-        meeting.getUser(),
+        user,
         user.getNickname() + NotificationType.NEW_PARTICIPATION_REQUEST.getDescription(),
         NotificationType.NEW_PARTICIPATION_REQUEST
     );
@@ -85,19 +135,7 @@ public class ParticipationService {
         .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
   }
 
-  @Transactional
-  public void approveParticipation(Long authorId, Long participationId) {
-    Participation participation =
-        validateMeetingAuthorForParticipation(authorId, participationId);
-    Meeting meeting = participation.getMeeting();
-
-    validatePossibleParticipant(participation, meeting); // 검증
-    participation.updateStatus(ParticipationStatus.APPROVED); // 참여 신청 상태를 APPROVED로 변경
-    meeting.incrementApprovedCount(); // 현재 인원 증가
-
-    joinChatRoom(meeting, participation); // 채팅방 입장
-
-    // 참여 신청을 보낸 회원에게 알림 발송 TODO: 비동기 처리 고려
+  private void sendNotificationToAppliedUser(Participation participation) {
     notificationService.sendNotification(
         participation.getUser(),
         participation.getMeeting().getTitle()
@@ -123,20 +161,6 @@ public class ParticipationService {
     if (!meeting.isRecruiting()) {
       throw new MeetingException(MeetingErrorCode.INVALID_MEETING_STATUS);
     }
-  }
-
-  @Transactional
-  public void rejectParticipation(Long authorId, Long participationId) {
-    Participation participation = validateMeetingAuthorForParticipation(authorId, participationId);
-    participation.updateStatus(ParticipationStatus.REJECTED);
-
-    // 참여 신청을 보낸 회원에게 알림 발송
-    notificationService.sendNotification(
-        participation.getUser(),
-        participation.getMeeting().getTitle()
-            + NotificationType.PARTICIPANT_REJECTED.getDescription(),
-        NotificationType.PARTICIPANT_REJECTED
-    );
   }
 
   private Participation validateMeetingAuthorForParticipation(Long authorId, Long participationId) {
