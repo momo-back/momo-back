@@ -44,7 +44,7 @@ public class ParticipationController {
   }
 
   /**
-   * 참여한 모임 목록 조회
+   * 신청한 모임 목록 조회
    *
    * @param customUserDetails 회원 정보
    * @param lastId            마지막으로 조회된 모임 ID
@@ -98,17 +98,18 @@ public class ParticipationController {
   }
 
   /**
-   * 모임 참여 신청 취소
+   * 모임 참여 삭제
    *
    * @param customUserDetails 회원 정보
-   * @param participationId   참여 신청 ID
+   * @param participationId   모임 참여 ID
+   * @return 204 No Content
    */
-  @DeleteMapping("/{participationId}/cancel")
-  public ResponseEntity<Void> cancelParticipation(
+  @DeleteMapping("/{participationId}")
+  public ResponseEntity<Void> deleteParticipation(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long participationId
   ) {
-    participationService.cancelParticipation(customUserDetails.getId(), participationId);
+    participationService.deleteParticipation(customUserDetails.getId(), participationId);
     return ResponseEntity.noContent().build();
   }
 }
