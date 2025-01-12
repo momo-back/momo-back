@@ -7,6 +7,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -73,7 +75,7 @@ class ParticipationServiceTest {
     User user = createUser(1L);
     User meetingOwner = createUser(2L);
     Meeting meeting = createMeeting(meetingOwner, MeetingStatus.RECRUITING);
-    Participation participation = createParticipation(user, meeting);
+    Participation participation = createParticipation(user, meeting, ParticipationStatus.PENDING);
 
     // given
     when(meetingRepository.findById(meeting.getId())).thenReturn(Optional.of(meeting));
@@ -157,9 +159,10 @@ class ParticipationServiceTest {
     // when
     // then
     assertThatThrownBy(
-        () -> participationService.createParticipation(user, meeting.getId())).isInstanceOf(
-        ParticipationException.class).hasFieldOrPropertyWithValue("participationErrorCode",
-        ParticipationErrorCode.ALREADY_PARTICIPATE_MEETING);
+        () -> participationService.createParticipation(user, meeting.getId()))
+        .isInstanceOf(ParticipationException.class)
+        .hasFieldOrPropertyWithValue("participationErrorCode",
+            ParticipationErrorCode.ALREADY_PARTICIPATE_MEETING);
 
     verify(participationRepository).existsByUser_IdAndMeeting_Id(user.getId(), meeting.getId());
   }
@@ -197,7 +200,7 @@ class ParticipationServiceTest {
     User user = createUser(1L);
     User author = createUser(2L);
     Meeting meeting = createMeeting(author, MeetingStatus.RECRUITING);
-    Participation participation = createParticipation(user, meeting);
+    Participation participation = createParticipation(user, meeting, ParticipationStatus.PENDING);
     ChatRoom chatRoom = createChatRoom(author, meeting);
 
     when(participationRepository.findById(participation.getId()))
@@ -237,7 +240,7 @@ class ParticipationServiceTest {
     User user = createUser(1L);
     User author = createUser(2L);
     Meeting meeting = createMeeting(author, MeetingStatus.RECRUITING);
-    Participation participation = createParticipation(user, meeting);
+    Participation participation = createParticipation(user, meeting, ParticipationStatus.PENDING);
 
     when(participationRepository.findById(participation.getId()))
         .thenReturn(Optional.of(participation));
@@ -256,6 +259,72 @@ class ParticipationServiceTest {
         NotificationType.PARTICIPANT_REJECTED);
   }
 
+  @Test
+  @DisplayName("모임 참여 신청 삭제 - 성공")
+  void deleteParticipation_Success() {
+    // given
+    User user = createUser(1L);
+    Meeting meeting = createMeeting(user, MeetingStatus.RECRUITING);
+    Participation participation = createParticipation(user, meeting, ParticipationStatus.PENDING);
+
+    given(participationRepository.findById(participation.getId()))
+        .willReturn(Optional.of(participation));
+
+    // when
+    participationService.deleteParticipation(user.getId(), participation.getId());
+
+    // then
+    verify(participationRepository, times(1)).delete(participation);
+  }
+
+  @Test
+  @DisplayName("참여 신청의 소유자가 아닌 경우 - 예외 발생")
+  void deleteParticipation_NotOwner_Throws() {
+    // given
+    User user = createUser(1L);
+    User otherUser = createUser(2L);
+    Meeting meeting = createMeeting(otherUser, MeetingStatus.RECRUITING);
+    Participation participation = createParticipation(
+        otherUser, meeting, ParticipationStatus.PENDING);
+
+    given(participationRepository.findById(participation.getId()))
+        .willReturn(Optional.of(participation));
+
+    // when
+    // then
+    assertThatThrownBy(
+        () -> participationService.deleteParticipation(user.getId(), participation.getId()))
+        .isInstanceOf(ParticipationException.class)
+        .hasFieldOrPropertyWithValue(
+            "participationErrorCode", ParticipationErrorCode.NOT_PARTICIPATION_OWNER
+        );
+
+    verify(participationRepository, never()).delete(participation);
+  }
+
+  @Test
+  @DisplayName("삭제할 수 없는 상태의 참여 신청 삭제 시도 - 예외 발생")
+  void deleteParticipation_InvalidStatus_Throws() {
+    //given
+    User user = createUser(1L);
+    Meeting meeting = createMeeting(user, MeetingStatus.RECRUITING);
+    Participation participation = createParticipation(user, meeting, ParticipationStatus.APPROVED);
+
+    given(participationRepository.findById(participation.getId()))
+        .willReturn(Optional.of(participation));
+
+    // when
+    // then
+    assertThatThrownBy(
+        () -> participationService.deleteParticipation(user.getId(), participation.getId()))
+        .isInstanceOf(ParticipationException.class)
+        .hasFieldOrPropertyWithValue(
+            "participationErrorCode", ParticipationErrorCode.INVALID_PARTICIPATION_STATUS
+        );
+
+    verify(participationRepository, never()).delete(participation);
+  }
+
   private static User createUser(Long userId) {
     return User.builder().id(userId).email("test@gmail.com").password("testapssword")
         .phone("01012345678").enabled(true).verificationToken("asdasdsad").build();
@@ -269,12 +338,12 @@ class ParticipationServiceTest {
         .thumbnailUrl("test-thumbnail-url.jpg").meetingStatus(meetingStatus).build();
   }
 
-  private Participation createParticipation(User user, Meeting meeting) {
+  private Participation createParticipation(User user, Meeting meeting, ParticipationStatus status) {
     return Participation.builder()
         .id(1L)
         .user(user)
         .meeting(meeting)
-        .participationStatus(ParticipationStatus.PENDING)
+        .participationStatus(status)
         .build();
   }
 
