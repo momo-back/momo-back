@@ -59,6 +59,9 @@ class ParticipationServiceTest {
   private ChatRoomRepository chatRoomRepository;
 
   @Mock
+  private ChatRoomService chatRoomService;
+
+  @Mock
   private NotificationService notificationService;
 
   @InjectMocks
