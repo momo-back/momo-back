@@ -5,7 +5,6 @@ import com.momo.chat.exception.ChatErrorCode;
 import com.momo.chat.exception.ChatException;
 import com.momo.chat.repository.ChatRoomRepository;
 import com.momo.chat.service.ChatRoomService;
-import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
@@ -56,16 +55,11 @@ public class ParticipationService {
     );
   }
 
-  public void cancelParticipation(Long userId, Long participationId) {
-    Participation participation = validateForCancelParticipation(userId, participationId);
-    participationRepository.delete(participation);
-  }
-
   public void approveParticipation(Long authorId, Long participationId) {
-    Participation participation = updateAppoveParticipation(authorId, participationId);
+    Participation participation = updateApproveParticipation(authorId, participationId);
     joinChatRoom(participation.getMeeting(), participation); // 채팅방 입장
 
-    // 참여 신청을 보낸 회원에게 알림 발송 TODO: 비동기 처리 고려
+    // 참여 신청을 보낸 회원에게 알림 발송 TODO: 대량 요청 테스트 후 비동기 처리 고려
     sendNotificationToAppliedUser(participation);
   }
 
@@ -74,13 +68,20 @@ public class ParticipationService {
     sendNotificationToAppliedUser(participation); // 참여 신청을 보낸 회원에게 알림 발송
   }
 
+  // TODO: merge 후 public 메서드가 위로 가도록
+  public void deleteParticipation(Long userId, Long participationId) {
+    Participation participation = validateForDeleteParticipation(userId, participationId);
+    participationRepository.delete(participation);
+  }
+
   @Transactional
-  Participation updateAppoveParticipation(Long authorId, Long participationId) {
+  Participation updateApproveParticipation(Long authorId, Long participationId) {
     Participation participation = validateMeetingAuthorForParticipation(authorId, participationId);
     Meeting meeting = participation.getMeeting();
 
     validatePossibleParticipant(participation, meeting); // 검증
     participation.updateStatus(ParticipationStatus.APPROVED); // 참여 신청 상태를 APPROVED로 변경
+
     meeting.incrementApprovedCount(); // 현재 인원 증가
 
     return participation;
@@ -90,6 +91,7 @@ public class ParticipationService {
   Participation updateRejectParticipation(Long authorId, Long participationId) {
     Participation participation = validateMeetingAuthorForParticipation(authorId, participationId);
     participation.updateStatus(ParticipationStatus.REJECTED);
+
     return participation;
   }
 
@@ -117,51 +119,6 @@ public class ParticipationService {
       throw new ParticipationException(ParticipationErrorCode.ALREADY_PARTICIPATE_MEETING);
     }
     return meeting;
-  }
-
-  public AppliedMeetingsResponse getAppliedMeetings(Long userId, Long lastId, int pageSize) {
-    List<AppliedMeetingProjection> appliedMeetingsProjections =
-        participationRepository.findAppliedMeetingsWithLastId(userId, lastId, pageSize + 1);
-    // 다음 페이지 존재 여부를 알기 위해 + 1
-
-    return AppliedMeetingsResponse.of(
-        appliedMeetingsProjections,
-        pageSize
-    );
-  }
-
-  public void approveParticipation(Long authorId, Long participationId) {
-    Participation participation = updateApproveParticipation(authorId, participationId);
-    joinChatRoom(participation.getMeeting(), participation); // 채팅방 입장
-
-    // 참여 신청을 보낸 회원에게 알림 발송 TODO: 대량 요청 테스트 후 비동기 처리 고려
-    sendNotificationToAppliedUser(participation);
-  }
-
-  public void rejectParticipation(Long authorId, Long participationId) {
-    Participation participation = updateRejectParticipation(authorId, participationId);
-    sendNotificationToAppliedUser(participation); // 참여 신청을 보낸 회원에게 알림 발송
-  }
-
-  @Transactional
-  Participation updateApproveParticipation(Long authorId, Long participationId) {
-    Participation participation = validateMeetingAuthorForParticipation(authorId, participationId);
-    Meeting meeting = participation.getMeeting();
-
-    validatePossibleParticipant(participation, meeting); // 검증
-    participation.updateStatus(ParticipationStatus.APPROVED); // 참여 신청 상태를 APPROVED로 변경
-
-    meeting.incrementApprovedCount(); // 현재 인원 증가
-
-    return participation;
-  }
-
-  @Transactional
-  Participation updateRejectParticipation(Long authorId, Long participationId) {
-    Participation participation = validateMeetingAuthorForParticipation(authorId, participationId);
-    participation.updateStatus(ParticipationStatus.REJECTED);
-
-    return participation;
   }
 
   private Meeting findByMeetingId(Long meetingId) {
@@ -208,12 +165,6 @@ public class ParticipationService {
         .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
 
     chatRoomService.joinRoom(participation.getUserId(), chatRoom.getId());
-  }
-
-  // TODO: merge 후 public 메서드가 위로 가도록
-  public void deleteParticipation(Long userId, Long participationId) {
-    Participation participation = validateForDeleteParticipation(userId, participationId);
-    participationRepository.delete(participation);
   }
 
   private Participation validateForDeleteParticipation(Long userId, Long participationId) {
