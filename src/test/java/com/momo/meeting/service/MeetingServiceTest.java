@@ -11,6 +11,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.momo.chat.entity.ChatRoom;
+import com.momo.chat.service.ChatRoomService;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingDto;
@@ -54,6 +56,9 @@ class MeetingServiceTest {
   @Mock
   private ParticipationRepository participationRepository;
 
+  @Mock
+  private ChatRoomService chatRoomService;
+
   @InjectMocks
   private MeetingService meetingService;
 
@@ -65,6 +70,7 @@ class MeetingServiceTest {
     LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
     LocalDateTime endOfDay = startOfDay.plusDays(1);
     MeetingCreateRequest request = createMeetingRequest();
+    Meeting meeting = createMeeting(user, request);
 
     when(meetingRepository.countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay))
         .thenReturn(0);
