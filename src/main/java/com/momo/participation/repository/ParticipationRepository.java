@@ -14,6 +14,7 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
 
   boolean existsByUser_IdAndMeeting_Id(Long userId, Long id);
 
+  // 신청한 모임 목록 조회
   @Query(value =
       "SELECT "
           + "p.id as id, "
