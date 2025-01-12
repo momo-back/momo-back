@@ -119,29 +119,15 @@ public class ParticipationService {
     return meeting;
   }
 
-  private Participation validateForCancelParticipation(Long userId, Long participationId) {
-    // 참여 신청이 존재하는지 검증
-    Participation participation = participationRepository.findById(participationId)
-        .orElseThrow(() ->
-            new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
+  public AppliedMeetingsResponse getAppliedMeetings(Long userId, Long lastId, int pageSize) {
+    List<AppliedMeetingProjection> appliedMeetingsProjections =
+        participationRepository.findAppliedMeetingsWithLastId(userId, lastId, pageSize + 1);
+    // 다음 페이지 존재 여부를 알기 위해 + 1
 
-    // 참여 신청의 주인인지 검증
-    if (!participation.isAuthor(userId)) {
-      throw new ParticipationException(ParticipationErrorCode.NOT_PARTICIPATION_OWNER);
-    }
-
-    // 참여 신청을 취소할 수 있는 상태인지 검증
-    if (!(participation.getParticipationStatus() == ParticipationStatus.PENDING)) {
-      throw new ParticipationException(ParticipationErrorCode.INVALID_PARTICIPATION_STATUS);
-    }
-
-    Meeting meeting = findByMeetingId(participation.getMeetingId()); // 모임이 존재하는지 검증
-
-    // 모임 상태가 모임 신청을 취소할 수 있는 상태인지 검증
-    if (!(meeting.getMeetingStatus() == MeetingStatus.RECRUITING)) {
-      throw new MeetingException(MeetingErrorCode.INVALID_MEETING_STATUS);
-    }
-    return participation;
+    return AppliedMeetingsResponse.of(
+        appliedMeetingsProjections,
+        pageSize
+    );
   }
 
   private Meeting findByMeetingId(Long meetingId) {
@@ -186,6 +172,35 @@ public class ParticipationService {
     // 현재 회원이 해당 모임 신청을 받은 모임의 작성자인지 검증
     if (!participation.isMeetingAuthor(authorId)) {
       throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
+    }
+    return participation;
+  }
+
+  // TODO: merge 후 public 메서드가 위로 가도록
+  public void deleteParticipation(Long userId, Long participationId) {
+    Participation participation = validateForDeleteParticipation(userId, participationId);
+    participationRepository.delete(participation);
+  }
+
+  private Participation validateForDeleteParticipation(Long userId, Long participationId) {
+    Participation participation = validateParticipation(userId, participationId);
+
+    // 참여 신청이 삭제할 수 있는 상태인지 검증
+    if (!participation.getParticipationStatus().isDeletable()) {
+      throw new ParticipationException(ParticipationErrorCode.INVALID_PARTICIPATION_STATUS);
+    }
+    return participation;
+  }
+
+  private Participation validateParticipation(Long userId, Long participationId) {
+    // 참여 신청이 존재하는지 검증
+    Participation participation = participationRepository.findById(participationId)
+        .orElseThrow(() ->
+            new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
+
+    // 참여 신청의 주인인지 검증
+    if (!participation.isAuthor(userId)) {
+      throw new ParticipationException(ParticipationErrorCode.NOT_PARTICIPATION_OWNER);
     }
     return participation;
   }

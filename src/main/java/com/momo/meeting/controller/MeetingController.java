@@ -1,6 +1,8 @@
 package com.momo.meeting.controller;
 
+import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
+import com.momo.meeting.constant.SearchType;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
@@ -12,6 +14,7 @@ import com.momo.user.dto.CustomUserDetails;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -172,5 +175,42 @@ public class MeetingController {
   ) {
     meetingService.updateMeetingStatus(customUserDetails.getId(), meetingId, meetingStatus);
     return ResponseEntity.ok().build();
+  }
+
+  /**
+   * 모집글 목록 검색
+   *
+   * @param latitude            사용자의 위도
+   * @param longitude           사용자의 경도
+   * @param lastId              마지막으로 조회된 모임 ID
+   * @param lastDistance        마지막으로 조회된 모임 위치 거리
+   * @param lastMeetingDateTime 마지막으로 조회된 모임 날짜
+   * @param pageSize            조회할 개수
+   * @param searchType          검색 옵션 (TITLE, ADDRESS, 또는 CONTENT)
+   * @param keyword             검색 키워드
+   * @param foodCategory        음식 카테고리 필터링 ("", "KOREAN", 또는 "KOREAN,JAPANESE")
+   * @return 조회된 모임 정보, 다음 페이지 여부, 다음 페이지 조회에 사용될 커서
+   */
+  @GetMapping("/search")
+  public ResponseEntity<MeetingsResponse> filterMeetings(
+      @RequestParam(required = false) @Range(min = -90, max = 90) Double latitude,
+      @RequestParam(required = false) @Range(min = -180, max = 180) Double longitude,
+      @RequestParam(required = false) Long lastId,
+      @RequestParam(required = false) Double lastDistance,
+      @RequestParam(required = false)
+      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastMeetingDateTime,
+      @RequestParam(defaultValue = "20") @Range(min = 1, max = 100) int pageSize,
+      @RequestParam(required = false) SearchType searchType,
+      @RequestParam(required = false) String keyword,
+      @RequestParam String foodCategory
+  ) {
+    Set<String> categorySet = (foodCategory != null && !foodCategory.isEmpty())
+        ? FoodCategory.convertToFoodCategories(foodCategory)
+        : null;
+    MeetingsRequest request = MeetingsRequest.createRequest(
+        latitude, longitude, lastId, lastDistance, lastMeetingDateTime, pageSize
+    );
+    return ResponseEntity
+        .ok(meetingService.filterMeetings(request, searchType, keyword, categorySet, pageSize));
   }
 }
