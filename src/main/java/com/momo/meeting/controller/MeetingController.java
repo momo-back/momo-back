@@ -2,6 +2,7 @@ package com.momo.meeting.controller;
 
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
+import com.momo.meeting.constant.SearchType;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
 import com.momo.meeting.dto.create.MeetingCreateRequest;
 import com.momo.meeting.dto.create.MeetingCreateResponse;
@@ -185,7 +186,7 @@ public class MeetingController {
    * @param lastDistance        마지막으로 조회된 모임 위치 거리
    * @param lastMeetingDateTime 마지막으로 조회된 모임 날짜
    * @param pageSize            조회할 개수
-   * @param kind                검색 옵션 ("title", "address", 또는 "content")
+   * @param searchType          검색 옵션 (TITLE, ADDRESS, 또는 CONTENT)
    * @param keyword             검색 키워드
    * @param foodCategory        음식 카테고리 필터링 ("", "KOREAN", 또는 "KOREAN,JAPANESE")
    * @return 조회된 모임 정보, 다음 페이지 여부, 다음 페이지 조회에 사용될 커서
@@ -199,7 +200,7 @@ public class MeetingController {
       @RequestParam(required = false)
       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastMeetingDateTime,
       @RequestParam(defaultValue = "20") @Range(min = 1, max = 100) int pageSize,
-      @RequestParam(required = false) String kind,
+      @RequestParam(required = false) SearchType searchType,
       @RequestParam(required = false) String keyword,
       @RequestParam String foodCategory
   ) {
@@ -210,6 +211,6 @@ public class MeetingController {
         latitude, longitude, lastId, lastDistance, lastMeetingDateTime, pageSize
     );
     return ResponseEntity
-        .ok(meetingService.filterMeetings(request, kind, keyword, categorySet, pageSize));
+        .ok(meetingService.filterMeetings(request, searchType, keyword, categorySet, pageSize));
   }
 }

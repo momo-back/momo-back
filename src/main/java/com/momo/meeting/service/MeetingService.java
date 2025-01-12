@@ -1,6 +1,8 @@
 package com.momo.meeting.service;
 
+import com.momo.chat.service.ChatRoomService;
 import com.momo.meeting.constant.MeetingStatus;
+import com.momo.meeting.constant.SearchType;
 import com.momo.meeting.constant.SortType;
 import com.momo.meeting.dto.MeetingCursor;
 import com.momo.meeting.dto.MeetingDto;
@@ -34,59 +36,16 @@ public class MeetingService {
 
   private final MeetingRepository meetingRepository;
   private final ParticipationRepository participationRepository;
+  private final ChatRoomService chatRoomService;
 
   public MeetingCreateResponse createMeeting(User user, MeetingCreateRequest request) {
     validateDailyPostLimit(user.getId());
     Meeting meeting = request.toEntity(request, user);
 
     meetingRepository.save(meeting);
+    chatRoomService.createChatRoom(user.getId(), meeting.getId()); // 채팅방 생성
+
     return MeetingCreateResponse.from(meeting);
-  }
-
-  private void validateDailyPostLimit(Long userId) {
-    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
-    LocalDateTime endOfDay = startOfDay.plusDays(1);
-
-    int todayPostCount =
-        meetingRepository.countByUser_IdAndCreatedAtBetween(userId, startOfDay, endOfDay);
-
-    if (todayPostCount >= 10) {
-      throw new MeetingException(MeetingErrorCode.DAILY_POSTING_LIMIT_EXCEEDED);
-    }
-  }
-
-  public MeetingsResponse getMeetings(MeetingsRequest request) {
-    List<MeetingToMeetingDtoProjection> meetingProjections;
-
-    if (request.getSortType() == SortType.DISTANCE) {
-      meetingProjections = getNearbyMeetings(request);
-    } else {
-      meetingProjections = getMeetingsByDate(request);
-    }
-
-    return MeetingsResponse.of(
-        meetingProjections,
-        request.getPageSize()
-    );
-  }
-
-  private List<MeetingToMeetingDtoProjection> getNearbyMeetings(MeetingsRequest request) {
-    return meetingRepository.findNearbyMeetingsWithCursor(
-        request.getUserLatitude(),
-        request.getUserLongitude(),
-        request.getRadius(),
-        request.getCursorId(),
-        request.getCursorDistance(),
-        request.getPageSize() + 1 // 다음 페이지 존재 여부를 알기 위해 + 1
-    );
-  }
-
-  private List<MeetingToMeetingDtoProjection> getMeetingsByDate(MeetingsRequest request) {
-    return meetingRepository.findOrderByMeetingDateWithCursor(
-        request.getCursorId(),
-        request.getCursorMeetingDateTime(),
-        request.getPageSize() + 1 // 다음 페이지 존재 여부를 알기 위해 + 1
-    );
   }
 
   public List<MeetingParticipantProjection> getParticipants(Long userId, Long meetingId) {
@@ -115,14 +74,19 @@ public class MeetingService {
     meetingRepository.delete(meeting);
   }
 
-  private Meeting validateForMeetingOwner(Long userId, Long meetingId) {
-    Meeting meeting = meetingRepository.findById(meetingId)
-        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
+  public MeetingsResponse getMeetings(MeetingsRequest request) {
+    List<MeetingToMeetingDtoProjection> meetingProjections;
 
-    if (!meeting.isAuthor(userId)) {
-      throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
+    if (request.getSortType() == SortType.DISTANCE) {
+      meetingProjections = getNearbyMeetings(request);
+    } else {
+      meetingProjections = getMeetingsByDate(request);
     }
-    return meeting;
+
+    return MeetingsResponse.of(
+        meetingProjections,
+        request.getPageSize()
+    );
   }
 
   public CreatedMeetingsResponse getCreatedMeetings(Long userId, Long lastId, int pageSize) {
@@ -138,7 +102,7 @@ public class MeetingService {
 
   public MeetingsResponse filterMeetings(
       MeetingsRequest request,
-      String kind,
+      SearchType searchType,
       String keyword,
       Set<String> categorySet,
       int pageSize
@@ -155,16 +119,16 @@ public class MeetingService {
 
     // 검색 유형 및 키워드 필터링 적용
     if (keyword != null && !keyword.isEmpty()) {
-      switch (kind) {
-        case "title":
+      switch (searchType) {
+        case TITLE:
           meetingStream = meetingStream.filter(
               meeting -> meeting.getTitle() != null && meeting.getTitle().contains(keyword));
           break;
-        case "address":
+        case ADDRESS:
           meetingStream = meetingStream.filter(
               meeting -> meeting.getAddress() != null && meeting.getAddress().contains(keyword));
           break;
-        case "content":
+        case CONTENT:
           meetingStream = meetingStream.filter(
               meeting -> meeting.getContent() != null && meeting.getContent().contains(keyword));
           break;
@@ -175,6 +139,47 @@ public class MeetingService {
 
     List<MeetingDto> filteredMeetings = meetingStream.collect(Collectors.toList());
     return processFilteredMeetings(filteredMeetings, pageSize);
+  }
+
+  private void validateDailyPostLimit(Long userId) {
+    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+    LocalDateTime endOfDay = startOfDay.plusDays(1);
+
+    int todayPostCount =
+        meetingRepository.countByUser_IdAndCreatedAtBetween(userId, startOfDay, endOfDay);
+
+    if (todayPostCount >= 10) {
+      throw new MeetingException(MeetingErrorCode.DAILY_POSTING_LIMIT_EXCEEDED);
+    }
+  }
+
+  private List<MeetingToMeetingDtoProjection> getNearbyMeetings(MeetingsRequest request) {
+    return meetingRepository.findNearbyMeetingsWithCursor(
+        request.getUserLatitude(),
+        request.getUserLongitude(),
+        request.getRadius(),
+        request.getCursorId(),
+        request.getCursorDistance(),
+        request.getPageSize() + 1 // 다음 페이지 존재 여부를 알기 위해 + 1
+    );
+  }
+
+  private List<MeetingToMeetingDtoProjection> getMeetingsByDate(MeetingsRequest request) {
+    return meetingRepository.findOrderByMeetingDateWithCursor(
+        request.getCursorId(),
+        request.getCursorMeetingDateTime(),
+        request.getPageSize() + 1 // 다음 페이지 존재 여부를 알기 위해 + 1
+    );
+  }
+
+  private Meeting validateForMeetingOwner(Long userId, Long meetingId) {
+    Meeting meeting = meetingRepository.findById(meetingId)
+        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
+
+    if (!meeting.isAuthor(userId)) {
+      throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
+    }
+    return meeting;
   }
 
   private MeetingsResponse processFilteredMeetings(

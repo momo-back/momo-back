@@ -42,7 +42,7 @@ public class ParticipationService {
     participationRepository.save(participation);
 
     // 모임 주최자에게 새로운 참여 알림 발송
-    sendNotificationToAuthor(user, meeting);
+    sendNotificationToAuthor(user);
   }
 
   public AppliedMeetingsResponse getAppliedMeetings(Long userId, Long lastId, int pageSize) {
@@ -62,6 +62,75 @@ public class ParticipationService {
   }
 
   public void approveParticipation(Long authorId, Long participationId) {
+    Participation participation = updateAppoveParticipation(authorId, participationId);
+    joinChatRoom(participation.getMeeting(), participation); // 채팅방 입장
+
+    // 참여 신청을 보낸 회원에게 알림 발송 TODO: 비동기 처리 고려
+    sendNotificationToAppliedUser(participation);
+  }
+
+  public void rejectParticipation(Long authorId, Long participationId) {
+    Participation participation = updateRejectParticipation(authorId, participationId);
+    sendNotificationToAppliedUser(participation); // 참여 신청을 보낸 회원에게 알림 발송
+  }
+
+  @Transactional
+  Participation updateAppoveParticipation(Long authorId, Long participationId) {
+    Participation participation = validateMeetingAuthorForParticipation(authorId, participationId);
+    Meeting meeting = participation.getMeeting();
+
+    validatePossibleParticipant(participation, meeting); // 검증
+    participation.updateStatus(ParticipationStatus.APPROVED); // 참여 신청 상태를 APPROVED로 변경
+    meeting.incrementApprovedCount(); // 현재 인원 증가
+
+    return participation;
+  }
+
+  @Transactional
+  Participation updateRejectParticipation(Long authorId, Long participationId) {
+    Participation participation = validateMeetingAuthorForParticipation(authorId, participationId);
+    participation.updateStatus(ParticipationStatus.REJECTED);
+    return participation;
+  }
+
+  private void sendNotificationToAuthor(User user) {
+    notificationService.sendNotification(
+        user,
+        user.getNickname() + NotificationType.NEW_PARTICIPATION_REQUEST.getDescription(),
+        NotificationType.NEW_PARTICIPATION_REQUEST
+    );
+  }
+
+  private Meeting validateForParticipate(Long userId, Long meetingId) {
+    Meeting meeting = findByMeetingId(meetingId);
+
+    if (!meeting.getMeetingStatus().isParticipate()) { // 참여 가능한 상태의 모임글인지 검증
+      throw new ParticipationException(ParticipationErrorCode.INVALID_MEETING_STATUS);
+    }
+
+    if (userId.equals(meeting.getUser().getId())) { // 본인이 작성한 모임글인지 검증
+      throw new ParticipationException(ParticipationErrorCode.PARTICIPATE_SELF_MEETING_NOT_ALLOW);
+    }
+
+    // 이미 참여 신청한 모임인지
+    if (participationRepository.existsByUser_IdAndMeeting_Id(userId, meeting.getId())) {
+      throw new ParticipationException(ParticipationErrorCode.ALREADY_PARTICIPATE_MEETING);
+    }
+    return meeting;
+  }
+
+  public AppliedMeetingsResponse getAppliedMeetings(Long userId, Long lastId, int pageSize) {
+    List<AppliedMeetingProjection> appliedMeetingsProjections =
+        participationRepository.findAppliedMeetingsWithLastId(userId, lastId, pageSize + 1);
+    // 다음 페이지 존재 여부를 알기 위해 + 1
+
+    return AppliedMeetingsResponse.of(
+        appliedMeetingsProjections,
+        pageSize
+    );
+  }
+
+  public void approveParticipation(Long authorId, Long participationId) {
     Participation participation = updateApproveParticipation(authorId, participationId);
     joinChatRoom(participation.getMeeting(), participation); // 채팅방 입장
 
@@ -69,7 +138,6 @@ public class ParticipationService {
     sendNotificationToAppliedUser(participation);
   }
 
-  @Transactional
   public void rejectParticipation(Long authorId, Long participationId) {
     Participation participation = updateRejectParticipation(authorId, participationId);
     sendNotificationToAppliedUser(participation); // 참여 신청을 보낸 회원에게 알림 발송
@@ -96,47 +164,18 @@ public class ParticipationService {
     return participation;
   }
 
-  private Participation validateForCancelParticipation(Long userId, Long participationId) {
-    // 참여 신청이 존재하는지 검증
-    Participation participation = participationRepository.findById(participationId)
-        .orElseThrow(() ->
-            new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
-
-    // 참여 신청의 주인인지 검증
-    if (!participation.isAuthor(userId)) {
-      throw new ParticipationException(ParticipationErrorCode.NOT_PARTICIPATION_OWNER);
-    }
-
-    // 참여 신청을 취소할 수 있는 상태인지 검증
-    if (!(participation.getParticipationStatus() == ParticipationStatus.PENDING)) {
-      throw new ParticipationException(ParticipationErrorCode.INVALID_PARTICIPATION_STATUS);
-    }
-
-    Meeting meeting = findByMeetingId(participation.getMeetingId()); // 모임이 존재하는지 검증
-
-    // 모임 상태가 모임 신청을 취소할 수 있는 상태인지 검증
-    if (!(meeting.getMeetingStatus() == MeetingStatus.RECRUITING)) {
-      throw new MeetingException(MeetingErrorCode.INVALID_MEETING_STATUS);
-    }
-    return participation;
+  private Meeting findByMeetingId(Long meetingId) {
+    return meetingRepository.findById(meetingId)
+        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
   }
 
-  private Meeting validateForParticipate(Long userId, Long meetingId) {
-    Meeting meeting = findByMeetingId(meetingId);
-
-    if (!meeting.getMeetingStatus().isParticipate()) { // 참여 가능한 상태의 모임글인지 검증
-      throw new ParticipationException(ParticipationErrorCode.INVALID_MEETING_STATUS);
-    }
-
-    if (userId.equals(meeting.getUser().getId())) { // 본인이 작성한 모임글인지 검증
-      throw new ParticipationException(ParticipationErrorCode.PARTICIPATE_SELF_MEETING_NOT_ALLOW);
-    }
-
-    // 이미 참여 신청한 모임인지
-    if (participationRepository.existsByUser_IdAndMeeting_Id(userId, meeting.getId())) {
-      throw new ParticipationException(ParticipationErrorCode.ALREADY_PARTICIPATE_MEETING);
-    }
-    return meeting;
+  private void sendNotificationToAppliedUser(Participation participation) {
+    notificationService.sendNotification(
+        participation.getUser(),
+        participation.getMeeting().getTitle()
+            + NotificationType.PARTICIPANT_APPROVED.getDescription(),
+        NotificationType.PARTICIPANT_APPROVED
+    );
   }
 
   private Participation validateMeetingAuthorForParticipation(Long authorId, Long participationId) {
@@ -164,32 +203,39 @@ public class ParticipationService {
     }
   }
 
-  private void sendNotificationToAuthor(User user, Meeting meeting) {
-    notificationService.sendNotification(
-        meeting.getUser(),
-        user.getNickname() + NotificationType.NEW_PARTICIPATION_REQUEST.getDescription(),
-        NotificationType.NEW_PARTICIPATION_REQUEST
-    );
-  }
-
-  private void sendNotificationToAppliedUser(Participation participation) {
-    notificationService.sendNotification(
-        participation.getUser(),
-        participation.getMeeting().getTitle()
-            + NotificationType.PARTICIPANT_APPROVED.getDescription(),
-        NotificationType.PARTICIPANT_APPROVED
-    );
-  }
-
-  private Meeting findByMeetingId(Long meetingId) {
-    return meetingRepository.findById(meetingId)
-        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
-  }
-
   private void joinChatRoom(Meeting meeting, Participation participation) {
     ChatRoom chatRoom = chatRoomRepository.findByMeeting_Id(meeting.getId())
         .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
 
     chatRoomService.joinRoom(participation.getUserId(), chatRoom.getId());
+  }
+
+  // TODO: merge 후 public 메서드가 위로 가도록
+  public void deleteParticipation(Long userId, Long participationId) {
+    Participation participation = validateForDeleteParticipation(userId, participationId);
+    participationRepository.delete(participation);
+  }
+
+  private Participation validateForDeleteParticipation(Long userId, Long participationId) {
+    Participation participation = validateParticipation(userId, participationId);
+
+    // 참여 신청이 삭제할 수 있는 상태인지 검증
+    if (!participation.getParticipationStatus().isDeletable()) {
+      throw new ParticipationException(ParticipationErrorCode.INVALID_PARTICIPATION_STATUS);
+    }
+    return participation;
+  }
+
+  private Participation validateParticipation(Long userId, Long participationId) {
+    // 참여 신청이 존재하는지 검증
+    Participation participation = participationRepository.findById(participationId)
+        .orElseThrow(() ->
+            new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
+
+    // 참여 신청의 주인인지 검증
+    if (!participation.isAuthor(userId)) {
+      throw new ParticipationException(ParticipationErrorCode.NOT_PARTICIPATION_OWNER);
+    }
+    return participation;
   }
 }

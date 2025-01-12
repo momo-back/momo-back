@@ -1,5 +1,6 @@
 package com.momo.participation.constant;
 
+import java.util.EnumSet;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -12,5 +13,13 @@ public enum ParticipationStatus {
   CLOSED("모집 완료"), // 참여한 모집글 목록에서 제거 가능
   CANCELED("모집 취소"); // 참여한 모집글 목록에서 제거 가능
 
+  private static final EnumSet<ParticipationStatus> DELETABLE_STATUS =
+      EnumSet.of(PENDING, REJECTED, CLOSED, CANCELED);
+
   private final String description;
+
+
+  public boolean isDeletable() {
+    return DELETABLE_STATUS.contains(this);
+  }
 }
