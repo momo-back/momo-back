@@ -130,6 +130,40 @@ public class ParticipationService {
     );
   }
 
+  public void approveParticipation(Long authorId, Long participationId) {
+    Participation participation = updateApproveParticipation(authorId, participationId);
+    joinChatRoom(participation.getMeeting(), participation); // 채팅방 입장
+
+    // 참여 신청을 보낸 회원에게 알림 발송 TODO: 대량 요청 테스트 후 비동기 처리 고려
+    sendNotificationToAppliedUser(participation);
+  }
+
+  public void rejectParticipation(Long authorId, Long participationId) {
+    Participation participation = updateRejectParticipation(authorId, participationId);
+    sendNotificationToAppliedUser(participation); // 참여 신청을 보낸 회원에게 알림 발송
+  }
+
+  @Transactional
+  Participation updateApproveParticipation(Long authorId, Long participationId) {
+    Participation participation = validateMeetingAuthorForParticipation(authorId, participationId);
+    Meeting meeting = participation.getMeeting();
+
+    validatePossibleParticipant(participation, meeting); // 검증
+    participation.updateStatus(ParticipationStatus.APPROVED); // 참여 신청 상태를 APPROVED로 변경
+
+    meeting.incrementApprovedCount(); // 현재 인원 증가
+
+    return participation;
+  }
+
+  @Transactional
+  Participation updateRejectParticipation(Long authorId, Long participationId) {
+    Participation participation = validateMeetingAuthorForParticipation(authorId, participationId);
+    participation.updateStatus(ParticipationStatus.REJECTED);
+
+    return participation;
+  }
+
   private Meeting findByMeetingId(Long meetingId) {
     return meetingRepository.findById(meetingId)
         .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
@@ -144,11 +178,17 @@ public class ParticipationService {
     );
   }
 
-  private void joinChatRoom(Meeting meeting, Participation participation) {
-    ChatRoom chatRoom = chatRoomRepository.findByMeeting_Id(meeting.getId())
-        .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
+  private Participation validateMeetingAuthorForParticipation(Long authorId, Long participationId) {
+    // 존재하는 참여 신청인지 확인
+    Participation participation = participationRepository.findById(participationId)
+        .orElseThrow(() ->
+            new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
 
-    chatRoomService.joinRoom(participation.getUserId(), chatRoom.getId());
+    // 현재 회원이 해당 모임 신청을 받은 모임의 작성자인지 검증
+    if (!participation.isMeetingAuthor(authorId)) {
+      throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
+    }
+    return participation;
   }
 
   private static void validatePossibleParticipant(Participation participation, Meeting meeting) {
@@ -163,17 +203,11 @@ public class ParticipationService {
     }
   }
 
-  private Participation validateMeetingAuthorForParticipation(Long authorId, Long participationId) {
-    // 존재하는 참여 신청인지 확인
-    Participation participation = participationRepository.findById(participationId)
-        .orElseThrow(() ->
-            new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
+  private void joinChatRoom(Meeting meeting, Participation participation) {
+    ChatRoom chatRoom = chatRoomRepository.findByMeeting_Id(meeting.getId())
+        .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
 
-    // 현재 회원이 해당 모임 신청을 받은 모임의 작성자인지 검증
-    if (!participation.isMeetingAuthor(authorId)) {
-      throw new MeetingException(MeetingErrorCode.NOT_MEETING_OWNER);
-    }
-    return participation;
+    chatRoomService.joinRoom(participation.getUserId(), chatRoom.getId());
   }
 
   // TODO: merge 후 public 메서드가 위로 가도록
