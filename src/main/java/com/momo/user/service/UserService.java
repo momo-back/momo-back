@@ -17,6 +17,7 @@ import com.momo.user.dto.UserInfoResponse;
 import com.momo.user.dto.UserUpdateRequest;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import javax.servlet.http.Cookie;
@@ -159,36 +160,62 @@ public class UserService {
         .getPrincipal();
   }
 
-  @Transactional
-  public User processKakaoUser(KakaoProfile kakaoProfile, OAuthToken oauthToken) {
-    String email = kakaoProfile.getKakao_account().getEmail();
+//  @Transactional
+//  public User processKakaoUser(KakaoProfile kakaoProfile, OAuthToken oauthToken) {
+//    String email = kakaoProfile.getKakao_account().getEmail();
+//
+//    // 이메일로 기존 사용자 검색
+//    User existingUser = userRepository.findByEmail(email).orElse(null);
+//
+//    if (existingUser != null) {
+//      existingUser.setEnabled(true); // 사용자 활성화
+//      updateRefreshToken(existingUser, oauthToken.getRefresh_token()); // 여기서 호출
+//      return existingUser;
+//    }
+//
+//    // 새 사용자 생성
+//    String randomPassword = UUID.randomUUID().toString();
+//    String encryptedPassword = passwordEncoder.encode(randomPassword);
+//
+//    User kakaoUser = User.builder()
+//        .email(email)
+//        .nickname(email) // 닉네임 기본값으로 이메일 사용
+//        .password(encryptedPassword)
+//        .enabled(true)
+//        .oauthUser(true)
+//        .build();
+//
+//    userRepository.save(kakaoUser); // 저장
+//    createRefreshToken(kakaoUser, oauthToken.getRefresh_token()); // 새 사용자에 대해 Refresh Token 생성
+//    return kakaoUser;
+//  }
+@Transactional
+public User processKakaoUser(KakaoProfile kakaoProfile, OAuthToken oauthToken) {
+  String email = kakaoProfile.getKakao_account().getEmail();
 
-    // 이메일로 기존 사용자 검색
-    User existingUser = userRepository.findByEmail(email).orElse(null);
+  User existingUser = userRepository.findByEmail(email).orElse(null);
 
-    if (existingUser != null) {
-      existingUser.setEnabled(true); // 사용자 활성화
-      updateRefreshToken(existingUser, oauthToken.getRefresh_token()); // 여기서 호출
-      return existingUser;
-    }
-
-    // 새 사용자 생성
-    String randomPassword = UUID.randomUUID().toString();
-    String encryptedPassword = passwordEncoder.encode(randomPassword);
-
-    User kakaoUser = User.builder()
-        .email(email)
-        .nickname(email) // 닉네임 기본값으로 이메일 사용
-        .password(encryptedPassword)
-        .enabled(true)
-        .oauthUser(true)
-        .build();
-
-    userRepository.save(kakaoUser); // 저장
-    createRefreshToken(kakaoUser, oauthToken.getRefresh_token()); // 새 사용자에 대해 Refresh Token 생성
-    return kakaoUser;
+  if (existingUser != null) {
+    existingUser.setEnabled(true);
+    upsertRefreshToken(existingUser, oauthToken.getRefresh_token());
+    return existingUser;
   }
 
+  String randomPassword = UUID.randomUUID().toString();
+  String encryptedPassword = passwordEncoder.encode(randomPassword);
+
+  User kakaoUser = User.builder()
+      .email(email)
+      .nickname(email)
+      .password(encryptedPassword)
+      .enabled(true)
+      .oauthUser(true)
+      .build();
+
+  userRepository.save(kakaoUser);
+  upsertRefreshToken(kakaoUser, oauthToken.getRefresh_token());
+  return kakaoUser;
+}
   private void createRefreshToken(User user, String refreshTokenValue) {
     if (user == null) {
       throw new IllegalArgumentException("User cannot be null");
@@ -316,6 +343,19 @@ public class UserService {
         .mbti(profile.getMbti())
         .introduction(profile.getIntroduction())
         .build();
+  }
+
+  @Transactional
+  public void upsertRefreshToken(User user, String refreshTokenValue) {
+    RefreshToken existingToken = refreshTokenRepository.findByUser(user).orElse(null);
+
+    if (existingToken != null) {
+      existingToken.updateToken(refreshTokenValue, LocalDateTime.now().plusDays(7));
+      refreshTokenRepository.save(existingToken);
+    } else {
+      RefreshToken newToken = RefreshToken.create(user, refreshTokenValue, LocalDateTime.now().plusDays(7));
+      refreshTokenRepository.save(newToken);
+    }
   }
 
 }
