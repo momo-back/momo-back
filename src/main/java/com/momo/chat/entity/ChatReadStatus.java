@@ -25,7 +25,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name="chat_read_status")
-public class ChatReadStatus extends BaseEntity {
+public class ChatReadStatus{
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
