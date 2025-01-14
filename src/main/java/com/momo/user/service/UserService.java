@@ -104,9 +104,6 @@ public class UserService {
     response.addCookie(cookie);
   }
 
-
-
-
   // 비밀번호 재설정 토큰 생성
   public String generateResetToken(String email) {
     User user = userRepository.findByEmail(email)
@@ -190,20 +187,12 @@ public class UserService {
   }
 
   private void createRefreshToken(User user, String refreshTokenValue) {
-    if (user == null) {
+    if (user == null || user.getId() == null) {
       throw new IllegalArgumentException("User cannot be null");
     }
 
-    if (user.getId() == null) {
-      throw new IllegalStateException("User ID cannot be null");
-    }
-
-    if (user.getRefreshTokens() == null) {
-      user.setRefreshTokens(new ArrayList<>());
-    }
-
     RefreshToken refreshToken = new RefreshToken(user, refreshTokenValue);
-    user.getRefreshTokens().add(refreshToken);
+    user.setRefreshToken(refreshToken);
     refreshTokenRepository.save(refreshToken);
   }
 
@@ -317,5 +306,4 @@ public class UserService {
         .introduction(profile.getIntroduction())
         .build();
   }
-
 }
