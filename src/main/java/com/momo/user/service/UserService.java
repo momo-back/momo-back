@@ -105,9 +105,6 @@ public class UserService {
     response.addCookie(cookie);
   }
 
-
-
-
   // 비밀번호 재설정 토큰 생성
   public String generateResetToken(String email) {
     User user = userRepository.findByEmail(email)
@@ -267,7 +264,6 @@ public User processKakaoUser(KakaoProfile kakaoProfile, OAuthToken oauthToken) {
         .introduction(profile.getIntroduction())
         .build();
   }
-
   @Transactional
   public void upsertRefreshToken(User user, String refreshTokenValue) {
     RefreshToken existingToken = refreshTokenRepository.findByUser(user).orElse(null);
