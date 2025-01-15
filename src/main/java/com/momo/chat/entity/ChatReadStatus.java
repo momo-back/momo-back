@@ -1,6 +1,5 @@
 package com.momo.chat.entity;
 
-import com.momo.common.entity.BaseEntity;
 import com.momo.user.entity.User;
 import java.time.LocalDateTime;
 import javax.persistence.Column;
@@ -25,7 +24,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name="chat_read_status")
-public class ChatReadStatus extends BaseEntity {
+public class ChatReadStatus{
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
