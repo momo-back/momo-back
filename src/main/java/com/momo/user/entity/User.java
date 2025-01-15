@@ -2,14 +2,9 @@ package com.momo.user.entity;
 
 import com.momo.config.token.entity.RefreshToken;
 import com.momo.profile.entity.Profile;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import lombok.*;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Getter
 @NoArgsConstructor
@@ -67,6 +62,12 @@ public class User {
     this.updatedAt = LocalDateTime.now();
   }
 
+  @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private RefreshToken refreshToken;
+
+  @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+  private Profile profile;
+
   /**
    * 계정을 활성화하는 비즈니스 로직
    */
@@ -75,28 +76,9 @@ public class User {
     this.verificationToken = null; // 인증 완료 시 토큰 제거
   }
 
-  public void setEnabled(boolean enabled) {
-    this.enabled = enabled;
+  public boolean isProfileCompleted() {
+    return this.profile != null &&
+        this.profile.getGender() != null &&
+        this.profile.getBirth() != null;
   }
-
-  public boolean isOauthUser() {
-    return oauthUser;
-  }
-
-  public void setOauthUser(boolean oauthUser) {
-    this.oauthUser = oauthUser;
-  }
-
-
-  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<RefreshToken> refreshTokens = new ArrayList<>();
-
-  public List<GrantedAuthority> getAuthorities() {
-    return Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"));
-  }
-
-  @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
-  private List<Profile> profiles = new ArrayList<>();
-
-
 }

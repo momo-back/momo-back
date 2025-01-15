@@ -49,6 +49,12 @@ public class JWTUtil {
     return claims.get("role", String.class); // 토큰에 저장된 role 반환
   }
 
+  // 프로필 상태 확인
+  public boolean isProfileCompleted(String token) {
+    Claims claims = getClaims(token);
+    return claims.get("profileCompleted", Boolean.class);
+  }
+
   // 토큰 만료 여부 확인
   public boolean isExpired(String token) {
     try {
@@ -71,6 +77,7 @@ public class JWTUtil {
         .claim("tokenType", tokenType)
         .claim("email", user.getEmail()) // 이메일 기반으로 변경
         .claim("role", role) // 기본 역할 추가
+        .claim("profileCompleted", user.isProfileCompleted()) // 프로필 상태 추가
         .setIssuedAt(now)
         .setExpiration(expiration)
         .signWith(key)
