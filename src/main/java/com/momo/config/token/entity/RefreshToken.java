@@ -30,7 +30,7 @@ public class RefreshToken {
   @JoinColumn(name = "user_id", nullable = false)
   private User user; // 사용자와 연관
 
-  @Column(name = "token", nullable = false, unique = true)
+  @Column(name = "token", length = 512, nullable = false, unique = true)
   private String token; // Refresh Token 값
 
   @Column(name = "expiration", nullable = false)
@@ -59,10 +59,5 @@ public class RefreshToken {
     if (this.expiration == null) {
       this.expiration = LocalDateTime.now().plusDays(7); // 기본 만료 시간 설정 (7일)
     }
-  }
-
-  public void updateToken(String newToken, LocalDateTime newExpiration) {
-    this.token = newToken;
-    this.expiration = newExpiration;
   }
 }

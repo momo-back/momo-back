@@ -157,33 +157,55 @@ public class UserService {
         .getPrincipal();
   }
 
-@Transactional
-public User processKakaoUser(KakaoProfile kakaoProfile, OAuthToken oauthToken) {
-  String email = kakaoProfile.getKakao_account().getEmail();
+  @Transactional
+  public User processKakaoUser(KakaoProfile kakaoProfile, OAuthToken oauthToken) {
+    String email = kakaoProfile.getKakao_account().getEmail();
 
-  User existingUser = userRepository.findByEmail(email).orElse(null);
+    // 이메일로 기존 사용자 검색
+    User existingUser = userRepository.findByEmail(email).orElse(null);
 
-  if (existingUser != null) {
-    existingUser.setEnabled(true);
-    upsertRefreshToken(existingUser, oauthToken.getRefresh_token());
-    return existingUser;
+    if (existingUser != null) {
+      existingUser.setEnabled(true); // 사용자 활성화
+      updateRefreshToken(existingUser, oauthToken.getRefresh_token()); // 여기서 호출
+      return existingUser;
+    }
+
+    // 새 사용자 생성
+    String randomPassword = UUID.randomUUID().toString();
+    String encryptedPassword = passwordEncoder.encode(randomPassword);
+
+    User kakaoUser = User.builder()
+        .email(email)
+        .nickname(email) // 닉네임 기본값으로 이메일 사용
+        .password(encryptedPassword)
+        .enabled(true)
+        .oauthUser(true)
+        .build();
+
+    userRepository.save(kakaoUser); // 저장
+    createRefreshToken(kakaoUser, oauthToken.getRefresh_token()); // 새 사용자에 대해 Refresh Token 생성
+    return kakaoUser;
   }
 
-  String randomPassword = UUID.randomUUID().toString();
-  String encryptedPassword = passwordEncoder.encode(randomPassword);
+  private void createRefreshToken(User user, String refreshTokenValue) {
+    if (user == null || user.getId() == null) {
+      throw new IllegalArgumentException("User cannot be null");
+    }
 
-  User kakaoUser = User.builder()
-      .email(email)
-      .nickname(email)
-      .password(encryptedPassword)
-      .enabled(true)
-      .oauthUser(true)
-      .build();
+    RefreshToken refreshToken = new RefreshToken(user, refreshTokenValue);
+    user.setRefreshToken(refreshToken);
+    refreshTokenRepository.save(refreshToken);
+  }
 
-  userRepository.save(kakaoUser);
-  upsertRefreshToken(kakaoUser, oauthToken.getRefresh_token());
-  return kakaoUser;
-}
+  private void updateRefreshToken(User user, String newTokenValue) {
+    if (user == null || user.getId() == null) {
+      throw new IllegalArgumentException("User or User ID cannot be null");
+    }
+
+    refreshTokenRepository.deleteByUser(user);
+
+    createRefreshToken(user, newTokenValue);
+  }
 
   // 카카오 로그인 회원정보 조회
   public UserInfoResponse getUserInfoByEmail(String email) {
@@ -263,18 +285,6 @@ public User processKakaoUser(KakaoProfile kakaoProfile, OAuthToken oauthToken) {
         .mbti(profile.getMbti())
         .introduction(profile.getIntroduction())
         .build();
-  }
-  @Transactional
-  public void upsertRefreshToken(User user, String refreshTokenValue) {
-    RefreshToken existingToken = refreshTokenRepository.findByUser(user).orElse(null);
-
-    if (existingToken != null) {
-      existingToken.updateToken(refreshTokenValue, LocalDateTime.now().plusDays(7));
-      refreshTokenRepository.save(existingToken);
-    } else {
-      RefreshToken newToken = RefreshToken.create(user, refreshTokenValue, LocalDateTime.now().plusDays(7));
-      refreshTokenRepository.save(newToken);
-    }
   }
 
 }
