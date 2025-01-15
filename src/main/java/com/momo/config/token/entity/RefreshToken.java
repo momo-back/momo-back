@@ -30,7 +30,7 @@ public class RefreshToken {
   @JoinColumn(name = "user_id", nullable = false)
   private User user; // 사용자와 연관
 
-  @Column(name = "token", nullable = false, unique = true)
+  @Column(name = "token", length = 510, nullable = false, unique = true)
   private String token; // Refresh Token 값
 
   @Column(name = "expiration", nullable = false)
