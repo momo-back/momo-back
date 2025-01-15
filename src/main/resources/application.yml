@@ -29,6 +29,9 @@ spring:
           timeout: 5000
           write timeout: 5000
 
+sse:
+  timeout: 60000 # 60초
+
 ---
 
 spring:
@@ -54,8 +57,6 @@ spring:
     init:
       mode: always
 
-sse:
-  timeout: 60000 # 60초
 ---
 
 spring:
