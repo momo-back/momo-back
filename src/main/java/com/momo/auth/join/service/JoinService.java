@@ -3,14 +3,17 @@ package com.momo.auth.join.service;
 import com.momo.auth.join.dto.JoinDTO;
 import com.momo.auth.join.exception.DuplicateException;
 import com.momo.auth.join.exception.ValidationException;
+import com.momo.common.exception.CustomException;
+import com.momo.common.exception.ErrorCode;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import com.momo.user.service.EmailService;
-import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -20,36 +23,55 @@ public class JoinService {
   private final BCryptPasswordEncoder bCryptPasswordEncoder;
   private final EmailService emailService;
 
+  // 인증 코드와 이메일 매핑
+  private final ConcurrentHashMap<String, JoinDTO> pendingUsers = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, String> verificationCodes = new ConcurrentHashMap<>();
+
   public void joinProcess(JoinDTO joinDto) throws MessagingException {
     String email = joinDto.getEmail();
     String password = joinDto.getPassword();
     String nickname = joinDto.getNickname();
     String phone = joinDto.getPhone();
 
-    // 입력값 검증
     validateInput(password);
-
-    // 중복 체크
     checkDuplicate(email, nickname, phone);
 
-    // 인증 토큰 생성
-    String token = UUID.randomUUID().toString();
+    String verificationCode = generateVerificationCode();
+    verificationCodes.put(verificationCode, email); // 코드로 이메일 매핑
+    pendingUsers.put(email, joinDto); // 이메일로 JoinDTO 매핑
 
-    // User 엔티티 생성
+    emailService.sendVerificationCodeEmail(email, verificationCode);
+  }
+
+  @Transactional
+  public void verifyCode(String code) {
+    String email = verificationCodes.get(code);
+    if (email == null) {
+      throw new CustomException(ErrorCode.INVALID_VERIFICATION_CODE);
+    }
+
+    JoinDTO joinDto = pendingUsers.get(email);
+    if (joinDto == null) {
+      throw new CustomException(ErrorCode.USER_NOT_FOUND);
+    }
+
+    verificationCodes.remove(code); // 인증 성공 시 코드 삭제
+    pendingUsers.remove(email); // 인증 성공 시 대기열에서 제거
+
+    // User 엔티티 생성 및 저장
     User user = User.builder()
         .email(email)
-        .password(bCryptPasswordEncoder.encode(password))
-        .nickname(nickname)
-        .phone(phone)
-        .enabled(false) // 초기 상태는 비활성화
-        .verificationToken(token)
+        .password(bCryptPasswordEncoder.encode(joinDto.getPassword()))
+        .nickname(joinDto.getNickname())
+        .phone(joinDto.getPhone())
+        .enabled(true)
         .build();
 
-    // 유저 저장
     userRepository.save(user);
+  }
 
-    // 인증 이메일 발송
-    emailService.sendVerificationEmail(email, token);
+  private String generateVerificationCode() {
+    return String.valueOf((int) (Math.random() * 900000) + 100000); // 6자리 숫자 생성
   }
 
   private void validateInput(String password) {

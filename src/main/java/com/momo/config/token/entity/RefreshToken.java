@@ -60,4 +60,9 @@ public class RefreshToken {
       this.expiration = LocalDateTime.now().plusDays(7); // 기본 만료 시간 설정 (7일)
     }
   }
+
+  public void updateToken(String newToken, LocalDateTime newExpiration) {
+    this.token = newToken;
+    this.expiration = newExpiration;
+  }
 }
