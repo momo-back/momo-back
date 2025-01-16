@@ -162,7 +162,8 @@ public class JWTFilter extends OncePerRequestFilter {
 
   private boolean isProfileCheckSkipPath(String path) {
     return isExcludedPath(path) ||
-        path.equals("/api/v1/profiles");
+        path.equals("/api/v1/profiles") ||
+        path.equals("/api/v1/users/logout");
   }
 
   private void sendErrorResponse(HttpServletResponse response, int status, String message)
