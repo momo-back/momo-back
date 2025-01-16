@@ -16,16 +16,14 @@ public class ProfileCreateResponse {
   private String profileImageUrl;
   private String introduction;
   private Mbti mbti;
-  private String accessToken;
 
-  public static ProfileCreateResponse from(Profile profile, String accessToken) {
+  public static ProfileCreateResponse from(Profile profile) {
     return ProfileCreateResponse.builder()
         .gender(profile.getGender())
         .birth(profile.getBirth())
         .profileImageUrl(profile.getProfileImageUrl())
         .introduction(profile.getIntroduction())
         .mbti(profile.getMbti())
-        .accessToken(accessToken)
         .build();
   }
 }
