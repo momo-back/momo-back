@@ -20,4 +20,17 @@ public class ChatController {
     chatService.sendMessage(dto.getUserId(), dto);
   }
 
+  // 채팅방에 입장하면 방에 메시지를 발송
+  @MessageMapping("/enterRoomMessage")
+  public void enterRoomMessage(ChatRequestDto dto) {
+    chatService.enterRoomMessage(dto.getUserId(), dto);
+  }
+
+  // 채팅방에 퇴장하면 방에 메시지를 발송
+  @MessageMapping("/leaveRoomMessage")
+  public void leaveRoomMessage(ChatRequestDto dto) {
+    chatService.leaveRoomMessage(dto.getUserId(), dto);
+  }
+
+
 }

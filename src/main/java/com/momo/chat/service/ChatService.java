@@ -49,4 +49,21 @@ public class ChatService {
     messagingTemplate.convertAndSend("/sub/chat/room/" + dto.getRoomId(), sendMessage);
   }
 
+  @Transactional
+  public void enterRoomMessage(Long userId, ChatRequestDto dto) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    messagingTemplate.convertAndSend("/sub/chat/room/" + dto.getRoomId(),
+        user.getNickname() + "님이 입장했습니다.");
+  }
+
+  @Transactional
+  public void leaveRoomMessage(Long userId, ChatRequestDto dto) {
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    messagingTemplate.convertAndSend("/sub/chat/room/" + dto.getRoomId(),
+        user.getNickname() + "님이 퇴장했습니다.");
+  }
+
+
 }
