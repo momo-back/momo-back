@@ -60,16 +60,8 @@ public class JWTFilter extends OncePerRequestFilter {
       log.debug("카카오 프로필에서 추출된 이메일: {}", email);
 
       // DB에서 사용자 조회
-      User user = findUserByEmail(email);
-
-      // 프로필 생성 요청이 아닌 경우에만 프로필 검증 수행
-      if (!isProfileCheckSkipPath(requestURI) && !user.isProfileCompleted()) {
-        sendErrorResponse(
-            response,
-            HttpServletResponse.SC_FORBIDDEN,
-            "프로필 생성이 필요합니다.");
-        return;
-      }
+      User user = userRepository.findByEmail(email)
+          .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
       // 사용자 인증 정보 설정
       CustomUserDetails userDetails = new CustomUserDetails(user);
@@ -97,18 +89,8 @@ public class JWTFilter extends OncePerRequestFilter {
       String email = jwtUtil.getEmail(token);
       log.debug("Extracted email from JWT: {}", email);
 
-      User user = findUserByEmail(email);
-
-      // 프로필 완성 여부 확인
-      log.info("token : {}", token);
-      if (!isProfileCheckSkipPath(requestURI) && !jwtUtil.isProfileCompleted(token)) {
-        sendErrorResponse(
-            response,
-            HttpServletResponse.SC_FORBIDDEN,
-            "프로필 생성이 필요합니다."
-        );
-        return;
-      }
+      User user = userRepository.findByEmail(email)
+          .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
       // 사용자 인증 정보 설정
       CustomUserDetails userDetails = new CustomUserDetails(user);
@@ -134,10 +116,6 @@ public class JWTFilter extends OncePerRequestFilter {
     filterChain.doFilter(request, response);
   }
 
-  private User findUserByEmail(String email) {
-    return userRepository.findByEmailWithProfile(email)
-        .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-  }
 
   private boolean isValidJwtFormat(String token) {
     // JWT 형식 확인: "header.payload.signature"
@@ -155,25 +133,8 @@ public class JWTFilter extends OncePerRequestFilter {
   }
 
   private boolean isExcludedPath(String path) {
-    return path.equals("/api/v1/users/login") ||
-        path.equals("/api/v1/users/signup") ||
-        path.equals("/token/reissue");
-  }
-
-  private boolean isProfileCheckSkipPath(String path) {
-    return isExcludedPath(path) ||
-        path.equals("/api/v1/profiles");
-  }
-
-  private void sendErrorResponse(HttpServletResponse response, int status, String message)
-      throws IOException {
-    response.setStatus(status);
-    response.setContentType("application/json;charset=UTF-8");
-    response.getWriter().write(String.format(
-        "{\"message\": \"%s\", \"code\": \"%s\"}",
-        message,
-        status == HttpServletResponse.SC_FORBIDDEN ? "PROFILE_REQUIRED" : "UNAUTHORIZED"
-    ));
+    return path.equals("/api/v1/users/login") || path.equals("/api/v1/users/signup")
+        || path.equals("/token/reissue");
   }
 
   private boolean isKakaoToken(String token) {

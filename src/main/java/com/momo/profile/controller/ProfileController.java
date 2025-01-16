@@ -1,10 +1,8 @@
 package com.momo.profile.controller;
 
 import com.momo.profile.dto.ProfileCreateRequest;
-import com.momo.profile.dto.ProfileCreateResponse;
 import com.momo.profile.service.ProfileService;
 import com.momo.user.dto.CustomUserDetails;
-import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -22,14 +20,12 @@ public class ProfileController {
   private final ProfileService profileService;
 
   @PostMapping
-  public ResponseEntity<ProfileCreateResponse> createProfile(
-      HttpServletResponse response,
+  public ResponseEntity<?> createProfile(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @RequestPart ProfileCreateRequest request,
       @RequestPart(required = false) MultipartFile profileImage
   ) {
-    return ResponseEntity.ok(
-        profileService.createProfile(response, customUserDetails.getUser(), request, profileImage)
-    );
+    return ResponseEntity.ok(profileService
+        .createProfile(customUserDetails.getUser(), request, profileImage));
   }
 }

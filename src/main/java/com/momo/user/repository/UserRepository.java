@@ -3,7 +3,6 @@ package com.momo.user.repository;
 import com.momo.user.entity.User;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
@@ -17,7 +16,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   Optional<User> findById(Long userId);
 
-  @Query("SELECT u FROM User u LEFT JOIN FETCH u.profile WHERE u.email = :email")
-  Optional<User> findByEmailWithProfile(String email);
 }
 
