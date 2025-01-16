@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.momo.config.JWTUtil;
 import com.momo.config.token.repository.RefreshTokenRepository;
 import io.jsonwebtoken.ExpiredJwtException;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
@@ -18,7 +17,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-@Slf4j
 public class CustomLogoutFilter extends GenericFilterBean {
   private final RefreshTokenRepository refreshTokenRepository;
   private final JWTUtil jwtUtil;
@@ -53,38 +51,37 @@ public class CustomLogoutFilter extends GenericFilterBean {
     String refresh = extractRefreshToken(request);
 
     if (refresh == null) {
-      log.warn("Refresh token is missing. Proceeding with logout for access token only.");
-    } else {
-      try {
-        if (jwtUtil.isExpired(refresh)) {
-          sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "Refresh token is expired");
-          return;
-        }
-
-        if (!"refresh".equals(jwtUtil.getTokenType(refresh))) {
-          sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token type");
-          return;
-        }
-
-        if (!refreshTokenRepository.existsByToken(refresh)) {
-          sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "Refresh token does not exist");
-          return;
-        }
-
-        String email = jwtUtil.getEmail(refresh);
-        refreshTokenRepository.deleteByEmail(email);
-
-      } catch (ExpiredJwtException e) {
-        sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "Refresh token is expired");
-        return;
-      } catch (Exception e) {
-        sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unexpected error occurred");
-        return;
-      }
+      sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "Refresh token is missing");
+      return;
     }
 
-    clearRefreshTokenCookie(response);
-    sendSuccessResponse(response, "로그아웃되었습니다.");
+    try {
+      if (jwtUtil.isExpired(refresh)) {
+        sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "Refresh token is expired");
+        return;
+      }
+
+      if (!"refresh".equals(jwtUtil.getTokenType(refresh))) {
+        sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "Invalid token type");
+        return;
+      }
+
+      if (!refreshTokenRepository.existsByToken(refresh)) {
+        sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "Refresh token does not exist");
+        return;
+      }
+
+      String email = jwtUtil.getEmail(refresh);
+      refreshTokenRepository.deleteByEmail(email);
+
+      clearRefreshTokenCookie(response);
+      sendSuccessResponse(response, "로그아웃되었습니다.");
+
+    } catch (ExpiredJwtException e) {
+      sendErrorResponse(response, HttpServletResponse.SC_BAD_REQUEST, "Refresh token is expired");
+    } catch (Exception e) {
+      sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Unexpected error occurred");
+    }
   }
 
   private String extractRefreshToken(HttpServletRequest request) {
@@ -106,7 +103,6 @@ public class CustomLogoutFilter extends GenericFilterBean {
     cookie.setPath("/");
     response.addCookie(cookie);
   }
-
 
   private void sendErrorResponse(HttpServletResponse response, int statusCode, String message) throws IOException {
     response.setStatus(statusCode);
