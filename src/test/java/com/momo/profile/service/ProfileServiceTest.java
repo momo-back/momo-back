@@ -8,9 +8,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.momo.config.JWTUtil;
-import com.momo.config.token.entity.RefreshToken;
-import com.momo.config.token.repository.RefreshTokenRepository;
 import com.momo.profile.constant.Gender;
 import com.momo.profile.constant.Mbti;
 import com.momo.profile.dto.ProfileCreateRequest;
@@ -21,9 +18,6 @@ import com.momo.profile.repository.ProfileRepository;
 import com.momo.profile.validation.ProfileValidator;
 import com.momo.user.entity.User;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Optional;
-import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,12 +31,6 @@ class ProfileServiceTest {
 
   @Mock
   private ProfileRepository profileRepository;
-
-  @Mock
-  private RefreshTokenRepository refreshTokenRepository;
-
-  @Mock
-  private JWTUtil jwtUtil;
 
   @Mock
   private ProfileImageService profileImageService;
@@ -59,24 +47,16 @@ class ProfileServiceTest {
     // given
     ProfileCreateRequest request = createProfileRequest();
     MultipartFile mockImage = mock(MultipartFile.class);
-
     User user = createUser();
     String imageUrl = "test-image-url.jpg";
     Profile profile = request.toEntity(user, imageUrl);
 
-    HttpServletResponse httpServletResponse = mock(HttpServletResponse.class);
-    RefreshToken refreshToken =
-        RefreshToken.create(user, "test-refresh-token", LocalDateTime.now().plusDays(7));
-
     doNothing().when(profileValidator).validateHasProfile(1L);
     when(profileImageService.getProfileImageUrl(mockImage)).thenReturn(imageUrl);
-
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
-    when(refreshTokenRepository.findByUser_Id(user.getId())).thenReturn(Optional.of(refreshToken));
 
     // when
-    ProfileCreateResponse response =
-        profileService.createProfile(httpServletResponse, user, request, mockImage);
+    ProfileCreateResponse response = profileService.createProfile(user, request, mockImage);
 
     // then
     verify(profileImageService).getProfileImageUrl(mockImage);
@@ -94,23 +74,15 @@ class ProfileServiceTest {
     // given
     ProfileCreateRequest request = createProfileRequest();
     String imageUrl = "default-image-url.jpg";
-
     User user = createUser();
     Profile profile = request.toEntity(user, imageUrl);
 
-    HttpServletResponse httpServletResponse = mock(HttpServletResponse.class);
-    RefreshToken refreshToken =
-        RefreshToken.create(user, "test-refresh-token", LocalDateTime.now().plusDays(7));
-
     doNothing().when(profileValidator).validateHasProfile(1L);
     when(profileImageService.getProfileImageUrl(null)).thenReturn(imageUrl);
-
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
-    when(refreshTokenRepository.findByUser_Id(user.getId())).thenReturn(Optional.of(refreshToken));
 
     // when
-    ProfileCreateResponse response =
-        profileService.createProfile(httpServletResponse, user, request, null);
+    ProfileCreateResponse response = profileService.createProfile(user, request, null);
 
     verify(profileRepository).save(any(Profile.class));
     verify(profileImageService).getProfileImageUrl(null);
@@ -142,14 +114,12 @@ class ProfileServiceTest {
         .introduction("자기소개")
         .mbti(Mbti.ENTJ)
         .build();
-    HttpServletResponse httpServletResponse = mock(HttpServletResponse.class);
 
     // when
     doNothing().when(profileValidator).validateHasProfile(1L);
 
     // then
-    assertThatThrownBy(() ->
-        profileService.createProfile(httpServletResponse, user, request, null))
+    assertThatThrownBy(() -> profileService.createProfile(user, request, null))
         .isInstanceOf(ProfileException.class);
   }
 
@@ -164,12 +134,10 @@ class ProfileServiceTest {
         .introduction("자기소개")
         .mbti(Mbti.ENTJ)
         .build();
-    HttpServletResponse httpServletResponse = mock(HttpServletResponse.class);
 
     // when
     // then
-    assertThatThrownBy(() ->
-        profileService.createProfile(httpServletResponse, user, request, null))
+    assertThatThrownBy(() -> profileService.createProfile(user, request, null))
         .isInstanceOf(ProfileException.class);
   }
 
@@ -184,18 +152,16 @@ class ProfileServiceTest {
         .introduction("자기소개")
         .mbti(Mbti.ENTJ)
         .build();
-    HttpServletResponse httpServletResponse = mock(HttpServletResponse.class);
 
     // when
     doNothing().when(profileValidator).validateHasProfile(1L);
 
     // then
-    assertThatThrownBy(() ->
-        profileService.createProfile(httpServletResponse, user, request, null))
+    assertThatThrownBy(() -> profileService.createProfile(user, request, null))
         .isInstanceOf(ProfileException.class);
   }
 
-  User createUser() {
+  User createUser(){
     return User.builder()
         .id(1L)
         .email("test@gmail.com")
