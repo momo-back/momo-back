@@ -1,10 +1,7 @@
 package com.momo.profile.service;
 
-import com.momo.common.exception.CustomException;
-import com.momo.common.exception.ErrorCode;
 import com.momo.config.JWTUtil;
 import com.momo.config.token.entity.RefreshToken;
-import com.momo.config.token.repository.RefreshTokenRepository;
 import com.momo.profile.constant.Gender;
 import com.momo.profile.dto.ProfileCreateRequest;
 import com.momo.profile.dto.ProfileCreateResponse;
@@ -31,7 +28,6 @@ public class ProfileService {
 
   private final ProfileValidator profileValidator;
   private final ProfileRepository profileRepository;
-  private final RefreshTokenRepository refreshTokenRepository;
   private final ProfileImageService profileImageService;
   private final JWTUtil jwtUtil;
 
@@ -79,9 +75,8 @@ public class ProfileService {
       HttpServletResponse response, User user, String newRefreshToken, Long expiredMs
   ) {
     LocalDateTime expirationDate = LocalDateTime.now().plusNanos(expiredMs * 1_000_000);
-    RefreshToken refreshToken = refreshTokenRepository.findByUser_Id(user.getId())
-        .orElseThrow(() -> new CustomException(ErrorCode.INVALID_VERIFICATION_TOKEN));
-    refreshToken.updateToken(newRefreshToken, expirationDate);
+    RefreshToken refreshTokenEntity = RefreshToken.create(user, newRefreshToken, expirationDate);
+    user.setRefreshToken(refreshTokenEntity);
 
     response.addCookie(createCookie(newRefreshToken));
     response.setContentType("application/json");
