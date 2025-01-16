@@ -24,7 +24,7 @@ public class JoinController {
   @PostMapping("/api/v1/users/signup")
   public ResponseEntity<String> join(@RequestBody JoinDTO joinDto) throws MessagingException {
     joinService.joinProcess(joinDto);
-    return ResponseEntity.ok("회원가입이 완료되었습니다. 이메일 인증을 마쳐주세요.");
+    return ResponseEntity.ok("입력하신 이메일로 인증 요청이 전송되었습니다. 메일을 확인해주세요.");
   }
 
 }
