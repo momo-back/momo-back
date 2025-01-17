@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ChatRoomService {
 
+  private final SimpMessageSendingOperations messagingTemplate;
   private final ChatRepository chatRepository;
   private final ChatRoomRepository chatRoomRepository;
   private final ChatReadStatusRepository chatReadStatusRepository;
@@ -89,6 +91,10 @@ public class ChatRoomService {
     chatRoomRepository.save(chatRoom);
     chatReadStatusRepository.save(chatReadStatus);
 
+    // 입장하면 채팅방에 메시지를 발송
+    messagingTemplate.convertAndSend("/sub/chat/room/" + chatRoomId,
+        user.getNickname() + "님이 입장했습니다.");
+
     return ChatRoomDto.of(chatRoom);
   }
 
@@ -102,6 +108,10 @@ public class ChatRoomService {
     readers.remove(user);
     chatRoomRepository.save(chatRoom);
     chatReadStatusRepository.deleteByUserIdAndChatRoomId(userId, chatRoomId);
+
+    // 퇴장하면 채팅방에 메시지를 발송
+    messagingTemplate.convertAndSend("/sub/chat/room/" + chatRoomId,
+        user.getNickname() + "님이 퇴장했습니다.");
 
     return ChatRoomDto.of(chatRoom);
   }
@@ -267,6 +277,10 @@ public class ChatRoomService {
     chatRoom.getReader().remove(targetUser);
     chatRoomRepository.save(chatRoom);
     chatReadStatusRepository.deleteByUserIdAndChatRoomId(targetUserId, chatRoomId);
+
+    // 강퇴하면 채팅방에 메시지를 발송
+    messagingTemplate.convertAndSend("/sub/chat/room/" + chatRoomId,
+        targetUser.getNickname() + "님이 강제퇴장되었습니다.");
 
     return ChatRoomDto.of(chatRoom);
   }
