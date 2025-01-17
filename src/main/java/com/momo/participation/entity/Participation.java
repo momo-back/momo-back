@@ -73,8 +73,4 @@ public class Participation extends BaseEntity {
   public boolean isAcceptableStatus() {
     return this.participationStatus == ParticipationStatus.PENDING;
   }
-
-  public Long getUserId() {
-    return this.getUser().getId();
-  }
 }

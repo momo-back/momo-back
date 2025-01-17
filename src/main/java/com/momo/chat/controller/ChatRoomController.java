@@ -30,7 +30,7 @@ public class ChatRoomController {
       @PathVariable Long meetingId
   ) {
     ChatRoomDto roomData = chatRoomService.createChatRoom(
-        customUserDetails.getUser().getId(), meetingId);
+        customUserDetails.getUser(), meetingId);
     return ResponseEntity.ok().body(roomData);
   }
 
@@ -41,7 +41,7 @@ public class ChatRoomController {
       @PathVariable Long roomId
   ) {
     ChatRoomDto roomData = chatRoomService.joinRoom(
-        customUserDetails.getUser().getId(), roomId);
+        customUserDetails.getUser(), roomId);
     return ResponseEntity.ok().body(roomData);
   }
 
@@ -52,7 +52,7 @@ public class ChatRoomController {
       @PathVariable Long roomId
   ) {
     ChatRoomDto roomData = chatRoomService.leaveRoom(
-        customUserDetails.getUser().getId(), roomId);
+        customUserDetails.getUser(), roomId);
     return ResponseEntity.ok().body(roomData);
   }
 
@@ -62,7 +62,7 @@ public class ChatRoomController {
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long roomId) {
     List<ChatHistoryDto> history = chatRoomService.getChatHistory(
-        customUserDetails.getUser().getId(), roomId);
+        customUserDetails.getUser(), roomId);
     return ResponseEntity.ok(history);
   }
 
@@ -73,7 +73,7 @@ public class ChatRoomController {
       @PathVariable Long roomId
   ) {
     List<ChatRoomDto> roomData = chatRoomService.outRoom(
-        customUserDetails.getUser().getId(), roomId);
+        customUserDetails.getUser(), roomId);
     return ResponseEntity.ok().body(roomData);
   }
 
@@ -84,7 +84,7 @@ public class ChatRoomController {
       @PathVariable Long roomId
   ) {
     ChatRoomDto roomData = chatRoomService.getRoom(
-        customUserDetails.getUser().getId(), roomId);
+        customUserDetails.getUser(), roomId);
     return ResponseEntity.ok().body(roomData);
   }
 
@@ -94,7 +94,7 @@ public class ChatRoomController {
       @AuthenticationPrincipal CustomUserDetails customUserDetails
   ) {
     List<ChatRoomDto> roomData = chatRoomService.getRooms(
-        customUserDetails.getUser().getId());
+        customUserDetails.getUser());
     return ResponseEntity.ok().body(roomData);
   }
 
@@ -105,7 +105,7 @@ public class ChatRoomController {
       @PathVariable Long roomId
   ) {
     List<ChatReaderDto> participants = chatRoomService.getRoomReaders(
-        customUserDetails.getUser().getId(), roomId);
+        customUserDetails.getUser(), roomId);
     return ResponseEntity.ok().body(participants);
   }
 
@@ -115,7 +115,7 @@ public class ChatRoomController {
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long roomId
   ) {
-    chatRoomService.deleteRoom(customUserDetails.getUser().getId(), roomId);
+    chatRoomService.deleteRoom(customUserDetails.getUser(), roomId);
     return ResponseEntity.noContent().build();
   }
 
@@ -127,7 +127,7 @@ public class ChatRoomController {
       @PathVariable Long userId
   ) {
     ChatRoomDto roomData = chatRoomService.withdrawal(
-        customUserDetails.getUser().getId(), roomId, userId);
+        customUserDetails.getUser(), roomId, userId);
     return ResponseEntity.ok().body(roomData);
   }
 
