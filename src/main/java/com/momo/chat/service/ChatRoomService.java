@@ -73,7 +73,9 @@ public class ChatRoomService {
   public ChatRoomDto joinRoom(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
 
-    if(chatRoom.getReader().contains(user)) {
+    // userId 비교 (user 비교시 버그발생)
+    if (chatRoom.getReader().stream()
+        .anyMatch(reader -> reader.getId().equals(user.getId()))) {
       throw new ChatException(ChatErrorCode.ALREADY_A_PARTICIPANT);
     }
 
@@ -101,8 +103,15 @@ public class ChatRoomService {
   public ChatRoomDto leaveRoom(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
 
+    checkParticipant(chatRoom, user);
+
+    // 호스트는 나가기 불가
+    if (chatRoom.getHost().getId().equals(user.getId())) {
+      throw new ChatException(ChatErrorCode.HOST_CANNOT_OPERATE);
+    }
+
     List<User> readers = chatRoom.getReader();
-    readers.remove(user);
+    readers.removeIf(reader -> reader.getId().equals(user.getId()));
     chatRoomRepository.save(chatRoom);
     chatReadStatusRepository.deleteByUserIdAndChatRoomId(user.getId(), chatRoomId);
 
@@ -297,7 +306,7 @@ public class ChatRoomService {
 
   private void checkParticipant(ChatRoom chatRoom, User user) {
     boolean isParticipant = chatRoom.getReader().stream()
-        .anyMatch(reader -> reader.getId().equals(user.getId())); // userId만 비교 (user비교시 버그발생)
+        .anyMatch(reader -> reader.getId().equals(user.getId())); // userId만 비교 (user 비교시 버그발생)
     if (!isParticipant) {
       throw new ChatException(ChatErrorCode.NOT_A_PARTICIPANT);
     }
