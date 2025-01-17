@@ -131,6 +131,10 @@ public class ChatRoomService {
     chatReadStatus.setLastReadAt(LocalDateTime.now());
     chatReadStatusRepository.save(chatReadStatus);
 
+    List<ChatRoomDto> rooms = getRooms(userId);
+    // 해당 방의 unreadMessagesCount를 0으로 설정
+    setUnreadMessagesCountToZero(chatRoomId, rooms);
+
     // 채팅방 ID로 모든 채팅 조회
     List<Chat> chats = chatRepository.findAllByChatRoomId(chatRoomId);
 
@@ -158,15 +162,9 @@ public class ChatRoomService {
     chatReadStatus.setLastReadAt(LocalDateTime.now());
     chatReadStatusRepository.save(chatReadStatus);
 
-    // 채팅방 목록을 조회
     List<ChatRoomDto> rooms = getRooms(userId);
-
-    // 특정 채팅방에 대해서만 unreadMessagesCount를 0으로 설정
-    rooms.forEach(room -> {
-      if (room.getRoomId().equals(chatRoomId)) {
-        room.setUnreadMessagesCount(0); // 해당 방의 unreadMessagesCount를 0으로 설정
-      }
-    });
+    // 해당 방의 unreadMessagesCount를 0으로 설정
+    setUnreadMessagesCountToZero(chatRoomId, rooms);
 
     return rooms;
   }
@@ -308,6 +306,14 @@ public class ChatRoomService {
   private ChatReadStatus validateChatReadStatus(Long userId, Long chatRoomId) {
     return chatReadStatusRepository.findByUserIdAndChatRoomId(userId, chatRoomId)
         .orElseThrow(() -> new ChatException(ChatErrorCode.READ_STATUS_NOT_FOUND));
+  }
+
+  private void setUnreadMessagesCountToZero(Long chatRoomId, List<ChatRoomDto> rooms) {
+    rooms.forEach(room -> {
+      if (room.getRoomId().equals(chatRoomId)) {
+        room.setUnreadMessagesCount(0);
+      }
+    });
   }
 
 }
