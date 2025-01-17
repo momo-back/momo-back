@@ -75,7 +75,7 @@ public class Meeting extends BaseEntity {
   @Column(nullable = false, length = 600)
   private String content;
 
-  private String thumbnailUrl;
+  private String thumbnail;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
@@ -90,7 +90,7 @@ public class Meeting extends BaseEntity {
     this.meetingDateTime = request.getMeetingDateTime();
     this.maxCount = request.getMaxCount();
     this.content = request.getContent();
-    this.thumbnailUrl = request.getThumbnailUrl();
+    this.thumbnail = request.getThumbnail();
     this.category = request.getCategory();
   }
 

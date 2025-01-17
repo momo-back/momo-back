@@ -63,7 +63,7 @@ public class ChatRoomDto {
     return new ChatRoomDto(
         chatRoom.getId(),
         chatRoom.getMeeting().getId(),
-        chatRoom.getMeeting().getThumbnailUrl(),
+        chatRoom.getMeeting().getThumbnail(),
         chatRoom.getMeeting().getTitle(),
         lastMessage,
         chatRoom.getHost().getId(),
