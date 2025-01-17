@@ -122,9 +122,7 @@ public class ChatRoomService {
     Profile profile = validateProfileExists(user.getId());
     ChatReadStatus chatReadStatus = validateChatReadStatus(user.getId(), chatRoomId);
 
-    if (!chatRoom.getReader().contains(user)) {
-      throw new ChatException(ChatErrorCode.NOT_A_PARTICIPANT);
-    }
+    checkParticipant(chatRoom, user);
 
     chatReadStatus.setLastReadAt(LocalDateTime.now());
     chatReadStatusRepository.save(chatReadStatus);
@@ -152,9 +150,7 @@ public class ChatRoomService {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
     ChatReadStatus chatReadStatus = validateChatReadStatus(user.getId(), chatRoomId);
 
-    if (!chatRoom.getReader().contains(user)) {
-      throw new ChatException(ChatErrorCode.NOT_A_PARTICIPANT);
-    }
+    checkParticipant(chatRoom, user);
 
     chatReadStatus.setLastReadAt(LocalDateTime.now());
     chatReadStatusRepository.save(chatReadStatus);
@@ -171,9 +167,7 @@ public class ChatRoomService {
   public ChatRoomDto getRoom(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
 
-    if (!chatRoom.getReader().contains(user)) {
-      throw new ChatException(ChatErrorCode.NOT_A_PARTICIPANT);
-    }
+    checkParticipant(chatRoom, user);
 
     return ChatRoomDto.of(chatRoom);
   }
@@ -224,9 +218,7 @@ public class ChatRoomService {
   public List<ChatReaderDto> getRoomReaders(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
 
-    if (!chatRoom.getReader().contains(user)) {
-      throw new ChatException(ChatErrorCode.NOT_A_PARTICIPANT);
-    }
+    checkParticipant(chatRoom, user);
 
     return chatRoom.getReader().stream()
         .map(reader -> {
@@ -301,6 +293,14 @@ public class ChatRoomService {
   private ChatReadStatus validateChatReadStatus(Long userId, Long chatRoomId) {
     return chatReadStatusRepository.findByUserIdAndChatRoomId(userId, chatRoomId)
         .orElseThrow(() -> new ChatException(ChatErrorCode.READ_STATUS_NOT_FOUND));
+  }
+
+  private void checkParticipant(ChatRoom chatRoom, User user) {
+    boolean isParticipant = chatRoom.getReader().stream()
+        .anyMatch(reader -> reader.getId().equals(user.getId())); // userId만 비교 (user비교시 버그발생)
+    if (!isParticipant) {
+      throw new ChatException(ChatErrorCode.NOT_A_PARTICIPANT);
+    }
   }
 
   private void setUnreadMessagesCountToZero(Long chatRoomId, List<ChatRoomDto> rooms) {
