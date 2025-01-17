@@ -1,6 +1,5 @@
 package com.momo.chat.entity;
 
-import com.momo.common.entity.BaseEntity;
 import com.momo.user.entity.User;
 import java.time.LocalDateTime;
 import javax.persistence.Column;
