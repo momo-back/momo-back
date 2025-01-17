@@ -164,7 +164,7 @@ public class ParticipationService {
     ChatRoom chatRoom = chatRoomRepository.findByMeeting_Id(meeting.getId())
         .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
 
-    chatRoomService.joinRoom(participation.getUserId(), chatRoom.getId());
+    chatRoomService.joinRoom(participation.getUser(), chatRoom.getId());
   }
 
   private Participation validateForDeleteParticipation(Long userId, Long participationId) {

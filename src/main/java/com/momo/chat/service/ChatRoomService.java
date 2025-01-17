@@ -44,8 +44,7 @@ public class ChatRoomService {
 
   // 채팅방 생성 (모임생성)
   @Transactional
-  public ChatRoomDto createChatRoom(Long userId, Long meetingId) {
-    User user = validateUserExists(userId);
+  public ChatRoomDto createChatRoom(User user, Long meetingId) {
     Meeting meeting = validateMeetingExists(meetingId);
 
     List<User> readers = new ArrayList<>();
@@ -71,8 +70,7 @@ public class ChatRoomService {
 
   // 채팅방 입장 (모임입장)
   @Transactional
-  public ChatRoomDto joinRoom(Long userId, Long chatRoomId) {
-    User user = validateUserExists(userId);
+  public ChatRoomDto joinRoom(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
 
     if(chatRoom.getReader().contains(user)) {
@@ -100,14 +98,13 @@ public class ChatRoomService {
 
   // 채팅방 퇴장 (모임퇴장)
   @Transactional
-  public ChatRoomDto leaveRoom(Long userId, Long chatRoomId) {
-    User user = validateUserExists(userId);
+  public ChatRoomDto leaveRoom(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
 
     List<User> readers = chatRoom.getReader();
     readers.remove(user);
     chatRoomRepository.save(chatRoom);
-    chatReadStatusRepository.deleteByUserIdAndChatRoomId(userId, chatRoomId);
+    chatReadStatusRepository.deleteByUserIdAndChatRoomId(user.getId(), chatRoomId);
 
     // 퇴장하면 채팅방에 메시지를 발송
     messagingTemplate.convertAndSend("/sub/chat/room/" + chatRoomId,
@@ -118,11 +115,10 @@ public class ChatRoomService {
 
   // 채팅방 들어가기 (채팅 기록 조회)
   @Transactional
-  public List<ChatHistoryDto> getChatHistory(Long userId, Long chatRoomId) {
-    User user = validateUserExists(userId);
+  public List<ChatHistoryDto> getChatHistory(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
-    Profile profile = validateProfileExists(userId);
-    ChatReadStatus chatReadStatus = validateChatReadStatus(userId, chatRoomId);
+    Profile profile = validateProfileExists(user.getId());
+    ChatReadStatus chatReadStatus = validateChatReadStatus(user.getId(), chatRoomId);
 
     if (!chatRoom.getReader().contains(user)) {
       throw new ChatException(ChatErrorCode.NOT_A_PARTICIPANT);
@@ -131,7 +127,7 @@ public class ChatRoomService {
     chatReadStatus.setLastReadAt(LocalDateTime.now());
     chatReadStatusRepository.save(chatReadStatus);
 
-    List<ChatRoomDto> rooms = getRooms(userId);
+    List<ChatRoomDto> rooms = getRooms(user);
     // 해당 방의 unreadMessagesCount를 0으로 설정
     setUnreadMessagesCountToZero(chatRoomId, rooms);
 
@@ -150,10 +146,9 @@ public class ChatRoomService {
 
   // 채팅방 나가기 (뒤로가기)
   @Transactional
-  public List<ChatRoomDto> outRoom(Long userId, Long chatRoomId) {
-    User user = validateUserExists(userId);
+  public List<ChatRoomDto> outRoom(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
-    ChatReadStatus chatReadStatus = validateChatReadStatus(userId, chatRoomId);
+    ChatReadStatus chatReadStatus = validateChatReadStatus(user.getId(), chatRoomId);
 
     if (!chatRoom.getReader().contains(user)) {
       throw new ChatException(ChatErrorCode.NOT_A_PARTICIPANT);
@@ -162,7 +157,7 @@ public class ChatRoomService {
     chatReadStatus.setLastReadAt(LocalDateTime.now());
     chatReadStatusRepository.save(chatReadStatus);
 
-    List<ChatRoomDto> rooms = getRooms(userId);
+    List<ChatRoomDto> rooms = getRooms(user);
     // 해당 방의 unreadMessagesCount를 0으로 설정
     setUnreadMessagesCountToZero(chatRoomId, rooms);
 
@@ -171,8 +166,7 @@ public class ChatRoomService {
 
   // 참여중인 채팅방 정보 조회
   @Transactional
-  public ChatRoomDto getRoom(Long userId, Long chatRoomId) {
-    User user = validateUserExists(userId);
+  public ChatRoomDto getRoom(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
 
     if (!chatRoom.getReader().contains(user)) {
@@ -184,15 +178,13 @@ public class ChatRoomService {
 
   // 로그인한 유저의 모든 채팅방 목록 조회
   @Transactional
-  public List<ChatRoomDto> getRooms(Long userId) {
-    User user = validateUserExists(userId);
-
+  public List<ChatRoomDto> getRooms(User user) {
     List<ChatRoom> chatRooms = chatRoomRepository.findAllByReaderContains(user);
 
     return chatRooms.stream()
         .map(chatRoom -> {
           // 데이터베이스에서 마지막으로 읽은 시간을 가져오거나, 사용가능한 데이터가 없으면 최소 시간을 사용
-          LocalDateTime lastReadAt = chatReadStatusRepository.findByUserIdAndChatRoomId(chatRoom.getId(), userId)
+          LocalDateTime lastReadAt = chatReadStatusRepository.findByUserIdAndChatRoomId(chatRoom.getId(), user.getId())
               .map(ChatReadStatus::getLastReadAt)
               .orElse(LocalDateTime.MIN);
 
@@ -227,8 +219,7 @@ public class ChatRoomService {
 
   // 참여중인 채팅방 참여자 목록 조회
   @Transactional
-  public List<ChatReaderDto> getRoomReaders(Long userId, Long chatRoomId) {
-    User user = validateUserExists(userId);
+  public List<ChatReaderDto> getRoomReaders(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
 
     if (!chatRoom.getReader().contains(user)) {
@@ -245,8 +236,7 @@ public class ChatRoomService {
 
   // 채팅방 삭제 (호스트만 가능)
   @Transactional
-  public void deleteRoom(Long userId, Long chatRoomId) {
-    User user = validateUserExists(userId);
+  public void deleteRoom(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
 
     // 호스트만 채팅방 삭제 가능
@@ -261,8 +251,7 @@ public class ChatRoomService {
 
   // 특정 사용자 강퇴 (호스트만 가능)
   @Transactional
-  public ChatRoomDto withdrawal(Long hostUserId, Long chatRoomId, Long targetUserId) {
-    User hostUser = validateUserExists(hostUserId);
+  public ChatRoomDto withdrawal(User hostUser, Long chatRoomId, Long targetUserId) {
     User targetUser = validateUserExists(targetUserId);
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
 

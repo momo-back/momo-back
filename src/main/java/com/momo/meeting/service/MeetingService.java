@@ -43,7 +43,7 @@ public class MeetingService {
     Meeting meeting = request.toEntity(request, user);
 
     meetingRepository.save(meeting);
-    chatRoomService.createChatRoom(user.getId(), meeting.getId()); // 채팅방 생성
+    chatRoomService.createChatRoom(user, meeting.getId()); // 채팅방 생성
 
     return MeetingCreateResponse.from(meeting);
   }
