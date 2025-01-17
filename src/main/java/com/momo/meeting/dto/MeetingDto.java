@@ -30,7 +30,7 @@ public class MeetingDto {
   private Integer approvedCount;
   private Set<String> category;
   private String content;
-  private String thumbnailUrl;
+  private String thumbnail;
   private Double distance;
 
   public static List<MeetingDto> convertToMeetingDtos(
@@ -59,7 +59,7 @@ public class MeetingDto {
         .approvedCount(meetingProjection.getApprovedCount())
         .category(foodCategories)
         .content(meetingProjection.getContent())
-        .thumbnailUrl(meetingProjection.getThumbnailUrl())
+        .thumbnail(meetingProjection.getThumbnailUrl())
         .distance(meetingProjection.getDistance())
         .build();
   }

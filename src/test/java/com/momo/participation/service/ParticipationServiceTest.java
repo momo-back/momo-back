@@ -327,7 +327,7 @@ class ParticipationServiceTest {
         .latitude(32.123123).longitude(127.123123).address("테스트 주소")
         .meetingDateTime(LocalDateTime.now().plusDays(1)).maxCount(6).approvedCount(1)
         .category(Set.of(FoodCategory.KOREAN, FoodCategory.JAPANESE)).content("테스트 내용")
-        .thumbnailUrl("test-thumbnail-url.jpg").meetingStatus(meetingStatus).build();
+        .thumbnail("test-thumbnail-url.jpg").meetingStatus(meetingStatus).build();
   }
 
   private Participation createParticipation(User user, Meeting meeting, ParticipationStatus status) {
@@ -391,7 +391,7 @@ class ParticipationServiceTest {
     assertThat(appliedMeetings.get(i).getApprovedCount()).isEqualTo(i + 1);
     assertThat(appliedMeetings.get(i).getCategory()).isEqualTo(Set.of("한식", "디저트"));
     assertThat(appliedMeetings.get(i).getContent()).isEqualTo("Test Content " + i);
-    assertThat(appliedMeetings.get(i).getThumbnailUrl())
+    assertThat(appliedMeetings.get(i).getThumbnail())
         .isEqualTo("test_" + i + "_thumbnail_url.jpg");
   }
 }

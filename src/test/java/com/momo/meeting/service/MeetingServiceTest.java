@@ -11,7 +11,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.momo.chat.entity.ChatRoom;
 import com.momo.chat.service.ChatRoomService;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
@@ -86,14 +85,14 @@ class MeetingServiceTest {
             "address", "meetingDateTime",
             "maxCount", "approvedCount",
             "category", "content",
-            "thumbnailUrl", "meetingStatus"
+            "thumbnail", "meetingStatus"
         ).containsExactly(
             request.getTitle(), request.getLocationId(),
             request.getLatitude(), request.getLongitude(),
             request.getAddress(), request.getMeetingDateTime(),
             request.getMaxCount(), 1,
             request.getCategory(), request.getContent(),
-            request.getThumbnailUrl(), MeetingStatus.RECRUITING
+            request.getThumbnail(), MeetingStatus.RECRUITING
         );
 
     verify(meetingRepository).countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay);
@@ -263,7 +262,7 @@ class MeetingServiceTest {
     assertEquals(2 + i, meetingDto.getMaxCount());
     assertEquals(1 + i, meetingDto.getApprovedCount());
     assertEquals(Set.of("한식", "일식"), meetingDto.getCategory());
-    assertEquals("test-url" + i + ".jpg", meetingDto.getThumbnailUrl());
+    assertEquals("test-url" + i + ".jpg", meetingDto.getThumbnail());
   }
 
   private static void verifyCursor(MeetingsResponse response) {
@@ -296,7 +295,7 @@ class MeetingServiceTest {
             "longitude", "address",
             "meetingDateTime", "maxCount",
             "approvedCount", "category",
-            "content", "thumbnailUrl",
+            "content", "thumbnail",
             "meetingStatus"
         ).containsExactly(
             1L, updateRequest.getTitle(),
@@ -304,7 +303,7 @@ class MeetingServiceTest {
             updateRequest.getLongitude(), updateRequest.getAddress(),
             updateRequest.getMeetingDateTime(), updateRequest.getMaxCount(),
             1, updateRequest.getCategory(),
-            updateRequest.getContent(), updateRequest.getThumbnailUrl(),
+            updateRequest.getContent(), updateRequest.getThumbnail(),
             MeetingStatus.RECRUITING
         );
 
@@ -387,7 +386,7 @@ class MeetingServiceTest {
         .approvedCount(1)
         .category(request.getCategory())
         .content(request.getContent())
-        .thumbnailUrl(request.getThumbnailUrl())
+        .thumbnail(request.getThumbnail())
         .meetingStatus(MeetingStatus.RECRUITING)
         .build();
   }
@@ -403,7 +402,7 @@ class MeetingServiceTest {
         .maxCount(6)
         .category(Set.of(FoodCategory.KOREAN, FoodCategory.JAPANESE))
         .content("테스트 내용")
-        .thumbnailUrl("test-thumbnail-url.jpg")
+        .thumbnail("test-thumbnail-url.jpg")
         .build();
   }
 
@@ -418,7 +417,7 @@ class MeetingServiceTest {
         .maxCount(5)
         .category(Set.of(FoodCategory.DESSERT))
         .content("업데이트 내용")
-        .thumbnailUrl("")
+        .thumbnail("")
         .build();
   }
 
@@ -499,7 +498,7 @@ class MeetingServiceTest {
     assertThat(createdMeetingDto.get(i).getApprovedCount()).isEqualTo(i + 1);
     assertThat(createdMeetingDto.get(i).getCategory()).isEqualTo(Set.of("한식", "디저트"));
     assertThat(createdMeetingDto.get(i).getContent()).isEqualTo("Test Content " + i);
-    assertThat(createdMeetingDto.get(i).getThumbnailUrl())
+    assertThat(createdMeetingDto.get(i).getThumbnail())
         .isEqualTo("test_" + i + "_thumbnail_url.jpg");
   }
 

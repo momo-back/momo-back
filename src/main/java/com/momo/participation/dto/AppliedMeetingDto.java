@@ -29,7 +29,7 @@ public class AppliedMeetingDto {
   private Integer approvedCount;
   private Set<String> category;
   private String content;
-  private String thumbnailUrl;
+  private String thumbnail;
 
   public static List<AppliedMeetingDto> convertToAppliedMeetingDtos(
       List<AppliedMeetingProjection> appliedMeetingProjections
@@ -61,7 +61,7 @@ public class AppliedMeetingDto {
         .approvedCount(appliedMeeting.getApprovedCount())
         .category(foodCategories)
         .content(appliedMeeting.getContent())
-        .thumbnailUrl(appliedMeeting.getThumbnailUrl())
+        .thumbnail(appliedMeeting.getThumbnailUrl())
         .build();
   }
 }

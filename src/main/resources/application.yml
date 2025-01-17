@@ -3,6 +3,8 @@ spring:
     name: momo
   profiles:
     active: dev
+    include:
+      - local
 
   jwt:
     secret: vmfhaadadadaddaddadltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalqwerqwerqwer
