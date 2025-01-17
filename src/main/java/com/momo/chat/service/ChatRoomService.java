@@ -110,6 +110,8 @@ public class ChatRoomService {
     messagingTemplate.convertAndSend("/sub/chat/room/" + chatRoomId,
         user.getNickname() + "님이 퇴장했습니다.");
 
+    // TODO: 채팅방 퇴장시 모임퇴장 되도록
+
     return ChatRoomDto.of(chatRoom);
   }
 
@@ -247,6 +249,8 @@ public class ChatRoomService {
     chatReadStatusRepository.deleteByChatRoomId(chatRoomId);
     chatRepository.deleteByChatRoomId(chatRoomId);
     chatRoomRepository.delete(chatRoom);
+
+    // TODO: 채팅방 삭제시 모임삭제 되도록
   }
 
   // 특정 사용자 강퇴 (호스트만 가능)
@@ -268,6 +272,8 @@ public class ChatRoomService {
     // 강퇴하면 채팅방에 메시지를 발송
     messagingTemplate.convertAndSend("/sub/chat/room/" + chatRoomId,
         targetUser.getNickname() + "님이 강제퇴장되었습니다.");
+
+    // TODO: 채팅방 강퇴시 모임강퇴 되도록
 
     return ChatRoomDto.of(chatRoom);
   }
