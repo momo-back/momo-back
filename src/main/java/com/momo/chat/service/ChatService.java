@@ -10,8 +10,11 @@ import com.momo.chat.repository.ChatRepository;
 import com.momo.chat.repository.ChatRoomRepository;
 import com.momo.common.exception.CustomException;
 import com.momo.common.exception.ErrorCode;
+import com.momo.notification.constant.NotificationType;
+import com.momo.notification.service.NotificationService;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
@@ -25,10 +28,12 @@ public class ChatService {
   private final ChatRepository chatRepository;
   private final ChatRoomRepository chatRoomRepository;
   private final UserRepository userRepository;
+  private final NotificationService notificationService;
+
 
   @Transactional
-  public void sendMessage(Long userId, ChatRequestDto dto) {
-    User user = userRepository.findById(userId)
+  public void sendMessage(ChatRequestDto dto) {
+    User user = userRepository.findById(dto.getUserId())
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     ChatRoom chatRoom = chatRoomRepository.findById(dto.getRoomId())
         .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
@@ -47,6 +52,24 @@ public class ChatService {
     sendMessage.setSender(user.getNickname());
 
     messagingTemplate.convertAndSend("/sub/chat/room/" + dto.getRoomId(), sendMessage);
+
+    // 채팅방 참여자들에게 알림 전송
+    sendChatRoomNotification(chatRoom, user, dto.getMessage());
+  }
+
+  private void sendChatRoomNotification(ChatRoom chatRoom, User sender, String message) {
+    // 채팅방에 참여한 사용자 목록 가져오기
+    List<User> readers = chatRoom.getReader();
+
+    // "닉네임: 채팅내용" 형식으로 알림 내용 구성
+    String notificationContent = sender.getNickname() + ": " + message;
+
+    // 참여자들에게 알림 전송
+    for (User reader : readers) {
+      if (!reader.getId().equals(sender.getId())) {  // 보낸 사람에게는 알림을 보내지 않음
+        notificationService.sendNotification(reader, notificationContent, NotificationType.NEW_CHAT_MESSAGE);
+      }
+    }
   }
 
 }

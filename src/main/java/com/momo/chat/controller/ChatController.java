@@ -17,7 +17,7 @@ public class ChatController {
   // 메시지 발송 (사용자가 채팅방에 메시지를 보내는 경우)
   @MessageMapping("/chat/message")
   public void sendMessage(ChatRequestDto dto) {
-    chatService.sendMessage(dto.getUserId(), dto);
+    chatService.sendMessage(dto);
   }
 
 }
