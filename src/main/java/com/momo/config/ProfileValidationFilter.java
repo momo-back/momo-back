@@ -17,12 +17,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 @Slf4j
@@ -30,8 +30,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class ProfileValidationFilter extends OncePerRequestFilter {
 
-  private static final EnumSet<ValidatePath> EXCLUDE_PATHS = EnumSet.allOf(ValidatePath.class);
+  private static final EnumSet<ValidatePath> VALIDATE_PATHS = EnumSet.allOf(ValidatePath.class);
   private final ProfileRepository profileRepository;
+  private final AntPathMatcher pathMatcher = new AntPathMatcher();
 
   @Override
   protected void doFilterInternal(
@@ -40,7 +41,7 @@ public class ProfileValidationFilter extends OncePerRequestFilter {
     String requestURI = request.getRequestURI();
     String method = request.getMethod();
 
-    if (isExcludePath(requestURI, method)) {
+    if (!needsValidation(requestURI, method)) {
       filterChain.doFilter(request, response);
       log.info("프로필 생성 검증 패스");
       return;
@@ -61,10 +62,12 @@ public class ProfileValidationFilter extends OncePerRequestFilter {
     }
   }
 
-  private boolean isExcludePath(String requestURI, String method) {
-    return EXCLUDE_PATHS.stream()
-        .anyMatch(exclude -> exclude.getPath().equals(requestURI) &&
-            exclude.getMethod().equals(HttpMethod.valueOf(method)));
+  private boolean needsValidation(String requestURI, String method) {
+    return VALIDATE_PATHS.stream()
+        .anyMatch(path ->
+            pathMatcher.match(path.getPath(), requestURI) &&
+                path.getMethod().matches(method)
+        );
   }
 
   private void validateUserProfile(Long userId) {
