@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name="chat_room")
+@Table(name = "chat_room")
 public class ChatRoom extends BaseEntity {
 
   @Id
@@ -55,5 +55,7 @@ public class ChatRoom extends BaseEntity {
   @OneToMany(mappedBy = "chatRoom", orphanRemoval = true)
   private List<Chat> ChatMessages = new ArrayList<>();
 
-
+  public Long getMeetingId() {
+    return this.meeting.getId();
+  }
 }

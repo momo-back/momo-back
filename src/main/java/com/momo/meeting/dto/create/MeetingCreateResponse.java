@@ -23,7 +23,7 @@ public class MeetingCreateResponse {
   private Integer approvedCount;
   private Set<FoodCategory> category;
   private String content;
-  private String thumbnailUrl;
+  private String thumbnail;
   private MeetingStatus meetingStatus;
 
   public static MeetingCreateResponse from(Meeting meeting) {
@@ -39,7 +39,7 @@ public class MeetingCreateResponse {
         .approvedCount(meeting.getApprovedCount())
         .category(meeting.getCategory())
         .content(meeting.getContent())
-        .thumbnailUrl(meeting.getThumbnailUrl())
+        .thumbnail(meeting.getThumbnail())
         .meetingStatus(meeting.getMeetingStatus())
         .build();
   }

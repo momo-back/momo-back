@@ -59,7 +59,7 @@ public class ParticipationService {
     Participation participation = updateApproveParticipation(authorId, participationId);
     joinChatRoom(participation.getMeeting(), participation); // 채팅방 입장
 
-    // 참여 신청을 보낸 회원에게 알림 발송 TODO: 대량 요청 테스트 후 비동기 처리 고려
+    // 참여 신청을 보낸 회원에게 알림 발송
     sendNotificationToAppliedUser(participation);
   }
 
@@ -68,7 +68,6 @@ public class ParticipationService {
     sendNotificationToAppliedUser(participation); // 참여 신청을 보낸 회원에게 알림 발송
   }
 
-  // TODO: merge 후 public 메서드가 위로 가도록
   public void deleteParticipation(Long userId, Long participationId) {
     Participation participation = validateForDeleteParticipation(userId, participationId);
     participationRepository.delete(participation);

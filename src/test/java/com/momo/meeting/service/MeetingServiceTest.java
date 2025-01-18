@@ -103,14 +103,14 @@ class MeetingServiceTest {
             "address", "meetingDateTime",
             "maxCount", "approvedCount",
             "category", "content",
-            "thumbnailUrl", "meetingStatus"
+            "thumbnail", "meetingStatus"
         ).containsExactly(
             request.getTitle(), request.getLocationId(),
             request.getLatitude(), request.getLongitude(),
             request.getAddress(), request.getMeetingDateTime(),
             request.getMaxCount(), 1,
             request.getCategory(), request.getContent(),
-            request.getThumbnailUrl(), MeetingStatus.RECRUITING
+            request.getThumbnail(), MeetingStatus.RECRUITING
         );
 
     verify(meetingRepository).countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay);
@@ -239,7 +239,7 @@ class MeetingServiceTest {
             "longitude", "address",
             "meetingDateTime", "maxCount",
             "approvedCount", "category",
-            "content", "thumbnailUrl",
+            "content", "thumbnail",
             "meetingStatus"
         ).containsExactly(
             1L, updateRequest.getTitle(),
@@ -247,7 +247,7 @@ class MeetingServiceTest {
             updateRequest.getLongitude(), updateRequest.getAddress(),
             updateRequest.getMeetingDateTime(), updateRequest.getMaxCount(),
             1, updateRequest.getCategory(),
-            updateRequest.getContent(), updateRequest.getThumbnailUrl(),
+            updateRequest.getContent(), updateRequest.getThumbnail(),
             MeetingStatus.RECRUITING
         );
 
@@ -548,7 +548,7 @@ class MeetingServiceTest {
         .approvedCount(1)
         .category(request.getCategory())
         .content(request.getContent())
-        .thumbnailUrl(request.getThumbnailUrl())
+        .thumbnail(request.getThumbnail())
         .meetingStatus(MeetingStatus.RECRUITING)
         .build();
   }
@@ -564,7 +564,7 @@ class MeetingServiceTest {
         .maxCount(6)
         .category(Set.of(FoodCategory.KOREAN, FoodCategory.JAPANESE))
         .content("테스트 내용")
-        .thumbnailUrl("test-thumbnail-url.jpg")
+        .thumbnail("test-thumbnail-url.jpg")
         .build();
   }
 
@@ -579,7 +579,7 @@ class MeetingServiceTest {
         .maxCount(5)
         .category(Set.of(FoodCategory.DESSERT))
         .content("업데이트 내용")
-        .thumbnailUrl("")
+        .thumbnail("")
         .build();
   }
 
@@ -635,7 +635,7 @@ class MeetingServiceTest {
     assertThat(createdMeetingDto.get(i).getApprovedCount()).isEqualTo(i + 1);
     assertThat(createdMeetingDto.get(i).getCategory()).isEqualTo(Set.of("한식", "디저트"));
     assertThat(createdMeetingDto.get(i).getContent()).isEqualTo("Test Content " + i);
-    assertThat(createdMeetingDto.get(i).getThumbnailUrl())
+    assertThat(createdMeetingDto.get(i).getThumbnail())
         .isEqualTo("test_" + i + "_thumbnail_url.jpg");
   }
 
@@ -654,7 +654,7 @@ class MeetingServiceTest {
     MeetingParticipantProjection projection = mock(MeetingParticipantProjection.class);
     given(projection.getUserId()).willReturn((long) i);
     given(projection.getNickname()).willReturn("test-nickname" + i);
-    given(projection.getProfileImageUrl()).willReturn("test_" + i + "_profile_image_url.jpg");
+    given(projection.getProfileImage()).willReturn("test_" + i + "_profile_image_url.jpg");
     given(projection.getParticipationStatus()).willReturn(ParticipationStatus.PENDING);
     projections.add(projection);
   }
@@ -671,7 +671,7 @@ class MeetingServiceTest {
   ) {
     assertThat(projections.get(i).getUserId()).isEqualTo(i);
     assertThat(projections.get(i).getNickname()).isEqualTo("test-nickname" + i);
-    assertThat(projections.get(i).getProfileImageUrl())
+    assertThat(projections.get(i).getProfileImage())
         .isEqualTo("test_" + i + "_profile_image_url.jpg");
     assertThat(projections.get(i).getParticipationStatus()).isEqualTo(ParticipationStatus.PENDING);
   }
