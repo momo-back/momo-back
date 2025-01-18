@@ -105,6 +105,12 @@ public class Meeting extends BaseEntity {
     this.approvedCount++;
   }
 
+  public void decrementApprovedCount() {
+    if (this.approvedCount > 0) {
+      this.approvedCount--;
+    }
+  }
+
   private boolean isFullCount() {
     return this.approvedCount >= this.maxCount;
   }
