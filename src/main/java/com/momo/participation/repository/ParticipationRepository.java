@@ -4,6 +4,7 @@ import com.momo.meeting.projection.MeetingParticipantProjection;
 import com.momo.participation.entity.Participation;
 import com.momo.participation.projection.AppliedMeetingProjection;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -65,4 +66,8 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
   List<MeetingParticipantProjection> findMeetingParticipantsByMeeting_Id(
       @Param("meetingId") Long meetingId
   );
+
+  void deleteByUser_Id(Long id);
+
+  Optional<Participation> findByUser_Id(Long id);
 }
