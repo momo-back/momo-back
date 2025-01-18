@@ -23,6 +23,8 @@ import com.momo.participation.exception.ParticipationErrorCode;
 import com.momo.participation.exception.ParticipationException;
 import com.momo.participation.repository.ParticipationRepository;
 import com.momo.profile.entity.Profile;
+import com.momo.profile.exception.ProfileErrorCode;
+import com.momo.profile.exception.ProfileException;
 import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
@@ -319,7 +321,7 @@ public class ChatRoomService {
 
   private Profile validateProfileExists(Long userId) {
     return profileRepository.findById(userId)
-        .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXISTS_PROFILE));
+        .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
   }
 
   private ChatReadStatus validateChatReadStatus(Long userId, Long chatRoomId) {

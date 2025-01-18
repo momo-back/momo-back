@@ -1,11 +1,14 @@
 package com.momo.meeting.repository;
 
+import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.projection.CreatedMeetingProjection;
+import com.momo.meeting.projection.ExpiredMeetingProjection;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -135,4 +138,20 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
       @Param("lastId") Long lastId,
       @Param("pageSize") int pageSize
   );
+
+  @Query("SELECT DISTINCT "
+      + "m.id as meetingId, "
+      + "m.title as title, "
+      + "m.user as author " +
+      "FROM Meeting m " +
+      "WHERE m.meetingStatus = :meetingStatus " +
+      "AND m.meetingDateTime < :now")
+  List<ExpiredMeetingProjection> findExpiredMeetings(
+      @Param("meetingStatus") MeetingStatus meetingStatus,
+      @Param("now") LocalDateTime now
+  );
+
+  @Modifying
+  @Query("DELETE FROM Meeting m WHERE m.id IN :meetingIds")
+  int deleteAllByMeetingIds(@Param("meetingIds") List<Long> meetingIds);
 }

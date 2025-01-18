@@ -1,6 +1,7 @@
 package com.momo.profile.controller;
 
 import com.momo.profile.dto.ProfileCreateRequest;
+import com.momo.profile.dto.ProfileCreateResponse;
 import com.momo.profile.service.ProfileService;
 import com.momo.user.dto.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class ProfileController {
   private final ProfileService profileService;
 
   @PostMapping
-  public ResponseEntity<?> createProfile(
+  public ResponseEntity<ProfileCreateResponse> createProfile(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @RequestPart ProfileCreateRequest request,
       @RequestPart(required = false) MultipartFile profileImage

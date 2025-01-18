@@ -1,11 +1,14 @@
 package com.momo.participation.repository;
 
 import com.momo.meeting.projection.MeetingParticipantProjection;
+import com.momo.participation.constant.ParticipationStatus;
 import com.momo.participation.entity.Participation;
 import com.momo.participation.projection.AppliedMeetingProjection;
+import com.momo.user.entity.User;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -67,7 +70,20 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
       @Param("meetingId") Long meetingId
   );
 
+
   void deleteByUser_Id(Long id);
 
   Optional<Participation> findByUser_Id(Long id);
+
+  @Query("SELECT p.user FROM Participation p " +
+      "WHERE p.meeting.id IN :meetingIds " +
+      "  AND p.participationStatus = :participationStatus")
+  List<User> findParticipantsByMeetingIds(
+      @Param("meetingIds") List<Long> meetingIds,
+      @Param("participationStatus") ParticipationStatus participationStatus
+  );
+
+  @Modifying
+  @Query("DELETE FROM Participation p WHERE p.meeting.id IN :meetingIds")
+  int deleteAllByMeetingIds(@Param("meetingIds") List<Long> meetingIds);
 }

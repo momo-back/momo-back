@@ -45,7 +45,8 @@ public class NotificationService {
   }
 
   /**
-   * 새로운 알림을 생성하고 실시간으로 전송하는 메서드. 알림을 보내야 하는 서비스 쪽에서 호출하여 사용.
+   * 새로운 알림을 생성하고 실시간으로 전송하는 메서드.
+   * 알림을 보내야 하는 서비스 쪽에서 호출하여 사용.
    *
    * @param user             알림 수신자
    * @param notificationType 알림 타입
@@ -55,7 +56,7 @@ public class NotificationService {
     Notification notification = createNotification(user, content, notificationType);
     notificationRepository.save(notification);
 
-    trySendNotification(user, notificationType, notification); // 실시간 알림 전송 시도
+    trySendNotification(user.getId(), notificationType, notification); // 실시간 알림 전송 시도
     boolean hasNotifications = notificationRepository.existsByUser_Id(user.getId());
     tryNotifyNotificationStatus(user.getId(), hasNotifications);
   }
@@ -83,9 +84,9 @@ public class NotificationService {
   }
 
   private void trySendNotification(
-      User user, NotificationType notificationType, Notification notification
+      Long userId, NotificationType notificationType, Notification notification
   ) {
-    sseEmitterManager.get(user.getId())
+    sseEmitterManager.get(userId)
         .ifPresent(sseEmitter -> {
           try {
             sseEmitter.send(SseEmitter.event()
@@ -93,7 +94,7 @@ public class NotificationService {
                 .data(notification.getContent())); // 알림 데이터 전송
           } catch (IOException e) {
             // 전송 실패 시 연결 제거
-            sseEmitterManager.remove(user.getId());
+            sseEmitterManager.remove(userId);
           }
         });
   }
