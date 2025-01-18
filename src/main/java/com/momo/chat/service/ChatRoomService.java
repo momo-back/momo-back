@@ -17,6 +17,11 @@ import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.repository.MeetingRepository;
+import com.momo.participation.constant.ParticipationStatus;
+import com.momo.participation.entity.Participation;
+import com.momo.participation.exception.ParticipationErrorCode;
+import com.momo.participation.exception.ParticipationException;
+import com.momo.participation.repository.ParticipationRepository;
 import com.momo.profile.entity.Profile;
 import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.entity.User;
@@ -41,6 +46,7 @@ public class ChatRoomService {
   private final UserRepository userRepository;
   private final MeetingRepository meetingRepository;
   private final ProfileRepository profileRepository;
+  private final ParticipationRepository participationRepository;
 
   // 채팅방 생성 (모임생성)
   @Transactional
@@ -110,16 +116,31 @@ public class ChatRoomService {
       throw new ChatException(ChatErrorCode.HOST_CANNOT_OPERATE);
     }
 
+    // Meeting을 직접 조회하여 영속성 컨텍스트에서 관리
+    Meeting meeting = meetingRepository.findById(chatRoom.getMeetingId())
+        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
+
+    Participation participation =
+        participationRepository.findByUser_Id(user.getId()).orElseThrow(() ->
+            new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
+
+    // 참여신청 상태가 승인된 게 아니라면 예외 처리
+    if (!(participation.getParticipationStatus() == ParticipationStatus.APPROVED)) {
+      throw new ChatException(ChatErrorCode.NOT_A_PARTICIPANT);
+    }
+
     List<User> readers = chatRoom.getReader();
     readers.removeIf(reader -> reader.getId().equals(user.getId()));
+
+    chatRoom.getMeeting().decrementApprovedCount(); // 모임의 현재 인원 1 감소
+    participationRepository.deleteByUser_Id(user.getId()); // 참여 신청 삭제
+
     chatRoomRepository.save(chatRoom);
     chatReadStatusRepository.deleteByUserIdAndChatRoomId(user.getId(), chatRoomId);
 
     // 퇴장하면 채팅방에 메시지를 발송
     messagingTemplate.convertAndSend("/sub/chat/room/" + chatRoomId,
         user.getNickname() + "님이 퇴장했습니다.");
-
-    // TODO: 채팅방 퇴장시 모임퇴장 되도록
 
     return ChatRoomDto.of(chatRoom);
   }
@@ -189,7 +210,8 @@ public class ChatRoomService {
     return chatRooms.stream()
         .map(chatRoom -> {
           // 데이터베이스에서 마지막으로 읽은 시간을 가져오거나, 사용가능한 데이터가 없으면 최소 시간을 사용
-          LocalDateTime lastReadAt = chatReadStatusRepository.findByUserIdAndChatRoomId(chatRoom.getId(), user.getId())
+          LocalDateTime lastReadAt = chatReadStatusRepository.findByUserIdAndChatRoomId(
+                  chatRoom.getId(), user.getId())
               .map(ChatReadStatus::getLastReadAt)
               .orElse(LocalDateTime.MIN);
 
@@ -232,7 +254,8 @@ public class ChatRoomService {
     return chatRoom.getReader().stream()
         .map(reader -> {
           Profile profile = validateProfileExists(reader.getId());
-          return new ChatReaderDto(reader.getId(), reader.getNickname(), profile.getProfileImageUrl());
+          return new ChatReaderDto(reader.getId(), reader.getNickname(),
+              profile.getProfileImageUrl());
         })
         .collect(Collectors.toList());
   }
