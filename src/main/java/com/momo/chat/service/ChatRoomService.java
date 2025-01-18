@@ -132,7 +132,7 @@ public class ChatRoomService {
     List<User> readers = chatRoom.getReader();
     readers.removeIf(reader -> reader.getId().equals(user.getId()));
 
-    chatRoom.getMeeting().decrementApprovedCount(); // 모임의 현재 인원 1 감소
+    meeting.decrementApprovedCount(); // 모임의 현재 인원 1 감소
     participationRepository.deleteByUser_Id(user.getId()); // 참여 신청 삭제
 
     chatRoomRepository.save(chatRoom);
