@@ -35,13 +35,4 @@ public class JoinExceptionHandler {
         ));
   }
 
-  @ExceptionHandler(Exception.class) // 기타 모든 예외 처리
-  public ResponseEntity<ErrorResponse> handleGeneralException(Exception e) {
-    log.error("Unexpected Exception: {}", e.getMessage());
-    return ResponseEntity
-        .status(ErrorCode.INTERNAL_SERVER_ERROR.getStatus())
-        .body(new ErrorResponse(
-            ErrorCode.INTERNAL_SERVER_ERROR
-        ));
-  }
 }
