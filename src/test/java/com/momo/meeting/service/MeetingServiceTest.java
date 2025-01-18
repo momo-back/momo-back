@@ -542,7 +542,7 @@ class MeetingServiceTest {
     MeetingParticipantProjection projection = mock(MeetingParticipantProjection.class);
     given(projection.getUserId()).willReturn((long) i);
     given(projection.getNickname()).willReturn("test-nickname" + i);
-    given(projection.getProfileImageUrl()).willReturn("test_" + i + "_profile_image_url.jpg");
+    given(projection.getProfileImage()).willReturn("test_" + i + "_profile_image_url.jpg");
     given(projection.getParticipationStatus()).willReturn(ParticipationStatus.PENDING);
     projections.add(projection);
   }
@@ -559,7 +559,7 @@ class MeetingServiceTest {
   ) {
     assertThat(projections.get(i).getUserId()).isEqualTo(i);
     assertThat(projections.get(i).getNickname()).isEqualTo("test-nickname" + i);
-    assertThat(projections.get(i).getProfileImageUrl())
+    assertThat(projections.get(i).getProfileImage())
         .isEqualTo("test_" + i + "_profile_image_url.jpg");
     assertThat(projections.get(i).getParticipationStatus()).isEqualTo(ParticipationStatus.PENDING);
   }
