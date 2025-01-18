@@ -1,5 +1,6 @@
 package com.momo.meeting.service;
 
+import com.momo.chat.repository.ChatRoomRepository;
 import com.momo.chat.service.ChatRoomService;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.constant.SearchType;
@@ -14,29 +15,68 @@ import com.momo.meeting.dto.MeetingsResponse;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.projection.CreatedMeetingProjection;
+import com.momo.meeting.projection.ExpiredMeetingProjection;
 import com.momo.meeting.projection.MeetingParticipantProjection;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
+import com.momo.notification.constant.NotificationType;
+import com.momo.notification.service.NotificationService;
+import com.momo.participation.constant.ParticipationStatus;
 import com.momo.participation.repository.ParticipationRepository;
 import com.momo.user.entity.User;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.repository.MeetingRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MeetingService {
 
+  @Autowired
+  private TransactionTemplate transactionTemplate;
+
   private final MeetingRepository meetingRepository;
   private final ParticipationRepository participationRepository;
+  private final ChatRoomRepository chatRoomRepository;
+
   private final ChatRoomService chatRoomService;
+  private final NotificationService notificationService;
+
+  //@Scheduled(cron = "0/10 * * * * *") // 10초마다 실행(테스트)
+  @Scheduled(cron = "0 */5 * * * *") // 5분마다 실행
+  public void deleteExpiredMeetingsAndNotify() {
+    log.info("Scheduled : 만료된 모임, 채팅방, 참여신청 모두 삭제 시도");
+
+    // 만료된 모임 조회
+    List<ExpiredMeetingProjection> expiredMeetings =
+        meetingRepository.findExpiredMeetings(MeetingStatus.RECRUITING, LocalDateTime.now());
+
+    if (expiredMeetings.isEmpty()) {
+      log.info("No expired meetings found");
+      return;
+    }
+
+    List<Long> expiredMeetingIds = extractMeetingIds(expiredMeetings); // Meeting ID 목록 추출
+
+    // 승인된 참가자 목록 조회
+    List<User> approvedParticipants = findApprovedParticipants(expiredMeetingIds);
+
+    deleteExpiredMeetingData(expiredMeetingIds); // 데이터 삭제
+    sendNotifications(expiredMeetings, approvedParticipants); // 알림 발송
+  }
 
   public MeetingCreateResponse createMeeting(User user, MeetingCreateRequest request) {
     validateDailyPostLimit(user.getId());
@@ -139,6 +179,63 @@ public class MeetingService {
 
     List<MeetingDto> filteredMeetings = meetingStream.collect(Collectors.toList());
     return processFilteredMeetings(filteredMeetings, pageSize);
+  }
+
+  private List<User> findApprovedParticipants(List<Long> expiredMeetingIds) {
+    return participationRepository.findParticipantsByMeetingIds(
+        expiredMeetingIds,
+        ParticipationStatus.APPROVED
+    );
+  }
+
+  private static List<Long> extractMeetingIds(List<ExpiredMeetingProjection> expiredMeetings) {
+    return expiredMeetings.stream()
+        .map(ExpiredMeetingProjection::getMeetingId)
+        .collect(Collectors.toList());
+  }
+
+  private void deleteExpiredMeetingData(List<Long> expiredMeetingIds) {
+    // Scheduled의 쓰레드에서는 Transaction을 실행할 수 없기 때문에 직접 실행
+    transactionTemplate.execute(status -> {
+      int deleteChatRoomCount = chatRoomRepository.deleteAllByMeetingIds(expiredMeetingIds);
+      int deleteParticipationCount =
+          participationRepository.deleteAllByMeetingIds(expiredMeetingIds);
+      int deleteMeetingCount = meetingRepository.deleteAllByMeetingIds(expiredMeetingIds);
+
+      log.info("채팅방 삭제: {}, 참여신청 삭제: {}, 모임 삭제: {}",
+          deleteChatRoomCount, deleteParticipationCount, deleteMeetingCount);
+      return null;
+    });
+  }
+
+  private void sendNotifications(
+      List<ExpiredMeetingProjection> expiredMeetings,
+      List<User> participants
+  ) {
+    for (ExpiredMeetingProjection expiredMeeting : expiredMeetings) {
+      List<User> recipients = new ArrayList<>();
+      recipients.add(expiredMeeting.getAuthor());  // 주최자 추가
+      recipients.addAll(participants);  // 참가자들 추가
+
+      String title = expiredMeeting.getTitle() + NotificationType.MEETING_EXPIRED.getDescription();
+      sendNotificationToExpiredMeetingParticipants(recipients, title);
+    }
+  }
+
+  private void sendNotificationToExpiredMeetingParticipants(List<User> participants, String title) {
+    participants.forEach(user -> {
+      try {
+        notificationService.sendNotification(
+            user,
+            title + NotificationType.MEETING_EXPIRED.getDescription(),
+            NotificationType.MEETING_EXPIRED
+        );
+        log.info("알림 전송 성공 : user = {}, title = {}", user.getId(), title);
+      } catch (Exception e) {
+        log.error("알림 전송 실패 : user = {}, title = {}, error = {}",
+            user.getId(), title, e.getMessage());
+      }
+    });
   }
 
   private void validateDailyPostLimit(Long userId) {
