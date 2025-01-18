@@ -23,6 +23,11 @@ public enum ValidatePath {
   APPROVED_PARTICIPATION("/api/v1/participations/*/reject", HttpMethod.PATCH), // 참여 신청 승인
   REJECT_PARTICIPATION("/api/v1/participations/*/approve", HttpMethod.PATCH), // 참여 신청 거절
   PARTICIPATION_DELETE("/api/v1/participations/**", HttpMethod.DELETE), // 모든 DELETE 요청
+
+  // 채팅
+  CHAT_CREATE("/api/v1/chats/**", HttpMethod.POST), // 모든 POST 요청
+  CHAT_GET("/api/v1/chats/**", HttpMethod.GET), // 모든 GET 요청
+  CHAT_DELETE("/api/v1/chats/**", HttpMethod.DELETE), // 모든 DELETE 요청
   ;
 
   private final String path;
