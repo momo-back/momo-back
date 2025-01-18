@@ -18,6 +18,8 @@ import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.repository.MeetingRepository;
 import com.momo.profile.entity.Profile;
+import com.momo.profile.exception.ProfileErrorCode;
+import com.momo.profile.exception.ProfileException;
 import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
@@ -296,7 +298,7 @@ public class ChatRoomService {
 
   private Profile validateProfileExists(Long userId) {
     return profileRepository.findById(userId)
-        .orElseThrow(() -> new CustomException(ErrorCode.NOT_EXISTS_PROFILE));
+        .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
   }
 
   private ChatReadStatus validateChatReadStatus(Long userId, Long chatRoomId) {
