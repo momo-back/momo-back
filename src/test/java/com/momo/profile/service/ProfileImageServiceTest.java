@@ -31,7 +31,7 @@ class ProfileImageServiceTest {
       "https://s3-momo-storage.s3.ap-northeast-2.amazonaws.com/default.jpg";
 
   @Test
-  @DisplayName("이미지가 없을 경우 - 기본 이미지 URL 반환")
+  @DisplayName("이미지가 없을 경우 - null 반환")
   void getProfileImageUrl_WithNullImage_ReturnDefaultImageUrl() {
     // given
     // when
@@ -39,7 +39,7 @@ class ProfileImageServiceTest {
 
     // then
     verifyNoInteractions(imageStorage);
-    assertThat(imageUrl).isEqualTo(DEFAULT_IMAGE_URL);
+    assertThat(imageUrl).isEqualTo(null);
   }
 
   @Test
