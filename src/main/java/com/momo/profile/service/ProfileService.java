@@ -4,9 +4,9 @@ import com.momo.profile.constant.Gender;
 import com.momo.profile.dto.ProfileCreateRequest;
 import com.momo.profile.dto.ProfileCreateResponse;
 import com.momo.profile.entity.Profile;
+import com.momo.profile.exception.ProfileErrorCode;
+import com.momo.profile.exception.ProfileException;
 import com.momo.profile.repository.ProfileRepository;
-import com.momo.profile.validation.ProfileRequiredValueValidator;
-import com.momo.profile.validation.ProfileValidator;
 import com.momo.user.entity.User;
 import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class ProfileService {
 
-  private final ProfileValidator profileValidator;
   private final ProfileRepository profileRepository;
   private final ProfileImageService profileImageService;
 
@@ -40,7 +39,33 @@ public class ProfileService {
   }
 
   private void validateForProfileCreation(Long userId, Gender gender, LocalDate birth) {
-    profileValidator.validateHasProfile(userId);
-    ProfileRequiredValueValidator.validateProfileRequiredValue(gender, birth);
+    validateHasProfile(userId);
+    validateProfileRequiredValue(gender, birth);
+  }
+
+  private void validateHasProfile(Long userId) {
+    if (profileRepository.existsByUser_Id(userId)) {
+      throw new ProfileException(ProfileErrorCode.DUPLICATE_PROFILE);
+    }
+  }
+
+  private void validateProfileRequiredValue(Gender gender, LocalDate birth) {
+    validateGender(gender);
+    validateBirth(birth);
+  }
+
+  private void validateGender(Gender gender) {
+    if (gender == null) {
+      throw new ProfileException(ProfileErrorCode.INVALID_GENDER);
+    }
+  }
+
+  private void validateBirth(LocalDate birth) {
+    if (birth == null) {
+      throw new ProfileException(ProfileErrorCode.INVALID_BIRTH);
+    }
+    if (birth.isAfter(LocalDate.now())) {
+      throw new ProfileException(ProfileErrorCode.BIRTH_NOT_FUTURE);
+    }
   }
 }
