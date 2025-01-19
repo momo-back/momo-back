@@ -49,8 +49,8 @@ public class NotificationService {
    * 알림을 보내야 하는 서비스 쪽에서 호출하여 사용.
    *
    * @param user             알림 수신자
-   * @param notificationType 알림 타입
    * @param content          알림 내용
+   * @param notificationType 알림 타입
    */
   public void sendNotification(User user, String content, NotificationType notificationType) {
     Notification notification = createNotification(user, content, notificationType);
@@ -114,8 +114,8 @@ public class NotificationService {
       User user, String content, NotificationType notificationType
   ) {
     return Notification.builder()
-        .content(content)
         .user(user)
+        .content(content)
         .notificationType(notificationType)
         .build();
   }
