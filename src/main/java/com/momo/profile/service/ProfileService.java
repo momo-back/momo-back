@@ -43,24 +43,24 @@ public class ProfileService {
     validateProfileRequiredValue(gender, birth);
   }
 
-  private void validateHasProfile(Long userId) {
+  private  void validateHasProfile(Long userId) {
     if (profileRepository.existsByUser_Id(userId)) {
       throw new ProfileException(ProfileErrorCode.DUPLICATE_PROFILE);
     }
   }
 
-  private void validateProfileRequiredValue(Gender gender, LocalDate birth) {
+  private static void validateProfileRequiredValue(Gender gender, LocalDate birth) {
     validateGender(gender);
     validateBirth(birth);
   }
 
-  private void validateGender(Gender gender) {
+  private static void validateGender(Gender gender) {
     if (gender == null) {
       throw new ProfileException(ProfileErrorCode.INVALID_GENDER);
     }
   }
 
-  private void validateBirth(LocalDate birth) {
+  private static void validateBirth(LocalDate birth) {
     if (birth == null) {
       throw new ProfileException(ProfileErrorCode.INVALID_BIRTH);
     }
