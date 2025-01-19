@@ -3,7 +3,6 @@ package com.momo.profile.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,7 +14,6 @@ import com.momo.profile.dto.ProfileCreateResponse;
 import com.momo.profile.exception.ProfileException;
 import com.momo.profile.entity.Profile;
 import com.momo.profile.repository.ProfileRepository;
-import com.momo.profile.validation.ProfileValidator;
 import com.momo.user.entity.User;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
@@ -35,9 +33,6 @@ class ProfileServiceTest {
   @Mock
   private ProfileImageService profileImageService;
 
-  @Mock
-  private ProfileValidator profileValidator;
-
   @InjectMocks
   private ProfileService profileService;
 
@@ -51,7 +46,7 @@ class ProfileServiceTest {
     String imageUrl = "test-image-url.jpg";
     Profile profile = request.toEntity(user, imageUrl);
 
-    doNothing().when(profileValidator).validateHasProfile(1L);
+    when(profileRepository.existsByUser_Id(user.getId())).thenReturn(false);
     when(profileImageService.getProfileImageUrl(mockImage)).thenReturn(imageUrl);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
@@ -59,6 +54,7 @@ class ProfileServiceTest {
     ProfileCreateResponse response = profileService.createProfile(user, request, mockImage);
 
     // then
+    verify(profileRepository).existsByUser_Id(user.getId());
     verify(profileImageService).getProfileImageUrl(mockImage);
     verify(profileRepository).save(any(Profile.class));
 
@@ -77,17 +73,18 @@ class ProfileServiceTest {
     User user = createUser();
     Profile profile = request.toEntity(user, imageUrl);
 
-    doNothing().when(profileValidator).validateHasProfile(1L);
+    when(profileRepository.existsByUser_Id(user.getId())).thenReturn(false);
     when(profileImageService.getProfileImageUrl(null)).thenReturn(imageUrl);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
     // when
     ProfileCreateResponse response = profileService.createProfile(user, request, null);
 
+    // then
+    verify(profileRepository).existsByUser_Id(user.getId());
     verify(profileRepository).save(any(Profile.class));
     verify(profileImageService).getProfileImageUrl(null);
 
-    // then
     assertThat(response.getGender()).isEqualTo(request.getGender());
     assertThat(response.getBirth()).isEqualTo(request.getBirth());
     assertThat(response.getProfileImageUrl()).isEqualTo(imageUrl);
@@ -116,11 +113,13 @@ class ProfileServiceTest {
         .build();
 
     // when
-    doNothing().when(profileValidator).validateHasProfile(1L);
+    when(profileRepository.existsByUser_Id(user.getId())).thenReturn(false);
 
     // then
     assertThatThrownBy(() -> profileService.createProfile(user, request, null))
         .isInstanceOf(ProfileException.class);
+
+    verify(profileRepository).existsByUser_Id(user.getId());
   }
 
   @Test
@@ -154,14 +153,15 @@ class ProfileServiceTest {
         .build();
 
     // when
-    doNothing().when(profileValidator).validateHasProfile(1L);
+    when(profileRepository.existsByUser_Id(user.getId())).thenReturn(false);
 
     // then
+    verify(profileImageService).getProfileImageUrl(null);
     assertThatThrownBy(() -> profileService.createProfile(user, request, null))
         .isInstanceOf(ProfileException.class);
   }
 
-  User createUser(){
+  User createUser() {
     return User.builder()
         .id(1L)
         .email("test@gmail.com")
