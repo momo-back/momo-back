@@ -502,7 +502,7 @@ class MeetingServiceTest {
     assertEquals(2 + i, meetingDto.getMaxCount());
     assertEquals(1 + i, meetingDto.getApprovedCount());
     assertEquals(Set.of("한식", "일식"), meetingDto.getCategory());
-    assertEquals("test-url" + i + ".jpg", meetingDto.getThumbnailUrl());
+    assertEquals("test-url" + i + ".jpg", meetingDto.getThumbnail());
   }
 
   private static void verifyCursor(MeetingsResponse response) {
