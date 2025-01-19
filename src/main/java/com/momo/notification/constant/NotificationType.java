@@ -8,7 +8,8 @@ import lombok.RequiredArgsConstructor;
 public enum NotificationType {
 
   // 모임 관련 (주최자)
-  NEW_PARTICIPATION_REQUEST("님이 모임 참여를 신청했습니다.", NotificationCategory.MEETING),
+  NEW_PARTICIPATION_REQUEST(
+      "님이 모임 참여를 신청했습니다.", NotificationCategory.MEETING),
 
   PARTICIPANT_LEFT("참가자 탈퇴", NotificationCategory.MEETING),
 

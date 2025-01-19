@@ -94,9 +94,7 @@ class NotificationServiceTest {
     // given
     Long notificationId = 1L;
     Long userId = 1L;
-    Notification notification = createNotification("테스트 알림");
 
-    when(notificationRepository.deleteByIdAndUser_Id(notificationId, userId)).thenReturn(1);
     when(notificationRepository.existsByUser_Id(userId)).thenReturn(false);
 
     // when

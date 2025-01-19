@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @Service
@@ -68,15 +69,14 @@ public class NotificationService {
         .collect(Collectors.toList());
   }
 
+  @Transactional
   public void deleteNotification(Long userId, Long notificationId) {
-    int deletedCount = notificationRepository.deleteByIdAndUser_Id(notificationId, userId);
-    if (deletedCount == 0) {
-      throw new NotificationException(NotificationErrorCode.NOTIFICATION_NOT_FOUND);
-    }
+    notificationRepository.deleteByIdAndUser_Id(notificationId, userId);
     boolean hasNotifications = notificationRepository.existsByUser_Id(userId);
     tryNotifyNotificationStatus(userId, hasNotifications);
   }
 
+  @Transactional
   public void deleteAllNotifications(Long userId) {
     notificationRepository.deleteAllByUser_Id(userId);
     boolean hasNotifications = notificationRepository.existsByUser_Id(userId);
