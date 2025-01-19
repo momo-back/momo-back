@@ -9,6 +9,7 @@ import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.repository.MeetingRepository;
+import com.momo.notification.constant.NotificationCategory;
 import com.momo.notification.constant.NotificationType;
 import com.momo.notification.service.NotificationService;
 import com.momo.participation.constant.ParticipationStatus;
@@ -60,12 +61,14 @@ public class ParticipationService {
     joinChatRoom(participation.getMeeting(), participation); // 채팅방 입장
 
     // 참여 신청을 보낸 회원에게 알림 발송
-    sendNotificationToAppliedUser(participation);
+    sendNotificationToAppliedUser(participation, NotificationType.PARTICIPANT_APPROVED);
   }
 
   public void rejectParticipation(Long authorId, Long participationId) {
     Participation participation = updateRejectParticipation(authorId, participationId);
-    sendNotificationToAppliedUser(participation); // 참여 신청을 보낸 회원에게 알림 발송
+
+    // 참여 신청을 보낸 회원에게 알림 발송
+    sendNotificationToAppliedUser(participation, NotificationType.PARTICIPANT_REJECTED);
   }
 
   public void deleteParticipation(Long userId, Long participationId) {
@@ -125,12 +128,13 @@ public class ParticipationService {
         .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
   }
 
-  private void sendNotificationToAppliedUser(Participation participation) {
+  private void sendNotificationToAppliedUser(
+      Participation participation, NotificationType notificationType
+  ) {
     notificationService.sendNotification(
         participation.getUser(),
-        participation.getMeeting().getTitle()
-            + NotificationType.PARTICIPANT_APPROVED.getDescription(),
-        NotificationType.PARTICIPANT_APPROVED
+        participation.getMeeting().getTitle() + notificationType.getDescription(),
+        notificationType
     );
   }
 
