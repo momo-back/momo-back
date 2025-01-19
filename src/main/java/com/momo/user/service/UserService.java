@@ -179,7 +179,8 @@ public class UserService {
 
     User kakaoUser = User.builder()
         .email(email)
-        .nickname(email) // 닉네임 기본값으로 이메일 사용
+        .nickname("")  // 닉네임을 빈 문자열("")로 설정
+        .phone("")  // 전화번호를 빈 문자열("")로 설정
         .password(encryptedPassword)
         .enabled(true)
         .oauthUser(true)
