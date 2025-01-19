@@ -107,7 +107,7 @@ public class MeetingController {
   }
 
   /**
-   * 모임 참여 신청자 목로 조회
+   * 모임 참여 신청자 목록 조회
    *
    * @param customUserDetails 회원 정보
    * @param meetingId         모임 ID
