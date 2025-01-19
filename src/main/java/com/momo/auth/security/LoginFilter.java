@@ -57,8 +57,15 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         throw new IllegalArgumentException("Email is required");
       }
 
+      // 사용자 존재 여부 확인
+      if (!userRepository.existsByEmail(email)) {
+        throw new AuthenticationException("사용자를 찾을 수 없습니다") {};
+      }
+
+      // 인증 객체 생성 및 반환
       UsernamePasswordAuthenticationToken authRequest =
           new UsernamePasswordAuthenticationToken(email, password);
+
       return this.getAuthenticationManager().authenticate(authRequest);
     } catch (IOException e) {
       log.error("로그인 요청 데이터 처리 중 오류 발생: {}", e.getMessage());
@@ -101,19 +108,28 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
 
   @Override
   protected void unsuccessfulAuthentication(HttpServletRequest request,
-      HttpServletResponse response,
-      AuthenticationException failed) throws IOException {
+      HttpServletResponse response, AuthenticationException failed) throws IOException {
+
     log.warn("로그인 실패: {}", failed.getMessage());
 
-    response.setStatus(HttpStatus.UNAUTHORIZED.value());
-    Map<String, String> error = new HashMap<>();
-    error.put("error", "Authentication failed");
-
+    Map<String, String> errorResponse = new HashMap<>();
     response.setContentType("application/json");
     response.setCharacterEncoding("UTF-8");
 
-    new ObjectMapper().writeValue(response.getWriter(), error);
+    if ("사용자를 찾을 수 없습니다".equals(failed.getMessage())) {
+      response.setStatus(HttpStatus.NOT_FOUND.value());
+      errorResponse.put("message", "사용자를 찾을 수 없습니다");
+      errorResponse.put("code", "USER_NOT_FOUND");
+    } else {
+      // 비밀번호가 틀린 경우
+      response.setStatus(HttpStatus.BAD_REQUEST.value());
+      errorResponse.put("message", "비밀번호가 일치하지 않습니다.");
+      errorResponse.put("code", "LOGIN_FAILED");
+    }
+
+    new ObjectMapper().writeValue(response.getWriter(), errorResponse);
   }
+
 
   private void handleException(HttpServletResponse response, Exception ex) throws IOException {
     response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());

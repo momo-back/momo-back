@@ -217,8 +217,7 @@ public class MeetingService {
       recipients.add(expiredMeeting.getAuthor());  // 주최자 추가
       recipients.addAll(participants);  // 참가자들 추가
 
-      String title = expiredMeeting.getTitle() + NotificationType.MEETING_EXPIRED.getDescription();
-      sendNotificationToExpiredMeetingParticipants(recipients, title);
+      sendNotificationToExpiredMeetingParticipants(recipients, expiredMeeting.getTitle());
     }
   }
 

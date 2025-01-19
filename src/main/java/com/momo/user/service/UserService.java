@@ -1,5 +1,8 @@
 package com.momo.user.service;
 
+import com.momo.auth.dto.KakaoProfile;
+import com.momo.auth.dto.LoginDTO;
+import com.momo.auth.dto.OAuthToken;
 import com.momo.auth.service.KakaoAuthService;
 import com.momo.common.exception.CustomException;
 import com.momo.common.exception.ErrorCode;
@@ -7,11 +10,10 @@ import com.momo.config.JWTUtil;
 import com.momo.config.token.entity.RefreshToken;
 import com.momo.config.token.repository.RefreshTokenRepository;
 import com.momo.profile.entity.Profile;
+import com.momo.profile.exception.ProfileErrorCode;
+import com.momo.profile.exception.ProfileException;
 import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.dto.CustomUserDetails;
-import com.momo.auth.dto.KakaoProfile;
-import com.momo.auth.dto.LoginDTO;
-import com.momo.auth.dto.OAuthToken;
 import com.momo.user.dto.OtherUserInfoResponse;
 import com.momo.user.dto.UserInfoResponse;
 import com.momo.user.dto.UserUpdateRequest;
@@ -19,17 +21,16 @@ import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.UUID;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import javax.transaction.Transactional;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -246,7 +247,7 @@ public class UserService {
 
     // Profile 엔티티 조회
     Profile profile = profileRepository.findByUser(user)
-        .orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
+        .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
 
     // UserInfoResponse 생성 및 반환
     return UserInfoResponse.builder()
@@ -272,7 +273,7 @@ public class UserService {
 
     // Profile 엔티티 조회 및 업데이트
     Profile profile = profileRepository.findByUser(user)
-        .orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
+        .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
 
     // User 엔티티 업데이트
     if (updateRequest.getNickname() != null) {
@@ -306,7 +307,7 @@ public class UserService {
 
     // Profile 엔티티 조회
     Profile profile = profileRepository.findByUser(user)
-        .orElseThrow(() -> new CustomException(ErrorCode.PROFILE_NOT_FOUND));
+        .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
 
     // 필요한 정보만 반환
     return OtherUserInfoResponse.builder()
