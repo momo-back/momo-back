@@ -90,8 +90,10 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
       // Refresh 토큰 저장
       addRefreshToken(user, refreshToken, Duration.ofHours(24).toMillis());
 
+
       // 응답에 토큰 추가
       Map<String, String> tokens = new HashMap<>();
+      tokens.put("userId", String.valueOf(user.getId())); // userId 추가
       tokens.put("accessToken", accessToken);
 
       response.addCookie(createCookie("refresh", refreshToken));
