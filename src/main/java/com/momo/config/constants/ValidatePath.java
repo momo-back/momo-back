@@ -30,8 +30,8 @@ public enum ValidatePath {
   CHAT_DELETE("/api/v1/chats/**", HttpMethod.DELETE), // 모든 DELETE 요청
 
   // 프로필 조회
-  NON_PROFILE_INFO("/api/v1/users/**", HttpMethod.GET),
-  NON_PROFILE_UPDATE("/api/v1/users/**", HttpMethod.PUT)// 모든 GET 요청
+  NON_PROFILE_INFO("/api/v1/users/**", HttpMethod.GET), // 모든 GET 요청
+  NON_PROFILE_UPDATE("/api/v1/users/**", HttpMethod.PUT) // 모든 PUT 요청
   ;
 
   private final String path;
