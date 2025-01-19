@@ -10,7 +10,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
 
   List<Notification> findAllByUser_Id(Long userId);
 
-  int deleteByIdAndUser_Id(Long notificationId, Long userId);
+  void deleteByIdAndUser_Id(Long notificationId, Long userId);
 
   void deleteAllByUser_Id(Long userId);
 
