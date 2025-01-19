@@ -11,6 +11,7 @@ import com.momo.profile.constant.Gender;
 import com.momo.profile.constant.Mbti;
 import com.momo.profile.dto.ProfileCreateRequest;
 import com.momo.profile.dto.ProfileCreateResponse;
+import com.momo.profile.exception.ProfileErrorCode;
 import com.momo.profile.exception.ProfileException;
 import com.momo.profile.entity.Profile;
 import com.momo.profile.repository.ProfileRepository;
@@ -156,9 +157,9 @@ class ProfileServiceTest {
     when(profileRepository.existsByUser_Id(user.getId())).thenReturn(false);
 
     // then
-    verify(profileImageService).getProfileImageUrl(null);
     assertThatThrownBy(() -> profileService.createProfile(user, request, null))
-        .isInstanceOf(ProfileException.class);
+        .isInstanceOf(ProfileException.class)
+        .hasFieldOrPropertyWithValue("profileErrorCode", ProfileErrorCode.BIRTH_NOT_FUTURE);
   }
 
   User createUser() {
