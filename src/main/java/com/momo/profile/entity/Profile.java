@@ -44,7 +44,6 @@ public class Profile extends BaseEntity {
   @Column(nullable = false)
   private LocalDate birth;
 
-  @Column(nullable = false)
   private String profileImageUrl;
 
   private String introduction;
