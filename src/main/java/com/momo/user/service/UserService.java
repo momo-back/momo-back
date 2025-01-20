@@ -11,6 +11,7 @@ import com.momo.common.exception.ErrorCode;
 import com.momo.config.JWTUtil;
 import com.momo.config.token.entity.RefreshToken;
 import com.momo.config.token.repository.RefreshTokenRepository;
+import com.momo.image.service.ImageService;
 import com.momo.meeting.repository.MeetingRepository;
 import com.momo.profile.entity.Profile;
 import com.momo.profile.exception.ProfileErrorCode;
@@ -34,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -50,6 +52,7 @@ public class UserService {
   private final ChatReadStatusRepository chatReadStatusRepository;
   private final ChatRoomRepository chatRoomRepository;
   private final MeetingRepository meetingRepository;
+  private final ImageService imageService;
 
   private final HashMap<String, String> passwordResetTokens = new HashMap<>();
 
@@ -289,7 +292,7 @@ public class UserService {
   }
 
   @Transactional
-  public void updateUser(UserUpdateRequest updateRequest) {
+  public void updateUser(UserUpdateRequest updateRequest, MultipartFile profileImage) {
     String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
     // User 엔티티 조회
@@ -310,8 +313,9 @@ public class UserService {
     userRepository.save(user);
 
     // Profile 엔티티 업데이트
-    if (updateRequest.getProfileImageUrl() != null) {
-      profile.setProfileImageUrl(updateRequest.getProfileImageUrl());
+    if (profileImage != null && !profileImage.isEmpty()) {
+      String profileImageUrl = imageService.getImageUrl(profileImage);
+      profile.setProfileImageUrl(profileImageUrl);
     }
     if (updateRequest.getIntroduction() != null) {
       profile.setIntroduction(updateRequest.getIntroduction());
