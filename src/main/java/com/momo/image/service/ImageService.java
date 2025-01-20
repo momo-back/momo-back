@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
-public class ProfileImageService {
+public class ImageService {
 
   private final ImageStorage imageStorage;
 
