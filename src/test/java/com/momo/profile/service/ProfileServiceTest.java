@@ -71,12 +71,11 @@ class ProfileServiceTest {
   void createProfile_WithoutImage_Success() {
     // given
     ProfileCreateRequest request = createProfileRequest();
-    String imageUrl = "default-image-url.jpg";
     User user = createUser();
-    Profile profile = request.toEntity(user, imageUrl);
+    Profile profile = request.toEntity(user, null);
 
     when(profileRepository.existsByUser_Id(user.getId())).thenReturn(false);
-    when(profileImageService.getImageUrl(null)).thenReturn(imageUrl);
+    when(profileImageService.getImageUrl(null)).thenReturn(null);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
     // when
@@ -89,7 +88,7 @@ class ProfileServiceTest {
 
     assertThat(response.getGender()).isEqualTo(request.getGender());
     assertThat(response.getBirth()).isEqualTo(request.getBirth());
-    assertThat(response.getProfileImageUrl()).isEqualTo(imageUrl);
+    assertThat(response.getProfileImageUrl()).isEqualTo(null);
     assertThat(response.getMbti()).isEqualTo(request.getMbti());
   }
 
