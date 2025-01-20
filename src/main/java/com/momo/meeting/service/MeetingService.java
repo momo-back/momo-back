@@ -22,6 +22,7 @@ import com.momo.notification.constant.NotificationType;
 import com.momo.notification.service.NotificationService;
 import com.momo.participation.constant.ParticipationStatus;
 import com.momo.participation.repository.ParticipationRepository;
+import com.momo.image.service.ImageService;
 import com.momo.user.entity.User;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.repository.MeetingRepository;
@@ -39,6 +40,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -54,6 +56,7 @@ public class MeetingService {
 
   private final ChatRoomService chatRoomService;
   private final NotificationService notificationService;
+  private final ImageService imageService;
 
   //@Scheduled(cron = "0/10 * * * * *") // 10초마다 실행(테스트)
   @Scheduled(cron = "0 */5 * * * *") // 5분마다 실행
@@ -78,9 +81,12 @@ public class MeetingService {
     sendNotifications(expiredMeetings, approvedParticipants); // 알림 발송
   }
 
-  public MeetingCreateResponse createMeeting(User user, MeetingCreateRequest request) {
+  public MeetingCreateResponse createMeeting(
+      User user, MeetingCreateRequest request, MultipartFile thumbnail
+  ) {
+    String thumbnailUrl = imageService.getImageUrl(thumbnail);
     validateDailyPostLimit(user.getId());
-    Meeting meeting = request.toEntity(request, user);
+    Meeting meeting = request.toEntity(request, user, thumbnailUrl);
 
     meetingRepository.save(meeting);
     chatRoomService.createChatRoom(user, meeting.getId()); // 채팅방 생성
