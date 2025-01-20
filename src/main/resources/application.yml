@@ -69,11 +69,16 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/momo
-    username: root
-    password: password
+    username: ${mysql_username}
+    password: ${mysql_password}
 
   jpa:
     hibernate:
       ddl-auto: create-drop
     database-platform: org.hibernate.dialect.MySQL8Dialect
     show-sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: ERROR  # Hibernate SQL 쿼리 로그 레벨을 ERROR로 설정
+    org.springframework.web: INFO  # Spring Web 관련 INFO 이상 로그 출력
