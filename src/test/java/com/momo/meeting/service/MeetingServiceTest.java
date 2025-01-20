@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import com.momo.chat.repository.ChatRoomRepository;
 import com.momo.chat.service.ChatRoomService;
+import com.momo.image.service.ImageService;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingDto;
@@ -28,11 +29,9 @@ import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.projection.CreatedMeetingProjection;
-import com.momo.meeting.projection.ExpiredMeetingProjection;
 import com.momo.meeting.projection.MeetingParticipantProjection;
 import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import com.momo.meeting.repository.MeetingRepository;
-import com.momo.notification.constant.NotificationType;
 import com.momo.notification.service.NotificationService;
 import com.momo.participation.constant.ParticipationStatus;
 import com.momo.participation.repository.ParticipationRepository;
@@ -50,10 +49,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 @ExtendWith(MockitoExtension.class)
 class MeetingServiceTest {
@@ -76,6 +74,9 @@ class MeetingServiceTest {
   @Mock
   private NotificationService notificationService;
 
+  @Mock
+  private ImageService imageService;
+
   @InjectMocks
   private MeetingService meetingService;
 
@@ -87,13 +88,15 @@ class MeetingServiceTest {
     LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
     LocalDateTime endOfDay = startOfDay.plusDays(1);
     MeetingCreateRequest request = createMeetingRequest();
-    Meeting meeting = createMeeting(user, request);
+    MultipartFile image = mock(MultipartFile.class);
+    String imageUrl = "test-image.jpg";
 
+    when(imageService.getImageUrl(image)).thenReturn(imageUrl);
     when(meetingRepository.countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay))
         .thenReturn(0);
 
     // when
-    MeetingCreateResponse response = meetingService.createMeeting(user, request);
+    MeetingCreateResponse response = meetingService.createMeeting(user, request, image);
 
     // then
     assertThat(response)
@@ -110,7 +113,7 @@ class MeetingServiceTest {
             request.getAddress(), request.getMeetingDateTime(),
             request.getMaxCount(), 1,
             request.getCategory(), request.getContent(),
-            request.getThumbnail(), MeetingStatus.RECRUITING
+            imageUrl, MeetingStatus.RECRUITING
         );
 
     verify(meetingRepository).countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay);
@@ -192,7 +195,6 @@ class MeetingServiceTest {
     );
   }
 
-
   @Test
   @DisplayName("하루 게시글 제한(10개) 초과 - 예외 발생")
   void createMeeting_ExceedDailyLimit_ThrowsException() {
@@ -201,13 +203,16 @@ class MeetingServiceTest {
     MeetingCreateRequest request = createMeetingRequest();
     LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
     LocalDateTime endOfDay = startOfDay.plusDays(1);
+    MultipartFile image = mock(MultipartFile.class);
+    String imageUrl = "test-image.jpg";
 
+    when(imageService.getImageUrl(image)).thenReturn(imageUrl);
     when(meetingRepository.countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay))
         .thenReturn(10);
 
     // when
     // then
-    assertThatThrownBy(() -> meetingService.createMeeting(user, request))
+    assertThatThrownBy(() -> meetingService.createMeeting(user, request, image))
         .isInstanceOf(MeetingException.class)
         .hasFieldOrPropertyWithValue(
             "meetingErrorCode",
