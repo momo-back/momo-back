@@ -31,7 +31,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/meetings")
@@ -50,11 +52,13 @@ public class MeetingController {
   @PostMapping
   public ResponseEntity<MeetingCreateResponse> createMeeting(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
-      @Valid @RequestBody MeetingCreateRequest request
+      @Valid @RequestPart MeetingCreateRequest request,
+      @RequestPart(required = false) MultipartFile thumbnail
   ) {
     MeetingCreateResponse response = meetingService.createMeeting(
         customUserDetails.getUser(),
-        request
+        request,
+        thumbnail
     );
     return ResponseEntity
         .created(URI.create("/api/v1/meetings/" + response.getId()))
