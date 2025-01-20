@@ -1,4 +1,4 @@
-package com.momo.profile.constant;
+package com.momo.image.constant;
 
 import com.momo.profile.exception.ProfileErrorCode;
 import com.momo.profile.exception.ProfileException;

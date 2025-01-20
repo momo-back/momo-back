@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.momo.image.service.ImageService;
 import com.momo.profile.constant.Gender;
 import com.momo.profile.constant.Mbti;
 import com.momo.profile.dto.ProfileCreateRequest;
@@ -32,7 +33,7 @@ class ProfileServiceTest {
   private ProfileRepository profileRepository;
 
   @Mock
-  private ProfileImageService profileImageService;
+  private ImageService profileImageService;
 
   @InjectMocks
   private ProfileService profileService;
@@ -48,7 +49,7 @@ class ProfileServiceTest {
     Profile profile = request.toEntity(user, imageUrl);
 
     when(profileRepository.existsByUser_Id(user.getId())).thenReturn(false);
-    when(profileImageService.getProfileImageUrl(mockImage)).thenReturn(imageUrl);
+    when(profileImageService.getImageUrl(mockImage)).thenReturn(imageUrl);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
     // when
@@ -56,7 +57,7 @@ class ProfileServiceTest {
 
     // then
     verify(profileRepository).existsByUser_Id(user.getId());
-    verify(profileImageService).getProfileImageUrl(mockImage);
+    verify(profileImageService).getImageUrl(mockImage);
     verify(profileRepository).save(any(Profile.class));
 
     assertThat(response.getGender()).isEqualTo(request.getGender());
@@ -75,7 +76,7 @@ class ProfileServiceTest {
     Profile profile = request.toEntity(user, imageUrl);
 
     when(profileRepository.existsByUser_Id(user.getId())).thenReturn(false);
-    when(profileImageService.getProfileImageUrl(null)).thenReturn(imageUrl);
+    when(profileImageService.getImageUrl(null)).thenReturn(imageUrl);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
     // when
@@ -84,7 +85,7 @@ class ProfileServiceTest {
     // then
     verify(profileRepository).existsByUser_Id(user.getId());
     verify(profileRepository).save(any(Profile.class));
-    verify(profileImageService).getProfileImageUrl(null);
+    verify(profileImageService).getImageUrl(null);
 
     assertThat(response.getGender()).isEqualTo(request.getGender());
     assertThat(response.getBirth()).isEqualTo(request.getBirth());

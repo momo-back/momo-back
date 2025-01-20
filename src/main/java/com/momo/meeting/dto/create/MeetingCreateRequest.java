@@ -54,7 +54,7 @@ public class MeetingCreateRequest {
 
   private String thumbnail;
 
-  public Meeting toEntity(MeetingCreateRequest request, User user) {
+  public static Meeting toEntity(MeetingCreateRequest request, User user, String thumbnail) {
     return Meeting.builder()
         .user(user)
         .title(request.getTitle())
@@ -67,7 +67,7 @@ public class MeetingCreateRequest {
         .maxCount(request.getMaxCount())
         .category(request.getCategory())
         .content(request.getContent())
-        .thumbnail(request.getThumbnail())
+        .thumbnail(thumbnail)
         .meetingStatus(MeetingStatus.RECRUITING)
         .build();
   }

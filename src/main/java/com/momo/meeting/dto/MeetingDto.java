@@ -59,7 +59,7 @@ public class MeetingDto {
         .approvedCount(meetingProjection.getApprovedCount())
         .category(foodCategories)
         .content(meetingProjection.getContent())
-        .thumbnail(meetingProjection.getThumbnailUrl())
+        .thumbnail(meetingProjection.getThumbnail())
         .distance(meetingProjection.getDistance())
         .build();
   }

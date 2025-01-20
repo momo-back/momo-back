@@ -61,7 +61,7 @@ public class CreatedMeetingDto {
         .approvedCount(createdMeetingProjection.getApprovedCount())
         .category(foodCategories)
         .content(createdMeetingProjection.getContent())
-        .thumbnail(createdMeetingProjection.getThumbnailUrl())
+        .thumbnail(createdMeetingProjection.getThumbnail())
         .build();
   }
 }

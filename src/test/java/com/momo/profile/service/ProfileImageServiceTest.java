@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.momo.image.service.ImageService;
 import com.momo.profile.adptor.ImageStorage;
 import com.momo.profile.exception.ProfileErrorCode;
 import com.momo.profile.exception.ProfileException;
@@ -25,7 +26,7 @@ class ProfileImageServiceTest {
   private ImageStorage imageStorage;
 
   @InjectMocks
-  private ProfileImageService profileImageService;
+  private ImageService profileImageService;
 
   private static final String DEFAULT_IMAGE_URL =
       "https://s3-momo-storage.s3.ap-northeast-2.amazonaws.com/default.jpg";
@@ -35,7 +36,7 @@ class ProfileImageServiceTest {
   void getProfileImageUrl_WithNullImage_ReturnDefaultImageUrl() {
     // given
     // when
-    String imageUrl = profileImageService.getProfileImageUrl(null);
+    String imageUrl = profileImageService.getImageUrl(null);
 
     // then
     verifyNoInteractions(imageStorage);
@@ -54,7 +55,7 @@ class ProfileImageServiceTest {
     when(imageStorage.uploadImage(mockImage)).thenReturn(imageUrl);
 
     // when
-    String response = profileImageService.getProfileImageUrl(mockImage);
+    String response = profileImageService.getImageUrl(mockImage);
 
     // then
     verify(imageStorage).uploadImage(mockImage);
@@ -70,7 +71,7 @@ class ProfileImageServiceTest {
     when(mockImage.getOriginalFilename()).thenReturn("test-image-url.txt");
 
     // when & then
-    assertThatThrownBy(() -> profileImageService.getProfileImageUrl(mockImage))
+    assertThatThrownBy(() -> profileImageService.getImageUrl(mockImage))
         .isInstanceOf(ProfileException.class)
         .hasFieldOrPropertyWithValue(
             "ProfileErrorCode",
