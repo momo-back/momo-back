@@ -4,11 +4,14 @@ import com.momo.auth.dto.KakaoProfile;
 import com.momo.auth.dto.LoginDTO;
 import com.momo.auth.dto.OAuthToken;
 import com.momo.auth.service.KakaoAuthService;
+import com.momo.chat.repository.ChatReadStatusRepository;
+import com.momo.chat.repository.ChatRoomRepository;
 import com.momo.common.exception.CustomException;
 import com.momo.common.exception.ErrorCode;
 import com.momo.config.JWTUtil;
 import com.momo.config.token.entity.RefreshToken;
 import com.momo.config.token.repository.RefreshTokenRepository;
+import com.momo.meeting.repository.MeetingRepository;
 import com.momo.profile.entity.Profile;
 import com.momo.profile.exception.ProfileErrorCode;
 import com.momo.profile.exception.ProfileException;
@@ -44,6 +47,9 @@ public class UserService {
   private final EmailService emailService;
   private final ProfileRepository profileRepository;
   private final KakaoAuthService kakaoAuthService;
+  private final ChatReadStatusRepository chatReadStatusRepository;
+  private final ChatRoomRepository chatRoomRepository;
+  private final MeetingRepository meetingRepository;
 
   private final HashMap<String, String> passwordResetTokens = new HashMap<>();
 
@@ -75,11 +81,28 @@ public class UserService {
       }
     }
 
+    Long userId = user.getId();
+
     // RefreshToken 삭제
     refreshTokenRepository.deleteByUser(user);
 
     // Profile 삭제
     profileRepository.findByUser(user).ifPresent(profileRepository::delete);
+
+    // ChatReadStatus 삭제
+    chatReadStatusRepository.deleteByUserId(userId);
+
+    // ChatRoom에서 해당 사용자 제거
+    chatRoomRepository.removeUserFromChatRooms(user);
+
+    // 유저가 생성한 채팅방 삭제
+    chatRoomRepository.deleteByHostId(userId);
+
+    // 유저가 생성한 Meeting의 카테고리 먼저 삭제
+    meetingRepository.deleteCategoriesByUserId(userId);
+
+    // 유저가 생성한 Meeting 삭제 추가
+    meetingRepository.deleteByUserId(userId);
 
     // User 삭제
     userRepository.delete(user);
@@ -89,6 +112,7 @@ public class UserService {
 
     log.debug("User and related data deleted successfully for email: {}", email);
   }
+
   private String extractAccessTokenFromAuthorizationHeader(HttpServletRequest request) {
     String authorizationHeader = request.getHeader("Authorization");
     if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {

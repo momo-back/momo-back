@@ -154,4 +154,15 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
   @Modifying
   @Query("DELETE FROM Meeting m WHERE m.id IN :meetingIds")
   int deleteAllByMeetingIds(@Param("meetingIds") List<Long> meetingIds);
+
+  // 먼저 MEETING_CATEGORY 데이터 삭제
+  @Modifying
+  @Query(value = "DELETE FROM meeting_category WHERE meeting_id IN (SELECT id FROM meeting WHERE user_id = :userId)", nativeQuery = true)
+  void deleteCategoriesByUserId(@Param("userId") Long userId);
+
+
+  // 사용자가 생성한 모든 미팅 삭제
+  @Modifying
+  @Query("DELETE FROM Meeting m WHERE m.user.id = :userId")
+  void deleteByUserId(@Param("userId") Long userId);
 }
