@@ -28,7 +28,7 @@ public interface MeetingToMeetingDtoProjection {
 
   String getContent();
 
-  String getThumbnailUrl();
+  String getThumbnail();
 
   Double getDistance();
 }

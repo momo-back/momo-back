@@ -35,7 +35,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
           + "m.max_count as maxCount, "
           + "m.approved_count as approvedCount, "
           + "m.content as content, "
-          + "m.thumbnail_url as thumbnailUrl, "
+          + "m.thumbnail as thumbnail, "
           + "GROUP_CONCAT(mc.category) as category "
           + "FROM meeting m "
           + "INNER JOIN meeting_category mc ON m.id = mc.meeting_id "
@@ -48,7 +48,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
           + "  m.id, m.user_id, m.title, "
           + "  m.location_id, m.latitude, m.longitude, "
           + "  m.address, m.meeting_date_time, m.max_count, "
-          + "  m.approved_count, m.content, m.thumbnail_url "
+          + "  m.approved_count, m.content, m.thumbnail "
           + "ORDER BY m.meeting_date_time ASC, m.id ASC  "
           + "LIMIT :pageSize",
       nativeQuery = true)
@@ -72,7 +72,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
           + "dm.max_count as maxCount, "
           + "dm.approved_count as approvedCount, "
           + "dm.content as content, "
-          + "dm.thumbnail_url as thumbnailUrl, "
+          + "dm.thumbnail as thumbnail, "
           + "("
           + "  SELECT GROUP_CONCAT(mc.category) "
           + "  FROM meeting_category mc "
@@ -81,7 +81,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
           + "dm.distance as distance "
           + "FROM ("
           + "  SELECT m.id, m.user_id, m.title, m.location_id, m.latitude, m.longitude, m.address, "
-          + "  m.meeting_date_time, m.max_count, m.approved_count, m.content, m.thumbnail_url, "
+          + "  m.meeting_date_time, m.max_count, m.approved_count, m.content, m.thumbnail, "
           + "    ST_Distance_Sphere( "
           + "        POINT(:userLongitude, :userLatitude), "
           + "        POINT(m.longitude, m.latitude) "
@@ -121,7 +121,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
       + "m.approved_count as approvedCount, "
       + "GROUP_CONCAT(mc.category) as category, "
       + "m.content as content, "
-      + "m.thumbnail_url as thumbnailUrl "
+      + "m.thumbnail as thumbnail "
       + "FROM meeting as m "
       + "INNER JOIN meeting_category mc ON mc.meeting_id = m.id "
       + "WHERE m.user_id = :userId "
@@ -129,7 +129,7 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
       + "GROUP BY m.id, m.user_id, m.meeting_status, m.title, "
       + "m.location_id, m.latitude, m.longitude, m.address, "
       + "m.meeting_date_time, m.max_count, m.approved_count, "
-      + "m.content, m.thumbnail_url "
+      + "m.content, m.thumbnail "
       + "ORDER BY m.meeting_date_time ASC, m.id ASC  "
       + "LIMIT :pageSize",
       nativeQuery = true)
