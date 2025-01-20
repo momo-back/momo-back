@@ -1,5 +1,6 @@
 package com.momo.profile.service;
 
+import com.momo.image.service.ImageService;
 import com.momo.profile.constant.Gender;
 import com.momo.profile.dto.ProfileCreateRequest;
 import com.momo.profile.dto.ProfileCreateResponse;
@@ -21,7 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class ProfileService {
 
   private final ProfileRepository profileRepository;
-  private final ProfileImageService profileImageService;
+  private final ImageService imageService;
 
   @Transactional
   public ProfileCreateResponse createProfile(
@@ -31,7 +32,7 @@ public class ProfileService {
   ) {
     validateForProfileCreation(user.getId(), request.getGender(), request.getBirth());
 
-    String profileImageUrl = profileImageService.getProfileImageUrl(profileImage);
+    String profileImageUrl = imageService.getImageUrl(profileImage);
     Profile profile = request.toEntity(user, profileImageUrl);
 
     Profile savedProfile = profileRepository.save(profile);
