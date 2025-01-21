@@ -86,4 +86,11 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
   @Modifying
   @Query("DELETE FROM Participation p WHERE p.meeting.id IN :meetingIds")
   int deleteAllByMeetingIds(@Param("meetingIds") List<Long> meetingIds);
+
+  List<Participation> findByUserId(Long userId);
+
+  // 특정 미팅에 대한 모든 참여자 삭제
+  @Modifying
+  @Query("DELETE FROM Participation p WHERE p.meeting.id = :meetingId")
+  void deleteByMeetingId(Long meetingId);
 }

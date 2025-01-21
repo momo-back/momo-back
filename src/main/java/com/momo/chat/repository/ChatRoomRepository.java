@@ -1,6 +1,7 @@
 package com.momo.chat.repository;
 
 import com.momo.chat.entity.ChatRoom;
+import com.momo.meeting.entity.Meeting;
 import com.momo.user.entity.User;
 import java.util.List;
 import java.util.Optional;
@@ -23,17 +24,5 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
   @Query("DELETE FROM ChatRoom cr WHERE cr.meeting.id IN :meetingIds")
   int deleteAllByMeetingIds(@Param("meetingIds") List<Long> meetingIds);
 
-  // 유저가 생성한 채팅방 삭제
-  @Modifying
-  @Query("DELETE FROM ChatRoom cr WHERE cr.host.id = :userId")
-  void deleteByHostId(@Param("userId") Long userId);
-
-  // 유저를 채팅방에서 제거
-  default void removeUserFromChatRooms(User user) {
-    List<ChatRoom> chatRooms = findAllByReaderContains(user);
-    for (ChatRoom chatRoom : chatRooms) {
-      chatRoom.getReader().remove(user);
-    }
-    saveAll(chatRooms); // 변경 사항 저장
-  }
+  List<ChatRoom> findByMeeting(Meeting meeting);
 }
