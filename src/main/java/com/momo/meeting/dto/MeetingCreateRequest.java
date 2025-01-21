@@ -52,8 +52,6 @@ public class MeetingCreateRequest {
   @Size(min = 1, max = 600, message = "내용은 600자 이하로 입력해주세요.")
   private String content;
 
-  private String thumbnail;
-
   public static Meeting toEntity(MeetingCreateRequest request, User user, String thumbnail) {
     return Meeting.builder()
         .user(user)

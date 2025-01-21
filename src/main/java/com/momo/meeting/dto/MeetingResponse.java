@@ -10,7 +10,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class MeetingCreateResponse {
+public class MeetingResponse {
 
   private Long id;
   private String title;
@@ -26,8 +26,8 @@ public class MeetingCreateResponse {
   private String thumbnail;
   private MeetingStatus meetingStatus;
 
-  public static MeetingCreateResponse from(Meeting meeting) {
-    return MeetingCreateResponse.builder()
+  public static MeetingResponse from(Meeting meeting) {
+    return MeetingResponse.builder()
         .id(meeting.getId())
         .title(meeting.getTitle())
         .locationId(meeting.getLocationId())
