@@ -49,7 +49,7 @@ class ProfileServiceTest {
     Profile profile = request.toEntity(user, imageUrl);
 
     when(profileRepository.existsByUser_Id(user.getId())).thenReturn(false);
-    when(profileImageService.getImageUrl(mockImage)).thenReturn(imageUrl);
+    when(profileImageService.uploadImageProcess(mockImage)).thenReturn(imageUrl);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
     // when
@@ -57,7 +57,7 @@ class ProfileServiceTest {
 
     // then
     verify(profileRepository).existsByUser_Id(user.getId());
-    verify(profileImageService).getImageUrl(mockImage);
+    verify(profileImageService).uploadImageProcess(mockImage);
     verify(profileRepository).save(any(Profile.class));
 
     assertThat(response.getGender()).isEqualTo(request.getGender());
@@ -75,7 +75,7 @@ class ProfileServiceTest {
     Profile profile = request.toEntity(user, null);
 
     when(profileRepository.existsByUser_Id(user.getId())).thenReturn(false);
-    when(profileImageService.getImageUrl(null)).thenReturn(null);
+    when(profileImageService.uploadImageProcess(null)).thenReturn(null);
     when(profileRepository.save(any(Profile.class))).thenReturn(profile);
 
     // when
@@ -84,7 +84,7 @@ class ProfileServiceTest {
     // then
     verify(profileRepository).existsByUser_Id(user.getId());
     verify(profileRepository).save(any(Profile.class));
-    verify(profileImageService).getImageUrl(null);
+    verify(profileImageService).uploadImageProcess(null);
 
     assertThat(response.getGender()).isEqualTo(request.getGender());
     assertThat(response.getBirth()).isEqualTo(request.getBirth());

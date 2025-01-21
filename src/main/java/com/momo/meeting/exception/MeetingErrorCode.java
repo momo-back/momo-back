@@ -22,7 +22,10 @@ public enum MeetingErrorCode {
 
   INVALID_FOOD_CATEGORY("유효한 음식 카테고리가 아닙니다.", HttpStatus.BAD_REQUEST),
 
-  ALREADY_MAX_COUNT("모임 인원이 가득찼습니다.", HttpStatus.CONFLICT);
+  ALREADY_MAX_COUNT("모임 인원이 가득찼습니다.", HttpStatus.CONFLICT),
+
+  INVALID_MEETING_DATE("모임 날짜는 1년까지 설정 가능합니다.", HttpStatus.BAD_REQUEST)
+  ;
 
   private final String message;
   private final HttpStatus status;

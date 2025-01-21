@@ -3,9 +3,10 @@ package com.momo.meeting.controller;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.constant.SearchType;
+import com.momo.meeting.dto.MeetingUpdateRequest;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
-import com.momo.meeting.dto.create.MeetingCreateRequest;
-import com.momo.meeting.dto.create.MeetingCreateResponse;
+import com.momo.meeting.dto.MeetingCreateRequest;
+import com.momo.meeting.dto.MeetingResponse;
 import com.momo.meeting.dto.MeetingsRequest;
 import com.momo.meeting.dto.MeetingsResponse;
 import com.momo.meeting.projection.MeetingParticipantProjection;
@@ -50,12 +51,12 @@ public class MeetingController {
    * @return 생성된 모임의 uri, 생성된 모임 정보
    */
   @PostMapping
-  public ResponseEntity<MeetingCreateResponse> createMeeting(
+  public ResponseEntity<MeetingResponse> createMeeting(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @Valid @RequestPart MeetingCreateRequest request,
       @RequestPart(required = false) MultipartFile thumbnail
   ) {
-    MeetingCreateResponse response = meetingService.createMeeting(
+    MeetingResponse response = meetingService.createMeeting(
         customUserDetails.getUser(),
         request,
         thumbnail
@@ -137,13 +138,14 @@ public class MeetingController {
    * @return 수정된 모임의 값
    */
   @PutMapping("/{meetingId}")
-  public ResponseEntity<MeetingCreateResponse> updateMeeting(
+  public ResponseEntity<MeetingResponse> updateMeeting(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long meetingId,
-      @Valid @RequestBody MeetingCreateRequest request
+      @Valid @RequestPart MeetingUpdateRequest request,
+      @RequestPart(required = false) MultipartFile newThumbnail
   ) {
-    MeetingCreateResponse response =
-        meetingService.updateMeeting(customUserDetails.getId(), meetingId, request);
+    MeetingResponse response =
+        meetingService.updateMeeting(customUserDetails.getId(), meetingId, request, newThumbnail);
     return ResponseEntity.ok(response);
   }
 

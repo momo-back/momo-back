@@ -1,4 +1,4 @@
-package com.momo.meeting.dto.create;
+package com.momo.meeting.dto;
 
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
@@ -51,8 +51,6 @@ public class MeetingCreateRequest {
   @NotBlank(message = "모임 내용을 입력해주세요.")
   @Size(min = 1, max = 600, message = "내용은 600자 이하로 입력해주세요.")
   private String content;
-
-  private String thumbnail;
 
   public static Meeting toEntity(MeetingCreateRequest request, User user, String thumbnail) {
     return Meeting.builder()

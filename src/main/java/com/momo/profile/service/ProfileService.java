@@ -32,7 +32,7 @@ public class ProfileService {
   ) {
     validateForProfileCreation(user.getId(), request.getGender(), request.getBirth());
 
-    String profileImageUrl = imageService.getImageUrl(profileImage);
+    String profileImageUrl = imageService.uploadImageProcess(profileImage);
     Profile profile = request.toEntity(user, profileImageUrl);
 
     Profile savedProfile = profileRepository.save(profile);

@@ -36,7 +36,7 @@ class ProfileImageServiceTest {
   void getProfileImageUrl_WithNullImage_ReturnDefaultImageUrl() {
     // given
     // when
-    String imageUrl = profileImageService.getImageUrl(null);
+    String imageUrl = profileImageService.uploadImageProcess(null);
 
     // then
     verifyNoInteractions(imageStorage);
@@ -55,7 +55,7 @@ class ProfileImageServiceTest {
     when(imageStorage.uploadImage(mockImage)).thenReturn(imageUrl);
 
     // when
-    String response = profileImageService.getImageUrl(mockImage);
+    String response = profileImageService.uploadImageProcess(mockImage);
 
     // then
     verify(imageStorage).uploadImage(mockImage);
@@ -71,7 +71,7 @@ class ProfileImageServiceTest {
     when(mockImage.getOriginalFilename()).thenReturn("test-image-url.txt");
 
     // when & then
-    assertThatThrownBy(() -> profileImageService.getImageUrl(mockImage))
+    assertThatThrownBy(() -> profileImageService.uploadImageProcess(mockImage))
         .isInstanceOf(ProfileException.class)
         .hasFieldOrPropertyWithValue(
             "ProfileErrorCode",

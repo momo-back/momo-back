@@ -7,9 +7,10 @@ import com.momo.meeting.constant.SearchType;
 import com.momo.meeting.constant.SortType;
 import com.momo.meeting.dto.MeetingCursor;
 import com.momo.meeting.dto.MeetingDto;
+import com.momo.meeting.dto.MeetingUpdateRequest;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
-import com.momo.meeting.dto.create.MeetingCreateRequest;
-import com.momo.meeting.dto.create.MeetingCreateResponse;
+import com.momo.meeting.dto.MeetingCreateRequest;
+import com.momo.meeting.dto.MeetingResponse;
 import com.momo.meeting.dto.MeetingsRequest;
 import com.momo.meeting.dto.MeetingsResponse;
 import com.momo.meeting.exception.MeetingErrorCode;
@@ -81,42 +82,51 @@ public class MeetingService {
     sendNotifications(expiredMeetings, approvedParticipants); // 알림 발송
   }
 
-  public MeetingCreateResponse createMeeting(
+  public MeetingResponse createMeeting(
       User user, MeetingCreateRequest request, MultipartFile thumbnail
   ) {
-    String thumbnailUrl = imageService.getImageUrl(thumbnail);
+    String thumbnailUrl = imageService.uploadImageProcess(thumbnail);
     validateDailyPostLimit(user.getId());
-    Meeting meeting = request.toEntity(request, user, thumbnailUrl);
+    Meeting meeting = MeetingCreateRequest.toEntity(request, user, thumbnailUrl);
 
     meetingRepository.save(meeting);
     chatRoomService.createChatRoom(user, meeting.getId()); // 채팅방 생성
 
-    return MeetingCreateResponse.from(meeting);
+    return MeetingResponse.from(meeting);
   }
 
   public List<MeetingParticipantProjection> getParticipants(Long userId, Long meetingId) {
-    validateForMeetingOwner(userId, meetingId);
+    validateForMeetingAuthor(userId, meetingId);
     return participationRepository.findMeetingParticipantsByMeeting_Id(meetingId);
   }
 
   @Transactional
-  public MeetingCreateResponse updateMeeting(
-      Long userId, Long meetingId, MeetingCreateRequest request
+  public MeetingResponse updateMeeting(
+      Long userId, Long meetingId, MeetingUpdateRequest request, MultipartFile newThumbnail
   ) {
-    Meeting meeting = validateForMeetingOwner(userId, meetingId);
-    meeting.update(request);
+    Meeting meeting = validateForMeetingAuthor(userId, meetingId); // 검증
+    
+    // 썸네일 처리
+    String newThumbnailUrl = imageService.handleThumbnailUpdate(meeting.getThumbnail(), newThumbnail);
 
-    return MeetingCreateResponse.from(meeting);
+    // 날짜 검증 (1년 이내)
+    if (request.getMeetingDateTime().isAfter(LocalDateTime.now().plusYears(1))) {
+      throw new MeetingException(MeetingErrorCode.INVALID_MEETING_DATE);
+    }
+
+    meeting.update(request, newThumbnailUrl); // 업데이트
+
+    return MeetingResponse.from(meeting);
   }
 
   @Transactional
   public void updateMeetingStatus(Long userId, Long meetingId, MeetingStatus newStatus) {
-    Meeting meeting = validateForMeetingOwner(userId, meetingId);
+    Meeting meeting = validateForMeetingAuthor(userId, meetingId);
     meeting.updateStatus(newStatus);
   }
 
   public void deleteMeeting(Long userId, Long meetingId) {
-    Meeting meeting = validateForMeetingOwner(userId, meetingId);
+    Meeting meeting = validateForMeetingAuthor(userId, meetingId);
     meetingRepository.delete(meeting);
   }
 
@@ -274,7 +284,7 @@ public class MeetingService {
     );
   }
 
-  private Meeting validateForMeetingOwner(Long userId, Long meetingId) {
+  private Meeting validateForMeetingAuthor(Long userId, Long meetingId) {
     Meeting meeting = meetingRepository.findById(meetingId)
         .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
 
