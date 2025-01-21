@@ -1,4 +1,4 @@
-package com.momo.meeting.dto.create;
+package com.momo.meeting.dto;
 
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
