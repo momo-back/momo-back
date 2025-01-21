@@ -119,11 +119,11 @@ public class S3StorageService implements ImageStorage {
     try {
       // URL에서 키 추출
       Map<String, String> urlToKeyMap = imageUrls.stream()
-          .filter(StringUtils::hasText)
+          .filter(StringUtils::hasText) // 각 URL이 null이 아니고, 비어있지 않고, 공백이 아닌지 검사
           .collect(Collectors.toMap(
-              url -> url,
-              this::extractKeyFromUrl,
-              (existing, replacement) -> existing
+              url -> url, // URL 자체를 키로 사용
+              this::extractKeyFromUrl, // URL에서 S3 키를 추출하여 값으로 사용
+              (existing, replacement) -> existing // 키 충돌 발생할 경우 기존 값을 유지
           ));
 
       // 삭제 요청 객체 생성
