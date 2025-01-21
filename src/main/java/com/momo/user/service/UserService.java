@@ -320,7 +320,7 @@ public class UserService {
       }
 
       // 새 프로필 이미지 업로드 및 저장
-      String profileImageUrl = imageService.getImageUrl(profileImage);
+      String profileImageUrl = imageService.uploadImageProcess(profileImage);
       profile.setProfileImageUrl(profileImageUrl);
     }
     if (updateRequest.getIntroduction() != null) {

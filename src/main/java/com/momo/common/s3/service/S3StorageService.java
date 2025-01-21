@@ -33,6 +33,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class S3StorageService implements ImageStorage {
 
+  private static final String IMAGE_PATH_PREFIX = "image";
+
   private final AmazonS3 amazonS3;
 
   @Value("${aws.s3.bucket}")
@@ -202,7 +204,8 @@ public class S3StorageService implements ImageStorage {
   }
 
   private static String createFilename(MultipartFile file) {
-    return "/" + FileUtils.createFileName(file.getOriginalFilename());
+    String fileName = FileUtils.createFileName(file.getOriginalFilename());
+    return IMAGE_PATH_PREFIX + "/" + fileName;
   }
 
   private static ObjectMetadata createObjectMetadata(MultipartFile file) {
