@@ -3,7 +3,7 @@ package com.momo.meeting.entity;
 import com.momo.common.entity.BaseEntity;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
-import com.momo.meeting.dto.create.MeetingCreateRequest;
+import com.momo.meeting.dto.MeetingUpdateRequest;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.user.entity.User;
@@ -84,7 +84,7 @@ public class Meeting extends BaseEntity {
   @Column(nullable = false)
   private MeetingStatus meetingStatus;
 
-  public void update(MeetingCreateRequest request) {
+  public void update(MeetingUpdateRequest request, String newThumbnail) {
     this.title = request.getTitle();
     this.locationId = request.getLocationId();
     this.latitude = request.getLatitude();
@@ -93,7 +93,7 @@ public class Meeting extends BaseEntity {
     this.meetingDateTime = request.getMeetingDateTime();
     this.maxCount = request.getMaxCount();
     this.content = request.getContent();
-    this.thumbnail = request.getThumbnail();
+    this.thumbnail = newThumbnail;
     this.category = request.getCategory();
   }
 
