@@ -105,9 +105,10 @@ public class MeetingService {
       Long userId, Long meetingId, MeetingUpdateRequest request, MultipartFile newThumbnail
   ) {
     Meeting meeting = validateForMeetingAuthor(userId, meetingId); // 검증
-    
+
     // 썸네일 처리
-    String newThumbnailUrl = imageService.handleThumbnailUpdate(meeting.getThumbnail(), newThumbnail);
+    String newThumbnailUrl =
+        imageService.handleThumbnailUpdate(meeting.getThumbnail(), newThumbnail);
 
     // 날짜 검증 (1년 이내)
     if (request.getMeetingDateTime().isAfter(LocalDateTime.now().plusYears(1))) {
