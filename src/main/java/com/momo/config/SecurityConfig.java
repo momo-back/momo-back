@@ -92,6 +92,7 @@ public class SecurityConfig {
             ).permitAll()
             .antMatchers(HttpMethod.GET, EndpointConstants.MEETINGS).permitAll()
             .antMatchers(HttpMethod.POST, EndpointConstants.MEETINGS).authenticated()
+            .antMatchers(HttpMethod.PATCH, EndpointConstants.MEETINGS).authenticated()
             .anyRequest().authenticated()
         )
         .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable()))
