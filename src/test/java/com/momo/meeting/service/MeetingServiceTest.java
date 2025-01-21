@@ -17,14 +17,15 @@ import com.momo.chat.service.ChatRoomService;
 import com.momo.image.service.ImageService;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
+import com.momo.meeting.dto.MeetingUpdateRequest;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingDto;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
 import com.momo.meeting.dto.MeetingCursor;
 import com.momo.meeting.dto.MeetingDto;
 import com.momo.meeting.dto.MeetingsRequest;
 import com.momo.meeting.dto.MeetingsResponse;
-import com.momo.meeting.dto.create.MeetingCreateRequest;
-import com.momo.meeting.dto.create.MeetingCreateResponse;
+import com.momo.meeting.dto.MeetingCreateRequest;
+import com.momo.meeting.dto.MeetingResponse;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
@@ -91,12 +92,12 @@ class MeetingServiceTest {
     MultipartFile image = mock(MultipartFile.class);
     String imageUrl = "test-image.jpg";
 
-    when(imageService.getImageUrl(image)).thenReturn(imageUrl);
+    when(imageService.uploadImageProcess(image)).thenReturn(imageUrl);
     when(meetingRepository.countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay))
         .thenReturn(0);
 
     // when
-    MeetingCreateResponse response = meetingService.createMeeting(user, request, image);
+    MeetingResponse response = meetingService.createMeeting(user, request, image);
 
     // then
     assertThat(response)
@@ -206,7 +207,7 @@ class MeetingServiceTest {
     MultipartFile image = mock(MultipartFile.class);
     String imageUrl = "test-image.jpg";
 
-    when(imageService.getImageUrl(image)).thenReturn(imageUrl);
+    when(imageService.uploadImageProcess(image)).thenReturn(imageUrl);
     when(meetingRepository.countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay))
         .thenReturn(10);
 
@@ -228,13 +229,17 @@ class MeetingServiceTest {
     User user = createUser();
     MeetingCreateRequest request = createMeetingRequest();
     Meeting meeting = createMeeting(user, request);
-    MeetingCreateRequest updateRequest = createUpdateRequest();
+    MultipartFile updateThumbnail = mock(MultipartFile.class);
+    String updateThumbnailUrl = "test-thumbnail.jpg";
+    MeetingUpdateRequest updateRequest = createUpdateRequest(updateThumbnailUrl);
 
+    when(imageService.handleThumbnailUpdate(meeting.getThumbnail(), updateThumbnail))
+        .thenReturn(updateThumbnailUrl);
     when(meetingRepository.findById(meeting.getId())).thenReturn(Optional.of(meeting));
 
     // when
-    MeetingCreateResponse response =
-        meetingService.updateMeeting(user.getId(), meeting.getId(), updateRequest);
+    MeetingResponse response =
+        meetingService.updateMeeting(user.getId(), meeting.getId(), updateRequest, updateThumbnail);
 
     // then
     assertThat(response)
@@ -264,13 +269,13 @@ class MeetingServiceTest {
   void updateMeeting_MeetingNotFound_ThrowsException() {
     // given
     User user = createUser();
-    MeetingCreateRequest request = createMeetingRequest();
+    MeetingUpdateRequest request = createUpdateRequest("test_thumbnail.jpg");
 
     when(meetingRepository.findById(1L)).thenReturn(Optional.empty());
 
     // when & then
     assertThatThrownBy(() ->
-        meetingService.updateMeeting(user.getId(), 1L, request))
+        meetingService.updateMeeting(user.getId(), 1L, request, null))
         .isInstanceOf(MeetingException.class)
         .hasFieldOrPropertyWithValue("meetingErrorCode", MeetingErrorCode.MEETING_NOT_FOUND);
   }
@@ -280,14 +285,17 @@ class MeetingServiceTest {
   void updateMeeting_NotOwner_ThrowsException() {
     // given
     User user = createUser();
-    MeetingCreateRequest request = createMeetingRequest();
+    MultipartFile updateThumbnail = mock(MultipartFile.class);
+    String updateThumbnailUrl = "test-thumbnail.jpg";
+    MeetingUpdateRequest request = createUpdateRequest(updateThumbnailUrl);
     Meeting meeting = createMeeting(user, request);
+
 
     when(meetingRepository.findById(meeting.getId())).thenReturn(Optional.of(meeting));
 
     // when & then
     assertThatThrownBy(() ->
-        meetingService.updateMeeting(2L, meeting.getId(), request))
+        meetingService.updateMeeting(2L, meeting.getId(), request, updateThumbnail))
         .isInstanceOf(MeetingException.class)
         .hasFieldOrPropertyWithValue("meetingErrorCode", MeetingErrorCode.NOT_MEETING_OWNER);
   }
@@ -486,8 +494,26 @@ class MeetingServiceTest {
         .approvedCount(1)
         .category(request.getCategory())
         .content(request.getContent())
-        .thumbnail(request.getThumbnail())
         .meetingStatus(MeetingStatus.RECRUITING)
+        .build();
+  }
+
+  private static Meeting createMeeting(User user, MeetingUpdateRequest request) {
+    return Meeting.builder()
+        .id(1L)
+        .user(user)
+        .title(request.getTitle())
+        .locationId(request.getLocationId())
+        .latitude(request.getLatitude())
+        .longitude(request.getLongitude())
+        .address(request.getAddress())
+        .meetingDateTime(request.getMeetingDateTime())
+        .maxCount(request.getMaxCount())
+        .approvedCount(1)
+        .category(request.getCategory())
+        .content(request.getContent())
+        .meetingStatus(MeetingStatus.RECRUITING)
+        .thumbnail(request.getThumbnail())
         .build();
   }
 
@@ -502,12 +528,11 @@ class MeetingServiceTest {
         .maxCount(6)
         .category(Set.of(FoodCategory.KOREAN, FoodCategory.JAPANESE))
         .content("테스트 내용")
-        .thumbnail("test-thumbnail-url.jpg")
         .build();
   }
 
-  private static MeetingCreateRequest createUpdateRequest() {
-    return MeetingCreateRequest.builder()
+  private static MeetingUpdateRequest createUpdateRequest(String thumbnail) {
+    return MeetingUpdateRequest.builder()
         .title("업데이트 테스트 제목")
         .locationId(123456L)
         .latitude(37.123123)
@@ -517,7 +542,7 @@ class MeetingServiceTest {
         .maxCount(5)
         .category(Set.of(FoodCategory.DESSERT))
         .content("업데이트 내용")
-        .thumbnail("")
+        .thumbnail(thumbnail)
         .build();
   }
 
