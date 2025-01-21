@@ -85,8 +85,10 @@ public class MeetingService {
   public MeetingResponse createMeeting(
       User user, MeetingCreateRequest request, MultipartFile thumbnail
   ) {
-    String thumbnailUrl = imageService.uploadImageProcess(thumbnail);
-    validateDailyPostLimit(user.getId());
+    validateDailyPostLimit(user.getId()); // 하루 포스팅 제한
+    validateMeetingDate(request.getMeetingDateTime()); // 날짜 검증 (1년 이내)
+
+    String thumbnailUrl = imageService.uploadImageProcess(thumbnail); // 썸네일 업로드
     Meeting meeting = MeetingCreateRequest.toEntity(request, user, thumbnailUrl);
 
     meetingRepository.save(meeting);
@@ -105,16 +107,11 @@ public class MeetingService {
       Long userId, Long meetingId, MeetingUpdateRequest request, MultipartFile newThumbnail
   ) {
     Meeting meeting = validateForMeetingAuthor(userId, meetingId); // 검증
+    validateMeetingDate(meeting.getMeetingDateTime()); // 날짜 검증 (1년 이내)
 
     // 썸네일 처리
     String newThumbnailUrl =
         imageService.handleThumbnailUpdate(meeting.getThumbnail(), newThumbnail);
-
-    // 날짜 검증 (1년 이내)
-    if (request.getMeetingDateTime().isAfter(LocalDateTime.now().plusYears(1))) {
-      throw new MeetingException(MeetingErrorCode.INVALID_MEETING_DATE);
-    }
-
     meeting.update(request, newThumbnailUrl); // 업데이트
 
     return MeetingResponse.from(meeting);
@@ -307,5 +304,11 @@ public class MeetingService {
         .hasNext(hasNext)
         .cursor(nextCursor)
         .build();
+  }
+
+  private static void validateMeetingDate(LocalDateTime meetingDateTime) {
+    if (meetingDateTime.isAfter(LocalDateTime.now().plusYears(1))) {
+      throw new MeetingException(MeetingErrorCode.INVALID_MEETING_DATE);
+    }
   }
 }

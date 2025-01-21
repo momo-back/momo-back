@@ -197,6 +197,30 @@ class MeetingServiceTest {
   }
 
   @Test
+  @DisplayName("모임 날짜 1년 이후로 설정 - 예외 발생")
+  void createMeeting_AfterOneYear_ThrowsException() {
+    // given
+    User user = createUser();
+    MeetingCreateRequest request = createMeetingInvalidMeetingDateRequest();
+    LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+    LocalDateTime endOfDay = startOfDay.plusDays(1);
+    MultipartFile image = mock(MultipartFile.class);
+
+    when(meetingRepository.countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay))
+        .thenReturn(0);
+
+    // when
+    // then
+    assertThatThrownBy(() -> meetingService.createMeeting(user, request, image))
+        .isInstanceOf(MeetingException.class)
+        .hasFieldOrPropertyWithValue(
+            "meetingErrorCode",
+            MeetingErrorCode.INVALID_MEETING_DATE);
+
+    verify(meetingRepository).countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay);
+  }
+
+  @Test
   @DisplayName("하루 게시글 제한(10개) 초과 - 예외 발생")
   void createMeeting_ExceedDailyLimit_ThrowsException() {
     // given
@@ -205,9 +229,7 @@ class MeetingServiceTest {
     LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
     LocalDateTime endOfDay = startOfDay.plusDays(1);
     MultipartFile image = mock(MultipartFile.class);
-    String imageUrl = "test-image.jpg";
 
-    when(imageService.uploadImageProcess(image)).thenReturn(imageUrl);
     when(meetingRepository.countByUser_IdAndCreatedAtBetween(user.getId(), startOfDay, endOfDay))
         .thenReturn(10);
 
@@ -289,7 +311,6 @@ class MeetingServiceTest {
     String updateThumbnailUrl = "test-thumbnail.jpg";
     MeetingUpdateRequest request = createUpdateRequest(updateThumbnailUrl);
     Meeting meeting = createMeeting(user, request);
-
 
     when(meetingRepository.findById(meeting.getId())).thenReturn(Optional.of(meeting));
 
@@ -525,6 +546,20 @@ class MeetingServiceTest {
         .longitude(127.123123)
         .address("테스트 주소")
         .meetingDateTime(LocalDateTime.now().plusDays(1))
+        .maxCount(6)
+        .category(Set.of(FoodCategory.KOREAN, FoodCategory.JAPANESE))
+        .content("테스트 내용")
+        .build();
+  }
+
+  private MeetingCreateRequest createMeetingInvalidMeetingDateRequest() {
+    return MeetingCreateRequest.builder()
+        .title("테스트 모임")
+        .locationId(123456L)
+        .latitude(37.123123)
+        .longitude(127.123123)
+        .address("테스트 주소")
+        .meetingDateTime(LocalDateTime.now().plusYears(1).plusSeconds(1))
         .maxCount(6)
         .category(Set.of(FoodCategory.KOREAN, FoodCategory.JAPANESE))
         .content("테스트 내용")
