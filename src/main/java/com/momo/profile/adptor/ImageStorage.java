@@ -1,5 +1,6 @@
 package com.momo.profile.adptor;
 
+import java.util.List;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface ImageStorage {
@@ -8,5 +9,7 @@ public interface ImageStorage {
 
   MultipartFile getImage(String fileKey);
 
-  void deleteImage(String fileKey);
+  boolean deleteImage(String fileKey);
+
+  List<String> deleteImageAll(List<String> images);
 }
