@@ -35,4 +35,11 @@ public class ImageService {
       throw new ProfileException(ProfileErrorCode.INVALID_IMAGE_FORMAT);
     }
   }
+
+  // 기존 프로필 이미지 삭제
+  public void deleteImage(String fileKey) {
+    if (fileKey != null && !fileKey.isEmpty()) {
+      imageStorage.deleteImage(fileKey);
+    }
+  }
 }

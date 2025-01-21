@@ -310,10 +310,15 @@ public class UserService {
     if (updateRequest.getPhone() != null) {
       user.setPhone(updateRequest.getPhone());
     }
-    userRepository.save(user);
 
     // Profile 엔티티 업데이트
     if (profileImage != null && !profileImage.isEmpty()) {
+      // 기존 프로필 이미지가 있다면 S3에서 삭제
+      if (profile.getProfileImageUrl() != null && !profile.getProfileImageUrl().isEmpty()) {
+        imageService.deleteImage(profile.getProfileImageUrl());
+      }
+
+      // 새 프로필 이미지 업로드 및 저장
       String profileImageUrl = imageService.getImageUrl(profileImage);
       profile.setProfileImageUrl(profileImageUrl);
     }
@@ -323,7 +328,6 @@ public class UserService {
     if (updateRequest.getMbti() != null) {
       profile.setMbti(updateRequest.getMbti());
     }
-    profileRepository.save(profile);
 
     log.debug("User and Profile updated successfully for email: {}", email);
   }
