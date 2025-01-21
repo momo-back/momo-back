@@ -33,5 +33,5 @@ public interface AppliedMeetingProjection {
 
   String getContent();
 
-  String getThumbnailUrl();
+  String getThumbnail();
 }
