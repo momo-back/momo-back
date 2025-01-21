@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 public class UserUpdateRequest {
   private String nickname;
   private String phone;
-  private String profileImageUrl;
   private String introduction;
   private Mbti mbti;
 }

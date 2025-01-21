@@ -12,6 +12,7 @@ import com.momo.common.exception.ErrorCode;
 import com.momo.config.JWTUtil;
 import com.momo.config.token.entity.RefreshToken;
 import com.momo.config.token.repository.RefreshTokenRepository;
+import com.momo.image.service.ImageService;
 import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.repository.MeetingRepository;
 import com.momo.notification.repository.NotificationRepository;
@@ -40,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
@@ -56,6 +58,7 @@ public class UserService {
   private final ChatReadStatusRepository chatReadStatusRepository;
   private final ChatRoomRepository chatRoomRepository;
   private final MeetingRepository meetingRepository;
+  private final ImageService imageService;
   private final ParticipationRepository participationRepository;
   private final NotificationRepository notificationRepository;
 
@@ -175,23 +178,6 @@ public class UserService {
   }
 
 
-
-
-  // 비밀번호 재설정 토큰 생성
-  public String generateResetToken(String email) {
-    User user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-    String token = UUID.randomUUID().toString();
-    passwordResetTokens.put(token, email);
-    return token;
-  }
-
-  // 비밀번호 재설정 토큰 검증
-  public boolean validateResetToken(String token) {
-    return passwordResetTokens.containsKey(token);
-  }
-
   // 비밀번호 재설정 링크 발송
   public void sendPasswordResetLink(String email) {
     User user = userRepository.findByEmail(email)
@@ -221,13 +207,6 @@ public class UserService {
     passwordResetTokens.remove(token);
   }
 
-  // 현재 로그인한 사용자 정보 가져오기
-  private CustomUserDetails getLoggedInUserDetails() {
-    return (CustomUserDetails) SecurityContextHolder
-        .getContext()
-        .getAuthentication()
-        .getPrincipal();
-  }
 
   @Transactional
   public User processKakaoUser(KakaoProfile kakaoProfile, OAuthToken oauthToken) {
@@ -288,28 +267,8 @@ public class UserService {
     createRefreshToken(user, newTokenValue);
   }
 
-  public UserInfoResponse getUserInfo() {
-    String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-    User user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new RuntimeException("User not found"));
-
-    Profile profile = profileRepository.findByUser(user)
-        .orElseThrow(() -> new RuntimeException("Profile not found"));
-
-    return UserInfoResponse.builder()
-        .nickname(user.getNickname())
-        .phone(user.getPhone())
-        .email(user.getEmail())
-        .gender(profile.getGender())
-        .birth(profile.getBirth())
-        .profileImageUrl(profile.getProfileImageUrl())
-        .introduction(profile.getIntroduction())
-        .mbti(profile.getMbti())
-        .build();
-  }
-
-  // 카카오 로그인 회원정보 조회
+  // 회원정보 조회
   public UserInfoResponse getUserInfoByEmail(String email) {
     // User 엔티티 조회
     User user = userRepository.findByEmail(email)
@@ -334,7 +293,7 @@ public class UserService {
   }
 
   @Transactional
-  public void updateUser(UserUpdateRequest updateRequest) {
+  public void updateUser(UserUpdateRequest updateRequest, MultipartFile profileImage) {
     String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
     // User 엔티티 조회
@@ -352,11 +311,17 @@ public class UserService {
     if (updateRequest.getPhone() != null) {
       user.setPhone(updateRequest.getPhone());
     }
-    userRepository.save(user);
 
     // Profile 엔티티 업데이트
-    if (updateRequest.getProfileImageUrl() != null) {
-      profile.setProfileImageUrl(updateRequest.getProfileImageUrl());
+    if (profileImage != null && !profileImage.isEmpty()) {
+      // 기존 프로필 이미지가 있다면 S3에서 삭제
+      if (profile.getProfileImageUrl() != null && !profile.getProfileImageUrl().isEmpty()) {
+        imageService.deleteImage(profile.getProfileImageUrl());
+      }
+
+      // 새 프로필 이미지 업로드 및 저장
+      String profileImageUrl = imageService.getImageUrl(profileImage);
+      profile.setProfileImageUrl(profileImageUrl);
     }
     if (updateRequest.getIntroduction() != null) {
       profile.setIntroduction(updateRequest.getIntroduction());
@@ -364,7 +329,6 @@ public class UserService {
     if (updateRequest.getMbti() != null) {
       profile.setMbti(updateRequest.getMbti());
     }
-    profileRepository.save(profile);
 
     log.debug("User and Profile updated successfully for email: {}", email);
   }
