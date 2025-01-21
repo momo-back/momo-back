@@ -4,6 +4,7 @@ import com.momo.auth.dto.KakaoProfile;
 import com.momo.auth.dto.LoginDTO;
 import com.momo.auth.dto.OAuthToken;
 import com.momo.auth.service.KakaoAuthService;
+import com.momo.chat.entity.ChatRoom;
 import com.momo.chat.repository.ChatReadStatusRepository;
 import com.momo.chat.repository.ChatRoomRepository;
 import com.momo.common.exception.CustomException;
@@ -11,7 +12,11 @@ import com.momo.common.exception.ErrorCode;
 import com.momo.config.JWTUtil;
 import com.momo.config.token.entity.RefreshToken;
 import com.momo.config.token.repository.RefreshTokenRepository;
+import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.repository.MeetingRepository;
+import com.momo.notification.repository.NotificationRepository;
+import com.momo.participation.entity.Participation;
+import com.momo.participation.repository.ParticipationRepository;
 import com.momo.profile.entity.Profile;
 import com.momo.profile.exception.ProfileErrorCode;
 import com.momo.profile.exception.ProfileException;
@@ -24,6 +29,7 @@ import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -50,6 +56,8 @@ public class UserService {
   private final ChatReadStatusRepository chatReadStatusRepository;
   private final ChatRoomRepository chatRoomRepository;
   private final MeetingRepository meetingRepository;
+  private final ParticipationRepository participationRepository;
+  private final NotificationRepository notificationRepository;
 
   private final HashMap<String, String> passwordResetTokens = new HashMap<>();
 
@@ -89,14 +97,51 @@ public class UserService {
     // Profile 삭제
     profileRepository.findByUser(user).ifPresent(profileRepository::delete);
 
-    // ChatReadStatus 삭제
-    chatReadStatusRepository.deleteByUserId(userId);
+    // Notification 삭제
+    notificationRepository.deleteAllByUser_Id(userId);
 
-    // ChatRoom에서 해당 사용자 제거
-    chatRoomRepository.removeUserFromChatRooms(user);
+    // 탈퇴하려는 사용자가 호스트인 경우 (모임 및 채팅방 삭제)
+    List<Meeting> userMeetingsAsHost = meetingRepository.findByUserId(userId);
+    for (Meeting meeting : userMeetingsAsHost) {
+      // 해당 미팅에 관련된 참여자 삭제
+      participationRepository.deleteByMeetingId(meeting.getId());
 
-    // 유저가 생성한 채팅방 삭제
-    chatRoomRepository.deleteByHostId(userId);
+      // 해당 미팅에 연결된 모든 채팅방 처리
+      List<ChatRoom> chatRoomsForMeeting = chatRoomRepository.findByMeeting(meeting);
+      for (ChatRoom chatRoom : chatRoomsForMeeting) {
+        // 채팅방에서 호스트 제거
+        chatRoom.getReader().remove(user);
+
+        // 해당 채팅방의 모든 ChatReadStatus 삭제
+        chatReadStatusRepository.deleteByChatRoom(chatRoom);
+
+        // 해당 채팅방 삭제
+        chatRoomRepository.delete(chatRoom);
+      }
+    }
+
+    // 탈퇴하려는 사용자가 참여자일 경우 (참여자 정보 삭제)
+    List<Participation> userParticipations = participationRepository.findByUserId(userId);
+    for (Participation participation : userParticipations) {
+      // 참여자 관련 정보 삭제
+      participationRepository.delete(participation);
+
+      // 해당 사용자가 참여한 채팅방이 있을 경우, 해당 채팅방에서 참여자 정보 삭제
+      Meeting meeting = participation.getMeeting();
+      List<ChatRoom> chatRoomsForMeeting = chatRoomRepository.findByMeeting(meeting);
+      for (ChatRoom chatRoom : chatRoomsForMeeting) {
+        // 채팅방에서 해당 참여자 제거
+        List<User> readers = chatRoom.getReader();  // 채팅방 참여자 리스트 가져오기
+        if (readers != null && readers.contains(user)) {
+          readers.remove(user);  // 유저를 채팅방에서 제거
+        }
+
+        // 해당 채팅방에서의 ChatReadStatus 삭제
+        chatReadStatusRepository.deleteByChatRoom_IdAndUser_Id(chatRoom.getId(), user.getId());
+
+        chatRoomRepository.save(chatRoom);
+      }
+    }
 
     // 유저가 생성한 Meeting의 카테고리 먼저 삭제
     meetingRepository.deleteCategoriesByUserId(userId);
