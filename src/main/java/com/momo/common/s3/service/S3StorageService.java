@@ -64,23 +64,23 @@ public class S3StorageService implements ImageStorage {
   }
 
   @Override
-  public MultipartFile getImage(String fileKey) {
+  public MultipartFile getImage(String fileUrl) {
     return null;
   }
 
   /**
    * S3 파일 삭제
    *
-   * @param imageUrl 삭제할 이미지 URL
+   * @param fileUrl 삭제할 이미지 URL
    * @return 삭제 결과
    */
   @Override
-  public boolean deleteImage(String imageUrl) {
+  public boolean deleteImage(String fileUrl) {
     try {
       // URL에서 키 추출
-      String key = extractKeyFromUrl(imageUrl);
+      String key = extractKeyFromUrl(fileUrl);
       if (key == null) {
-        log.error("URL에서 key 추출 실패 : {}", imageUrl);
+        log.error("URL에서 key 추출 실패 : {}", fileUrl);
         return false;
       }
 
@@ -107,18 +107,18 @@ public class S3StorageService implements ImageStorage {
   /**
    * 다중 파일 삭제
    *
-   * @param imageUrls 삭제할 이미지 URL 목록
+   * @param fileUrls 삭제할 이미지 URL 목록
    * @return 삭제 성공한 파일의 URL 목록
    */
   @Override
-  public List<String> deleteImageAll(List<String> imageUrls) {
-    if (CollectionUtils.isEmpty(imageUrls)) {
+  public List<String> deleteImageAll(List<String> fileUrls) {
+    if (CollectionUtils.isEmpty(fileUrls)) {
       return Collections.emptyList();
     }
 
     try {
       // URL에서 키 추출
-      Map<String, String> urlToKeyMap = imageUrls.stream()
+      Map<String, String> urlToKeyMap = fileUrls.stream()
           .filter(StringUtils::hasText) // 각 URL이 null이 아니고, 비어있지 않고, 공백이 아닌지 검사
           .collect(Collectors.toMap(
               url -> url, // URL 자체를 키로 사용
@@ -147,7 +147,7 @@ public class S3StorageService implements ImageStorage {
           .map(Map.Entry::getKey)
           .collect(Collectors.toList());
 
-      log.info("이미지 {}개 중, {}개 삭제 성공", successUrls.size(), imageUrls.size());
+      log.info("이미지 {}개 중, {}개 삭제 성공", successUrls.size(), fileUrls.size());
       return successUrls;
 
     } catch (AmazonServiceException e) {

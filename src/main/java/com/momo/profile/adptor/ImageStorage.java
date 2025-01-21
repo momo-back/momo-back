@@ -7,9 +7,9 @@ public interface ImageStorage {
 
   String uploadImage(MultipartFile file);
 
-  MultipartFile getImage(String fileKey);
+  MultipartFile getImage(String fileUrl);
 
-  boolean deleteImage(String fileKey);
+  boolean deleteImage(String fileUrl);
 
-  List<String> deleteImageAll(List<String> images);
+  List<String> deleteImageAll(List<String> fileUrls);
 }
