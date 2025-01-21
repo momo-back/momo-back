@@ -364,7 +364,7 @@ class ParticipationServiceTest {
     given(projection.getApprovedCount()).willReturn(i + 1);
     given(projection.getCategory()).willReturn("KOREAN,DESSERT");
     given(projection.getContent()).willReturn("Test Content " + i);
-    given(projection.getThumbnailUrl()).willReturn("test_" + i + "_thumbnail_url.jpg");
+    given(projection.getThumbnail()).willReturn("test_" + i + "_thumbnail_url.jpg");
     projections.add(projection);
   }
 

@@ -35,7 +35,7 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
           + "m.approved_count as approvedCount, "
           + "categories.categories as category, "
           + "m.content as content, "
-          + "m.thumbnail_url as thumbnailUrl "
+          + "m.thumbnail as thumbnail "
           + "FROM participation p "
           + "INNER JOIN meeting m ON p.meeting_id = m.id "
           + "INNER JOIN ("
