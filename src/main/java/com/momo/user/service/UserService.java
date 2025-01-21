@@ -133,23 +133,6 @@ public class UserService {
   }
 
 
-
-
-  // 비밀번호 재설정 토큰 생성
-  public String generateResetToken(String email) {
-    User user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-    String token = UUID.randomUUID().toString();
-    passwordResetTokens.put(token, email);
-    return token;
-  }
-
-  // 비밀번호 재설정 토큰 검증
-  public boolean validateResetToken(String token) {
-    return passwordResetTokens.containsKey(token);
-  }
-
   // 비밀번호 재설정 링크 발송
   public void sendPasswordResetLink(String email) {
     User user = userRepository.findByEmail(email)
@@ -179,13 +162,6 @@ public class UserService {
     passwordResetTokens.remove(token);
   }
 
-  // 현재 로그인한 사용자 정보 가져오기
-  private CustomUserDetails getLoggedInUserDetails() {
-    return (CustomUserDetails) SecurityContextHolder
-        .getContext()
-        .getAuthentication()
-        .getPrincipal();
-  }
 
   @Transactional
   public User processKakaoUser(KakaoProfile kakaoProfile, OAuthToken oauthToken) {
@@ -246,28 +222,8 @@ public class UserService {
     createRefreshToken(user, newTokenValue);
   }
 
-  public UserInfoResponse getUserInfo() {
-    String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-    User user = userRepository.findByEmail(email)
-        .orElseThrow(() -> new RuntimeException("User not found"));
-
-    Profile profile = profileRepository.findByUser(user)
-        .orElseThrow(() -> new RuntimeException("Profile not found"));
-
-    return UserInfoResponse.builder()
-        .nickname(user.getNickname())
-        .phone(user.getPhone())
-        .email(user.getEmail())
-        .gender(profile.getGender())
-        .birth(profile.getBirth())
-        .profileImageUrl(profile.getProfileImageUrl())
-        .introduction(profile.getIntroduction())
-        .mbti(profile.getMbti())
-        .build();
-  }
-
-  // 카카오 로그인 회원정보 조회
+  // 회원정보 조회
   public UserInfoResponse getUserInfoByEmail(String email) {
     // User 엔티티 조회
     User user = userRepository.findByEmail(email)
