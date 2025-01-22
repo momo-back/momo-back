@@ -1,5 +1,7 @@
 package com.momo.meeting.service;
 
+import com.momo.chat.repository.ChatReadStatusRepository;
+import com.momo.chat.repository.ChatRepository;
 import com.momo.chat.repository.ChatRoomRepository;
 import com.momo.chat.service.ChatRoomService;
 import com.momo.meeting.constant.MeetingStatus;
@@ -54,6 +56,8 @@ public class MeetingService {
   private final MeetingRepository meetingRepository;
   private final ParticipationRepository participationRepository;
   private final ChatRoomRepository chatRoomRepository;
+  private final ChatReadStatusRepository chatReadStatusRepository;
+  private final ChatRepository chatRepository;
 
   private final ChatRoomService chatRoomService;
   private final NotificationService notificationService;
@@ -211,6 +215,8 @@ public class MeetingService {
   private void deleteExpiredMeetingData(List<Long> expiredMeetingIds) {
     // Scheduled의 쓰레드에서는 Transaction을 실행할 수 없기 때문에 직접 실행
     transactionTemplate.execute(status -> {
+      chatReadStatusRepository.deleteAllByChatRoomIds(expiredMeetingIds);
+      chatRepository.deleteAllByChatRoomIds(expiredMeetingIds);
       int deleteChatRoomCount = chatRoomRepository.deleteAllByMeetingIds(expiredMeetingIds);
       int deleteParticipationCount =
           participationRepository.deleteAllByMeetingIds(expiredMeetingIds);
