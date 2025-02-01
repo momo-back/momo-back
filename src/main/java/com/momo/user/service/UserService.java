@@ -312,17 +312,22 @@ public class UserService {
       user.setPhone(updateRequest.getPhone());
     }
 
-    // Profile 엔티티 업데이트
-    if (profileImage != null && !profileImage.isEmpty()) {
+    // Profile 이미지 업데이트 (imageService 사용)
+    String profileImageUrl = imageService.uploadImageProcess(profileImage);
+
+    if (profileImageUrl != null) {
       // 기존 프로필 이미지가 있다면 S3에서 삭제
       if (profile.getProfileImageUrl() != null && !profile.getProfileImageUrl().isEmpty()) {
         imageService.deleteImage(profile.getProfileImageUrl());
       }
-
-      // 새 프로필 이미지 업로드 및 저장
-      String profileImageUrl = imageService.uploadImageProcess(profileImage);
+      // 새 프로필 이미지 업로드 후 저장
       profile.setProfileImageUrl(profileImageUrl);
+    } else {
+      // 프로필 이미지가 업로드되지 않은 경우, 기본 이미지로 설정하거나 null 유지
+      profile.setProfileImageUrl(null); // 기본 이미지가 있으면 여기서 설정
     }
+
+    // Profile 추가 정보 업데이트
     if (updateRequest.getIntroduction() != null) {
       profile.setIntroduction(updateRequest.getIntroduction());
     }
