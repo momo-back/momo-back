@@ -9,7 +9,6 @@ import com.momo.meeting.entity.Meeting;
 import com.momo.meeting.exception.MeetingErrorCode;
 import com.momo.meeting.exception.MeetingException;
 import com.momo.meeting.repository.MeetingRepository;
-import com.momo.notification.constant.NotificationCategory;
 import com.momo.notification.constant.NotificationType;
 import com.momo.notification.service.NotificationService;
 import com.momo.participation.constant.ParticipationStatus;
@@ -56,6 +55,7 @@ public class ParticipationService {
     );
   }
 
+  @Transactional
   public void approveParticipation(Long authorId, Long participationId) {
     Participation participation = updateApproveParticipation(authorId, participationId);
     joinChatRoom(participation.getMeeting(), participation); // 채팅방 입장
