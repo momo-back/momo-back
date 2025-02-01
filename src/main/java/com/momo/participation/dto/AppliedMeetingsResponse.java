@@ -26,7 +26,7 @@ public class AppliedMeetingsResponse {
         appliedMeetingDtos.subList(0, pageSize) :
         appliedMeetingDtos.subList(0, appliedMeetingDtos.size());
 
-    Long lastId = hasNext ? appliedMeetingDtos.get(appliedMeetingDtos.size() - 1).getId() : null;
+    Long lastId = hasNext ? appliedMeetingDtos.get(appliedMeetingDtos.size() - 1).getParticipationId() : null;
 
     return AppliedMeetingsResponse.builder()
         .lastId(lastId)

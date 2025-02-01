@@ -15,7 +15,7 @@ import lombok.Getter;
 @Builder
 public class AppliedMeetingDto {
 
-  private Long id;
+  private Long participationId;
   private Long meetingId;
   private Long authorId;
   private ParticipationStatus participationStatus;
@@ -47,7 +47,7 @@ public class AppliedMeetingDto {
     Set<String> foodCategories = FoodCategory.convertToFoodCategories(appliedMeeting.getCategory());
 
     return AppliedMeetingDto.builder()
-        .id(appliedMeeting.getId())
+        .participationId(appliedMeeting.getId())
         .meetingId(appliedMeeting.getMeetingId())
         .authorId(appliedMeeting.getAuthorId())
         .participationStatus(appliedMeeting.getParticipationStatus())

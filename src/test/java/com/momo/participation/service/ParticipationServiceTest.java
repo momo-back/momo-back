@@ -375,7 +375,7 @@ class ParticipationServiceTest {
   }
 
   private static void AssertThatAppliedMeeting(List<AppliedMeetingDto> appliedMeetings, int i) {
-    assertThat(appliedMeetings.get(i).getId()).isEqualTo(i);
+    assertThat(appliedMeetings.get(i).getParticipationId()).isEqualTo(i);
     assertThat(appliedMeetings.get(i).getMeetingId()).isEqualTo(i * 10L);
     assertThat(appliedMeetings.get(i).getAuthorId()).isEqualTo(i * 100L);
     assertThat(appliedMeetings.get(i).getParticipationStatus())
