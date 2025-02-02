@@ -57,6 +57,7 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
   // 해당 모임에 참여 신청한 회원 목록을 조회
   @Query(value = "SELECT "
       + "u.user_id as userId, "
+      + "mp.id as participationId, "
       + "u.nickname as nickname, "
       + "p.profile_image_url as profileImageUrl, "
       + "mp.participation_status as participationStatus "
