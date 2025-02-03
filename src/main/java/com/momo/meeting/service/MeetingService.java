@@ -1,5 +1,8 @@
 package com.momo.meeting.service;
 
+import com.momo.chat.entity.ChatRoom;
+import com.momo.chat.exception.ChatErrorCode;
+import com.momo.chat.exception.ChatException;
 import com.momo.chat.repository.ChatReadStatusRepository;
 import com.momo.chat.repository.ChatRepository;
 import com.momo.chat.repository.ChatRoomRepository;
@@ -127,9 +130,16 @@ public class MeetingService {
     meeting.updateStatus(newStatus);
   }
 
+  @Transactional
   public void deleteMeeting(Long userId, Long meetingId) {
     Meeting meeting = validateForMeetingAuthor(userId, meetingId);
-    meetingRepository.delete(meeting);
+    ChatRoom chatRoom = chatRoomRepository.findByMeeting_Id(meetingId)
+        .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
+    
+    chatRoomService.deleteRoom(meeting.getUser(), chatRoom.getId()); // 채팅방 삭제
+    participationRepository.deleteByMeetingId(meetingId); // 참여신청 삭제
+    meetingRepository.delete(meeting); // 모임 삭제
+    imageService.deleteImage(meeting.getThumbnail()); // 모임 썸네일 삭제
   }
 
   public MeetingsResponse getMeetings(MeetingsRequest request) {

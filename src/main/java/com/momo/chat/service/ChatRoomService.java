@@ -275,8 +275,6 @@ public class ChatRoomService {
     chatReadStatusRepository.deleteByChatRoomId(chatRoomId);
     chatRepository.deleteByChatRoomId(chatRoomId);
     chatRoomRepository.delete(chatRoom);
-
-    // TODO: 채팅방 삭제시 모임삭제 되도록
   }
 
   // 특정 사용자 강퇴 (호스트만 가능)

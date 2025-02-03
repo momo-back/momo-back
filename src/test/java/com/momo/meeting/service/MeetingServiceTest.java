@@ -12,6 +12,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.momo.chat.entity.ChatRoom;
 import com.momo.chat.repository.ChatRoomRepository;
 import com.momo.chat.service.ChatRoomService;
 import com.momo.image.service.ImageService;
@@ -45,6 +46,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import javax.swing.text.html.Option;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -405,6 +407,28 @@ class MeetingServiceTest {
     verify(meetingRepository, never()).deleteAllByMeetingIds(any());
   }
 
+  @Test
+  @DisplayName("모임 삭제 - 성공")
+  void deleteMeeting_Success() {
+    // given
+    User user = createUser();
+    MeetingCreateRequest request = createMeetingRequest();
+    Meeting meeting = createMeeting(user, request);
+    ChatRoom chatRoom = createChatRoom(user, meeting);
+
+    when(meetingRepository.findById(meeting.getId())).thenReturn(Optional.of(meeting));
+    when(chatRoomRepository.findByMeeting_Id(meeting.getId())).thenReturn(Optional.of(chatRoom));
+
+    // when
+    meetingService.deleteMeeting(user.getId(), meeting.getId());
+
+    // then
+    verify(chatRoomService).deleteRoom(user, chatRoom.getId());
+    verify(participationRepository).deleteByMeetingId(meeting.getId());
+    verify(meetingRepository).delete(meeting);
+    verify(imageService).deleteImage(meeting.getThumbnail());
+  }
+
   private static MeetingsRequest createMeetingsRequest(
       Double userLatitude,
       Double userLongitude,
@@ -672,5 +696,15 @@ class MeetingServiceTest {
     assertThat(projections.get(i).getProfileImage())
         .isEqualTo("test_" + i + "_profile_image_url.jpg");
     assertThat(projections.get(i).getParticipationStatus()).isEqualTo(ParticipationStatus.PENDING);
+  }
+
+  private static ChatRoom createChatRoom(User host, Meeting meeting) {
+    return ChatRoom.builder()
+        .id(1L)
+        .host(host)
+        .meeting(meeting)
+        .reader(new ArrayList<>(List.of(host)))
+        .ChatMessages(new ArrayList<>())
+        .build();
   }
 }
