@@ -355,6 +355,7 @@ public class UserService {
         .birth(profile.getBirth())
         .mbti(profile.getMbti())
         .introduction(profile.getIntroduction())
+        .profileImageUrl(profile.getProfileImageUrl())
         .build();
   }
 
