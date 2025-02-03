@@ -19,4 +19,5 @@ public class OtherUserInfoResponse {
   private LocalDate birth;
   private Mbti mbti;
   private String introduction;
+  private String profileImageUrl;
 }
