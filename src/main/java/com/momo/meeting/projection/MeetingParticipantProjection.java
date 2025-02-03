@@ -6,6 +6,8 @@ public interface MeetingParticipantProjection {
 
   Long getUserId();
 
+  Long getParticipationId();
+
   String getNickname();
 
   String getProfileImage();
