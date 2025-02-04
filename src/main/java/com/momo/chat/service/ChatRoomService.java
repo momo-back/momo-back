@@ -151,7 +151,7 @@ public class ChatRoomService {
   @Transactional
   public List<ChatHistoryDto> getChatHistory(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
-    Profile profile = validateProfileExists(user.getId());
+    Profile profile = validateProfileExists(user);
     ChatReadStatus chatReadStatus = validateChatReadStatus(user.getId(), chatRoomId);
 
     checkParticipant(chatRoom, user);
@@ -255,7 +255,7 @@ public class ChatRoomService {
 
     return chatRoom.getReader().stream()
         .map(reader -> {
-          Profile profile = validateProfileExists(reader.getId());
+          Profile profile = validateProfileExists(reader);
           return new ChatReaderDto(reader.getId(), reader.getNickname(),
               profile.getProfileImageUrl());
         })
@@ -317,8 +317,8 @@ public class ChatRoomService {
         .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
   }
 
-  private Profile validateProfileExists(Long userId) {
-    return profileRepository.findById(userId)
+  private Profile validateProfileExists(User user) {
+    return profileRepository.findByUser(user)
         .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
   }
 

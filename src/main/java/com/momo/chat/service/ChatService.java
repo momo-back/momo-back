@@ -40,7 +40,7 @@ public class ChatService {
   public void sendMessage(ChatRequestDto dto) {
     User user = userRepository.findById(dto.getUserId())
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-    Profile profile = profileRepository.findById(dto.getUserId())
+    Profile profile = profileRepository.findByUser(user)
         .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
     ChatRoom chatRoom = chatRoomRepository.findById(dto.getRoomId())
         .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
