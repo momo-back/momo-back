@@ -151,7 +151,6 @@ public class ChatRoomService {
   @Transactional
   public List<ChatHistoryDto> getChatHistory(User user, Long chatRoomId) {
     ChatRoom chatRoom = validateChatRoomExists(chatRoomId);
-    Profile profile = validateProfileExists(user.getId());
     ChatReadStatus chatReadStatus = validateChatReadStatus(user.getId(), chatRoomId);
 
     checkParticipant(chatRoom, user);
@@ -169,7 +168,7 @@ public class ChatRoomService {
     return chats.stream().map(chat -> new ChatHistoryDto(
         chat.getSender().getId(),
         chat.getSender().getNickname(),
-        profile.getProfileImageUrl(),
+        getProfileImageUrlFromUser(chat.getSender()),
         chat.getMessage(),
         chat.getCreatedAt(),
         chat.getUpdatedAt()
@@ -255,7 +254,7 @@ public class ChatRoomService {
 
     return chatRoom.getReader().stream()
         .map(reader -> {
-          Profile profile = validateProfileExists(reader.getId());
+          Profile profile = validateProfileExists(reader);
           return new ChatReaderDto(reader.getId(), reader.getNickname(),
               profile.getProfileImageUrl());
         })
@@ -317,8 +316,8 @@ public class ChatRoomService {
         .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
   }
 
-  private Profile validateProfileExists(Long userId) {
-    return profileRepository.findById(userId)
+  private Profile validateProfileExists(User user) {
+    return profileRepository.findByUser(user)
         .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
   }
 
@@ -341,6 +340,12 @@ public class ChatRoomService {
         room.setUnreadMessagesCount(0);
       }
     });
+  }
+
+  private String getProfileImageUrlFromUser(User user) {
+    Profile profile =  profileRepository.findByUser(user)
+        .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
+    return profile.getProfileImageUrl();
   }
 
 }
