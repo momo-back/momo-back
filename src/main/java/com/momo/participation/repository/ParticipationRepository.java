@@ -59,7 +59,7 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
       + "u.user_id as userId, "
       + "mp.id as participationId, "
       + "u.nickname as nickname, "
-      + "p.profile_image_url as profileImageUrl, "
+      + "p.profile_image_url as profileImage, "
       + "mp.participation_status as participationStatus "
       + "FROM participation mp "
       + "JOIN users u ON mp.user_id = u.user_id "

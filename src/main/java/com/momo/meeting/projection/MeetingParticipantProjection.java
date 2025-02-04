@@ -10,7 +10,7 @@ public interface MeetingParticipantProjection {
 
   String getNickname();
 
-  String getProfileImageUrl();
+  String getProfileImage();
 
   ParticipationStatus getParticipationStatus();
 }
