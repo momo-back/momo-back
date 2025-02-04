@@ -1,7 +1,5 @@
 package com.momo.notification.service;
 
-import com.momo.notification.exception.NotificationErrorCode;
-import com.momo.notification.exception.NotificationException;
 import com.momo.notification.sseemitter.SseEmitterManager;
 import com.momo.notification.constant.NotificationType;
 import com.momo.notification.dto.NotificationResponse;

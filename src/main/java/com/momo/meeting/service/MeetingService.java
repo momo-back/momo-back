@@ -13,6 +13,7 @@ import com.momo.meeting.constant.SortType;
 import com.momo.meeting.dto.MeetingCursor;
 import com.momo.meeting.dto.MeetingDto;
 import com.momo.meeting.dto.MeetingUpdateRequest;
+import com.momo.meeting.dto.MeetingStatusRequest;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
 import com.momo.meeting.dto.MeetingCreateRequest;
 import com.momo.meeting.dto.MeetingResponse;
@@ -125,9 +126,9 @@ public class MeetingService {
   }
 
   @Transactional
-  public void updateMeetingStatus(Long userId, Long meetingId, MeetingStatus newStatus) {
+  public void updateMeetingStatus(Long userId, Long meetingId, MeetingStatusRequest newStatus) {
     Meeting meeting = validateForMeetingAuthor(userId, meetingId);
-    meeting.updateStatus(newStatus);
+    meeting.updateStatus(newStatus.getMeetingStatus());
   }
 
   @Transactional
