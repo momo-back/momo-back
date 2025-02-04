@@ -18,6 +18,7 @@ import com.momo.image.service.ImageService;
 import com.momo.meeting.constant.FoodCategory;
 import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.dto.MeetingUpdateRequest;
+import com.momo.meeting.dto.MeetingStatusRequest;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingDto;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
 import com.momo.meeting.dto.MeetingCursor;
@@ -328,11 +329,14 @@ class MeetingServiceTest {
     User user = createUser();
     MeetingCreateRequest request = createMeetingRequest();
     Meeting meeting = createMeeting(user, request);
+    MeetingStatusRequest meetingStatus = MeetingStatusRequest.builder()
+        .meetingStatus(MeetingStatus.CLOSED)
+        .build();
 
     when(meetingRepository.findById(user.getId())).thenReturn(Optional.of(meeting));
 
     // when
-    meetingService.updateMeetingStatus(user.getId(), meeting.getId(), MeetingStatus.CLOSED);
+    meetingService.updateMeetingStatus(user.getId(), meeting.getId(), meetingStatus);
 
     // then
     assertEquals(MeetingStatus.CLOSED, meeting.getMeetingStatus());
