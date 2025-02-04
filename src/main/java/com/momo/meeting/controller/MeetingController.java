@@ -1,10 +1,9 @@
 package com.momo.meeting.controller;
 
 import com.momo.meeting.constant.FoodCategory;
-import com.momo.meeting.constant.MeetingStatus;
 import com.momo.meeting.constant.SearchType;
 import com.momo.meeting.dto.MeetingUpdateRequest;
-import com.momo.meeting.dto.PatchMeetingStatus;
+import com.momo.meeting.dto.MeetingStatusRequest;
 import com.momo.meeting.dto.createdMeeting.CreatedMeetingsResponse;
 import com.momo.meeting.dto.MeetingCreateRequest;
 import com.momo.meeting.dto.MeetingResponse;
@@ -178,7 +177,7 @@ public class MeetingController {
   public ResponseEntity<Void> updateMeetingStatus(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
       @PathVariable Long meetingId,
-      @RequestBody @NotNull PatchMeetingStatus meetingStatus
+      @RequestBody @NotNull MeetingStatusRequest meetingStatus
   ) {
     meetingService.updateMeetingStatus(customUserDetails.getId(), meetingId, meetingStatus);
     return ResponseEntity.ok().build();
