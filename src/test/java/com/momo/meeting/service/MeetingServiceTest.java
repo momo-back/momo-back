@@ -47,7 +47,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import javax.swing.text.html.Option;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -680,7 +679,7 @@ class MeetingServiceTest {
     MeetingParticipantProjection projection = mock(MeetingParticipantProjection.class);
     given(projection.getUserId()).willReturn((long) i);
     given(projection.getNickname()).willReturn("test-nickname" + i);
-    given(projection.getProfileImage()).willReturn("test_" + i + "_profile_image_url.jpg");
+    given(projection.getProfileImageUrl()).willReturn("test_" + i + "_profile_image_url.jpg");
     given(projection.getParticipationStatus()).willReturn(ParticipationStatus.PENDING);
     projections.add(projection);
   }
@@ -697,7 +696,7 @@ class MeetingServiceTest {
   ) {
     assertThat(projections.get(i).getUserId()).isEqualTo(i);
     assertThat(projections.get(i).getNickname()).isEqualTo("test-nickname" + i);
-    assertThat(projections.get(i).getProfileImage())
+    assertThat(projections.get(i).getProfileImageUrl())
         .isEqualTo("test_" + i + "_profile_image_url.jpg");
     assertThat(projections.get(i).getParticipationStatus()).isEqualTo(ParticipationStatus.PENDING);
   }
