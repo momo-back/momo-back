@@ -12,6 +12,10 @@ import com.momo.common.exception.CustomException;
 import com.momo.common.exception.ErrorCode;
 import com.momo.notification.constant.NotificationType;
 import com.momo.notification.service.NotificationService;
+import com.momo.profile.entity.Profile;
+import com.momo.profile.exception.ProfileErrorCode;
+import com.momo.profile.exception.ProfileException;
+import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.entity.User;
 import com.momo.user.repository.UserRepository;
 import java.util.List;
@@ -29,12 +33,15 @@ public class ChatService {
   private final ChatRoomRepository chatRoomRepository;
   private final UserRepository userRepository;
   private final NotificationService notificationService;
+  private final ProfileRepository profileRepository;
 
 
   @Transactional
   public void sendMessage(ChatRequestDto dto) {
     User user = userRepository.findById(dto.getUserId())
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+    Profile profile = profileRepository.findById(dto.getUserId())
+        .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
     ChatRoom chatRoom = chatRoomRepository.findById(dto.getRoomId())
         .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
 
@@ -49,7 +56,9 @@ public class ChatService {
     ChatResponseDto sendMessage = new ChatResponseDto();
     sendMessage.setRoomId(dto.getRoomId());
     sendMessage.setMessage(dto.getMessage());
-    sendMessage.setSender(user.getNickname());
+    sendMessage.setSenderNickname(user.getNickname());
+    sendMessage.setSenderId(user.getId());
+    sendMessage.setUserProfileImageUrl(profile.getProfileImageUrl());
 
     messagingTemplate.convertAndSend("/sub/chat/room/" + dto.getRoomId(), sendMessage);
 
