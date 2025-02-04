@@ -23,7 +23,9 @@ import com.momo.profile.exception.ProfileErrorCode;
 import com.momo.profile.exception.ProfileException;
 import com.momo.profile.repository.ProfileRepository;
 import com.momo.user.dto.CustomUserDetails;
+import com.momo.user.dto.OtherUserInfoProjection;
 import com.momo.user.dto.OtherUserInfoResponse;
+import com.momo.user.dto.UserInfoProjection;
 import com.momo.user.dto.UserInfoResponse;
 import com.momo.user.dto.UserUpdateRequest;
 import com.momo.user.entity.User;
@@ -268,27 +270,21 @@ public class UserService {
   }
 
 
-  // 회원정보 조회
+  // 본인 정보 조회
   public UserInfoResponse getUserInfoByEmail(String email) {
-    // User 엔티티 조회
-    User user = userRepository.findByEmail(email)
+    UserInfoProjection projection = userRepository.findUserInfoByEmail(email)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-    // Profile 엔티티 조회
-    Profile profile = profileRepository.findByUser(user)
-        .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
-
-    // UserInfoResponse 생성 및 반환
     return UserInfoResponse.builder()
-        .nickname(user.getNickname())
-        .phone(user.getPhone())
-        .email(user.getEmail())
-        .gender(profile.getGender())
-        .birth(profile.getBirth())
-        .profileImageUrl(profile.getProfileImageUrl())
-        .introduction(profile.getIntroduction())
-        .mbti(profile.getMbti())
-        .oauthProvider(user.isOauthUser() ? "KAKAO" : "LOCAL") // 회원 타입 구분
+        .nickname(projection.getNickname())
+        .phone(projection.getPhone())
+        .email(projection.getEmail())
+        .gender(projection.getGender())
+        .birth(projection.getBirth())
+        .profileImageUrl(projection.getProfileImageUrl())
+        .introduction(projection.getIntroduction())
+        .mbti(projection.getMbti())
+        .oauthProvider(projection.isOauthUser() ? "KAKAO" : "LOCAL")
         .build();
   }
 
@@ -338,25 +334,21 @@ public class UserService {
     log.debug("User and Profile updated successfully for email: {}", email);
   }
 
+  // 다른 사용자 프로필 조회
   @Transactional
   public OtherUserInfoResponse getOtherUserProfile(Long userId) {
-    // User 엔티티 조회
-    User user = userRepository.findById(userId)
+    OtherUserInfoProjection projection = userRepository.findOtherUserProfileById(userId)
         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-    // Profile 엔티티 조회
-    Profile profile = profileRepository.findByUser(user)
-        .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
-
-    // 필요한 정보만 반환
     return OtherUserInfoResponse.builder()
-        .nickname(user.getNickname())
-        .gender(profile.getGender())
-        .birth(profile.getBirth())
-        .mbti(profile.getMbti())
-        .introduction(profile.getIntroduction())
-        .profileImageUrl(profile.getProfileImageUrl())
+        .nickname(projection.getNickname())
+        .gender(projection.getGender())
+        .birth(projection.getBirth())
+        .mbti(projection.getMbti())
+        .introduction(projection.getIntroduction())
+        .profileImageUrl(projection.getProfileImageUrl())
         .build();
   }
+
 
 }
