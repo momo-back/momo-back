@@ -212,9 +212,9 @@ public class ChatRoomService {
         .map(chatRoom -> {
           // 데이터베이스에서 마지막으로 읽은 시간을 가져오거나, 사용가능한 데이터가 없으면 최소 시간을 사용
           LocalDateTime lastReadAt = chatReadStatusRepository.findByUserIdAndChatRoomId(
-                  chatRoom.getId(), user.getId())
+                  user.getId(), chatRoom.getId())
               .map(ChatReadStatus::getLastReadAt)
-              .orElse(LocalDateTime.MIN);
+              .orElseGet(() -> LocalDateTime.MIN);
 
           // 각 채팅방에 대한 읽지 않은 메시지 수를 계산
           Integer unreadMessagesCount = (int) chatRoom.getChatMessages().stream()
