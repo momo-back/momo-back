@@ -37,6 +37,7 @@ import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import com.momo.meeting.repository.MeetingRepository;
 import com.momo.notification.service.NotificationService;
 import com.momo.participation.constant.ParticipationStatus;
+import com.momo.participation.entity.Participation;
 import com.momo.participation.repository.ParticipationRepository;
 import com.momo.user.entity.User;
 import java.time.LocalDate;
@@ -324,20 +325,17 @@ class MeetingServiceTest {
   }
 
   @Test
-  @DisplayName("모임 상태 변경  - 성공")
+  @DisplayName("모임 모집완료 - 성공")
   void updateMeetingStatus_Success() {
     // given
     User user = createUser();
     MeetingCreateRequest request = createMeetingRequest();
     Meeting meeting = createMeeting(user, request);
-    MeetingStatusRequest meetingStatus = MeetingStatusRequest.builder()
-        .meetingStatus(MeetingStatus.CLOSED)
-        .build();
 
     when(meetingRepository.findById(user.getId())).thenReturn(Optional.of(meeting));
 
     // when
-    meetingService.updateMeetingStatus(user.getId(), meeting.getId(), meetingStatus);
+    meetingService.completedMeeting(user.getId(), meeting.getId());
 
     // then
     assertEquals(MeetingStatus.CLOSED, meeting.getMeetingStatus());
@@ -679,7 +677,7 @@ class MeetingServiceTest {
     MeetingParticipantProjection projection = mock(MeetingParticipantProjection.class);
     given(projection.getUserId()).willReturn((long) i);
     given(projection.getNickname()).willReturn("test-nickname" + i);
-    given(projection.getProfileImageUrl()).willReturn("test_" + i + "_profile_image_url.jpg");
+    given(projection.getProfileImage()).willReturn("test_" + i + "_profile_image_url.jpg");
     given(projection.getParticipationStatus()).willReturn(ParticipationStatus.PENDING);
     projections.add(projection);
   }
@@ -696,7 +694,7 @@ class MeetingServiceTest {
   ) {
     assertThat(projections.get(i).getUserId()).isEqualTo(i);
     assertThat(projections.get(i).getNickname()).isEqualTo("test-nickname" + i);
-    assertThat(projections.get(i).getProfileImageUrl())
+    assertThat(projections.get(i).getProfileImage())
         .isEqualTo("test_" + i + "_profile_image_url.jpg");
     assertThat(projections.get(i).getParticipationStatus()).isEqualTo(ParticipationStatus.PENDING);
   }
@@ -708,6 +706,16 @@ class MeetingServiceTest {
         .meeting(meeting)
         .reader(new ArrayList<>(List.of(host)))
         .ChatMessages(new ArrayList<>())
+        .build();
+  }
+
+  private static Participation createParticipation(
+      User user, Meeting meeting, ParticipationStatus participationStatus
+  ) {
+    return Participation.builder()
+        .user(user)
+        .meeting(meeting)
+        .participationStatus(participationStatus)
         .build();
   }
 }
