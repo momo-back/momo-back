@@ -94,4 +94,12 @@ public interface ParticipationRepository extends JpaRepository<Participation, Lo
   @Modifying
   @Query("DELETE FROM Participation p WHERE p.meeting.id = :meetingId")
   void deleteByMeetingId(Long meetingId);
+
+  @Modifying
+  @Query("UPDATE Participation p SET p.participationStatus = :newStatus "
+      + "WHERE p.meeting.id = :meetingId AND p.participationStatus  = :currentStatus")
+  void findAllByMeeting_IdAndParticipationStatus(
+      @Param("meetingId") Long meetingID,
+      @Param("currentStatus") ParticipationStatus currentStatus,
+      @Param("newStatus") ParticipationStatus newStatus);
 }
