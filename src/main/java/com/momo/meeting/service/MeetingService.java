@@ -28,6 +28,7 @@ import com.momo.meeting.projection.MeetingToMeetingDtoProjection;
 import com.momo.notification.constant.NotificationType;
 import com.momo.notification.service.NotificationService;
 import com.momo.participation.constant.ParticipationStatus;
+import com.momo.participation.entity.Participation;
 import com.momo.participation.repository.ParticipationRepository;
 import com.momo.image.service.ImageService;
 import com.momo.user.entity.User;
@@ -126,9 +127,13 @@ public class MeetingService {
   }
 
   @Transactional
-  public void updateMeetingStatus(Long userId, Long meetingId, MeetingStatusRequest newStatus) {
+  public void completedMeeting(Long userId, Long meetingId) {
     Meeting meeting = validateForMeetingAuthor(userId, meetingId);
-    meeting.updateStatus(newStatus.getMeetingStatus());
+    meeting.updateStatus(MeetingStatus.CLOSED); // 모집완료 상태로 변경
+
+    // 해당 모임에 참여신청한 회원들 중 참여신청의 상태가 'PENDING'인 신청은 'CLOSED'로 변경
+    participationRepository.findAllByMeeting_IdAndParticipationStatus(
+        meetingId, ParticipationStatus.PENDING, ParticipationStatus.CLOSED);
   }
 
   @Transactional
@@ -136,7 +141,7 @@ public class MeetingService {
     Meeting meeting = validateForMeetingAuthor(userId, meetingId);
     ChatRoom chatRoom = chatRoomRepository.findByMeeting_Id(meetingId)
         .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
-    
+
     chatRoomService.deleteRoom(meeting.getUser(), chatRoom.getId()); // 채팅방 삭제
     participationRepository.deleteByMeetingId(meetingId); // 참여신청 삭제
     meetingRepository.delete(meeting); // 모임 삭제
