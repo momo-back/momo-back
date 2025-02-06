@@ -166,20 +166,14 @@ public class MeetingController {
   }
 
   /**
-   * 모임 상태 변경
-   *
-   * @param customUserDetails 회원 정보
-   * @param meetingId         상태를 변경할 모임 ID
-   * @param meetingStatus     변경할 상태
-   * @return 200 OK
+   * 모집 완료
    */
-  @PatchMapping("/{meetingId}")
-  public ResponseEntity<Void> updateMeetingStatus(
+  @PatchMapping("/{meetingId}/complete")
+  public ResponseEntity<Void> completedMeeting(
       @AuthenticationPrincipal CustomUserDetails customUserDetails,
-      @PathVariable Long meetingId,
-      @RequestBody @NotNull MeetingStatusRequest meetingStatus
+      @PathVariable Long meetingId
   ) {
-    meetingService.updateMeetingStatus(customUserDetails.getId(), meetingId, meetingStatus);
+    meetingService.completedMeeting(customUserDetails.getId(), meetingId);
     return ResponseEntity.ok().build();
   }
 
