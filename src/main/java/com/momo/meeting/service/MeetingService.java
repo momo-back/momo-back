@@ -138,8 +138,9 @@ public class MeetingService {
     ChatRoom chatRoom = chatRoomRepository.findByMeeting_Id(meetingId)
         .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
 
-    chatRoomService.deleteRoom(meeting.getUser(), chatRoom.getId()); // 채팅방 삭제
     List<Participation> participations = participationRepository.findAllByMeeting_Id(meetingId);
+
+    chatRoomService.deleteRoom(meeting.getUser(), chatRoom.getId()); // 채팅방 삭제
     participationRepository.deleteByMeetingId(meetingId); // 참여신청 삭제
     meetingRepository.delete(meeting); // 모임 삭제
     imageService.deleteImage(meeting.getThumbnail()); // 모임 썸네일 삭제
