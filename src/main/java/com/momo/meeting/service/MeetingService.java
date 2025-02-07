@@ -142,10 +142,14 @@ public class MeetingService {
     ChatRoom chatRoom = chatRoomRepository.findByMeeting_Id(meetingId)
         .orElseThrow(() -> new ChatException(ChatErrorCode.CHAT_ROOM_NOT_FOUND));
 
+    List<Participation> participations = participationRepository.findAllByMeeting_Id(meetingId);
+
     chatRoomService.deleteRoom(meeting.getUser(), chatRoom.getId()); // 채팅방 삭제
     participationRepository.deleteByMeetingId(meetingId); // 참여신청 삭제
     meetingRepository.delete(meeting); // 모임 삭제
     imageService.deleteImage(meeting.getThumbnail()); // 모임 썸네일 삭제
+
+    sendMeetingCanceledNotifications(participations, meeting); // 모든 참여신청자에게 알림 발송
   }
 
   public MeetingsResponse getMeetings(MeetingsRequest request) {
@@ -331,6 +335,15 @@ public class MeetingService {
   private static void validateMeetingDate(LocalDateTime meetingDateTime) {
     if (meetingDateTime.isAfter(LocalDateTime.now().plusYears(1))) {
       throw new MeetingException(MeetingErrorCode.INVALID_MEETING_DATE);
+    }
+  }
+
+  private void sendMeetingCanceledNotifications(List<Participation> participations, Meeting meeting) {
+    for (Participation participation : participations) {
+      notificationService.sendNotification(
+          participation.getUser(),
+          meeting.getTitle() + NotificationType.MEETING_CANCELED.getDescription(),
+          NotificationType.MEETING_CANCELED);
     }
   }
 }
