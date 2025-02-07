@@ -13,6 +13,8 @@ public enum NotificationType {
 
   PARTICIPANT_LEFT("참가자 탈퇴", NotificationCategory.MEETING),
 
+  MEETING_CANCELED("모임이 취소되었습니다.", NotificationCategory.MEETING),
+
   MEETING_EXPIRED(
       "모임 시간이 만료되어 자동으로 삭제되었습니다.", NotificationCategory.MEETING),
 
