@@ -127,9 +127,13 @@ public class MeetingService {
   }
 
   @Transactional
-  public void updateMeetingStatus(Long userId, Long meetingId, MeetingStatusRequest newStatus) {
+  public void completedMeeting(Long userId, Long meetingId) {
     Meeting meeting = validateForMeetingAuthor(userId, meetingId);
-    meeting.updateStatus(newStatus.getMeetingStatus());
+    meeting.updateStatus(MeetingStatus.CLOSED); // 모집완료 상태로 변경
+
+    // 해당 모임에 참여신청한 회원들 중 참여신청의 상태가 'PENDING'인 신청은 'CLOSED'로 변경
+    participationRepository.findAllByMeeting_IdAndParticipationStatus(
+        meetingId, ParticipationStatus.PENDING, ParticipationStatus.CLOSED);
   }
 
   @Transactional
