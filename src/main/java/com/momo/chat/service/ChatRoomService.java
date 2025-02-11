@@ -118,24 +118,10 @@ public class ChatRoomService {
       throw new ChatException(ChatErrorCode.HOST_CANNOT_OPERATE);
     }
 
-    // Meeting을 직접 조회하여 영속성 컨텍스트에서 관리
-    Meeting meeting = meetingRepository.findById(chatRoom.getMeetingId())
-        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
-
-    Participation participation =
-        participationRepository.findByUser_Id(user.getId()).orElseThrow(() ->
-            new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
-
-    // 참여신청 상태가 승인된 게 아니라면 예외 처리
-    if (!(participation.getParticipationStatus() == ParticipationStatus.APPROVED)) {
-      throw new ChatException(ChatErrorCode.NOT_A_PARTICIPANT);
-    }
-
     List<User> readers = chatRoom.getReader();
     readers.removeIf(reader -> reader.getId().equals(user.getId()));
 
-    meeting.decrementApprovedCount(); // 모임의 현재 인원 1 감소
-    participationRepository.deleteByUser_Id(user.getId()); // 참여 신청 삭제
+    withdrawFromMeeting(user, chatRoom); // 모임 인원 감소 및 참여신청 삭제
 
     chatRoomRepository.save(chatRoom);
     chatReadStatusRepository.deleteByUserIdAndChatRoomId(user.getId(), chatRoomId);
@@ -292,11 +278,11 @@ public class ChatRoomService {
     chatRoomRepository.save(chatRoom);
     chatReadStatusRepository.deleteByUserIdAndChatRoomId(targetUserId, chatRoomId);
 
+    withdrawFromMeeting(targetUser, chatRoom); // 모임 인원 감소 및 참여신청 삭제
+
     // 강퇴하면 채팅방에 메시지를 발송
     messagingTemplate.convertAndSend("/sub/chat/room/" + chatRoomId,
         targetUser.getNickname() + "님이 강제퇴장되었습니다.");
-
-    // TODO: 채팅방 강퇴시 모임강퇴 되도록
 
     return ChatRoomDto.of(chatRoom);
   }
@@ -343,9 +329,26 @@ public class ChatRoomService {
   }
 
   private String getProfileImageUrlFromUser(User user) {
-    Profile profile =  profileRepository.findByUser(user)
+    Profile profile = profileRepository.findByUser(user)
         .orElseThrow(() -> new ProfileException(ProfileErrorCode.NOT_EXISTS_PROFILE));
     return profile.getProfileImageUrl();
   }
 
+  private void withdrawFromMeeting(User user, ChatRoom chatRoom) {
+    // Meeting을 직접 조회하여 영속성 컨텍스트에서 관리
+    Meeting meeting = meetingRepository.findById(chatRoom.getMeetingId())
+        .orElseThrow(() -> new MeetingException(MeetingErrorCode.MEETING_NOT_FOUND));
+
+    Participation participation =
+        participationRepository.findByUser_Id(user.getId()).orElseThrow(() ->
+            new ParticipationException(ParticipationErrorCode.PARTICIPATION_NOT_FOUND));
+
+    // 참여신청 상태가 승인된 게 아니라면 예외 처리
+    if (!(participation.getParticipationStatus() == ParticipationStatus.APPROVED)) {
+      throw new ChatException(ChatErrorCode.NOT_A_PARTICIPANT);
+    }
+
+    meeting.decrementApprovedCount(); // 모임의 현재 인원 1 감소
+    participationRepository.deleteByUser_Id(user.getId()); // 참여 신청 삭제
+  }
 }
