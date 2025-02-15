@@ -41,7 +41,7 @@ public class ParticipationService {
     participationRepository.save(participation);
 
     // 모임 주최자에게 새로운 참여 알림 발송
-    sendNotificationToAuthor(user);
+    sendNotificationToAuthor(meeting.getUser());
   }
 
   public AppliedMeetingsResponse getAppliedMeetings(Long userId, Long lastId, int pageSize) {
