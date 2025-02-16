@@ -236,9 +236,11 @@ public class UserService {
         .oauthUser(true)
         .build();
 
-    userRepository.save(kakaoUser); // 저장
-    createRefreshToken(kakaoUser, oauthToken.getRefresh_token()); // 새 사용자에 대해 Refresh Token 생성
-    return kakaoUser;
+    User savedUser = userRepository.save(kakaoUser);// 저장
+    savedUser.setNickname("anony" + savedUser.getId());
+
+    createRefreshToken(savedUser, oauthToken.getRefresh_token()); // 새 사용자에 대해 Refresh Token 생성
+    return savedUser;
   }
 
   private void createRefreshToken(User user, String refreshTokenValue) {
